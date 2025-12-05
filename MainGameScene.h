@@ -1,42 +1,42 @@
 #pragma once
-#ifndef __MAIN_GAME_SCENE_H__
-#define __MAIN_GAME_SCENE_H__
+// MainGameScene.h
+#ifndef MAINGAMESCENE_H
+#define MAINGAMESCENE_H
 
 #include "cocos2d.h"
-#include "ICEY.h"
-#include "InputHandler.h"
-#include "UIManager.h"
-#include "NarratorSystem.h"
-#include "Level.h"
-#include "CombatSystem.h"
+#include "Player.h"
 
-class MainGameScene : public cocos2d::Scene
+class MainGameScene : public cocos2d::Scene 
 {
-private:
-    ICEY* m_player;
-    InputHandler* m_inputHandler;
-    UIManager* m_uiManager;
-    NarratorSystem* m_narrator;
-    Level* m_currentLevel;
-    CombatSystem* m_combatSystem;
-    bool m_isPaused;
-
 public:
+    // 创建场景
     static cocos2d::Scene* createScene();
-    virtual bool init() override;
-    virtual void update(float delta) override;
 
+    // 初始化
+    virtual bool init();
+
+    // 更新
+    void update(float delta);
+
+    // 创建方法
     CREATE_FUNC(MainGameScene);
 
-    // 游戏流程控制
-    void pauseGame();
-    void resumeGame();
-    void gameOver(bool isWin);
-    void restartGame();
+private:
 
-    // 获取器
-    ICEY* getPlayer() const { return m_player; }
-    Level* getCurrentLevel() const { return m_currentLevel; }
+    Player* _player;
+    cocos2d::Node* _background;  // 将 Sprite* 改为 Node*
+  
+    // 初始化方法
+    void initBackground();
+    void initPlayer();
+    void initInput();
+
+    // 输入监听器
+    cocos2d::EventListenerKeyboard* _keyboardListener;
+
+    // 键盘事件回调
+    void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
+    void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
 };
 
-#endif // __MAIN_GAME_SCENE_H__
+#endif // MAINGAMESCENE_H

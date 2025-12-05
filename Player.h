@@ -1,58 +1,53 @@
 #pragma once
-#ifndef __PLAYER_H__
-#define __PLAYER_H__
+// Player.h
+#ifndef PLAYER_H
+#define PLAYER_H
 
 #include "cocos2d.h"
 #include "PlayerState.h"
-#include "Hitbox.h"
-#include "Hurtbox.h"
 
-class Player : public cocos2d::Sprite
-{
-protected:
-    float m_health;
-    float m_maxHealth;
-    float m_speed;
-    float m_jumpForce;
-    bool m_isFacingRight;
-    bool m_isGrounded;
-    bool m_isInvincible;
-    float m_invincibleTimer;
-
-    PlayerState m_currentState;
-    cocos2d::Vector<cocos2d::FiniteTimeAction*> m_actions;
-
-    Hurtbox m_hurtbox;
-
+class Player : public cocos2d::Sprite {
 public:
-    virtual bool init() override;
-    virtual void update(float delta) override;
+    // 创建函数
+    static Player* create(const std::string& spriteFile);
+
+    // 初始化
+    virtual bool init(const std::string& spriteFile);
+
+    // 析构函数
+    virtual ~Player();
+
+    // 更新
+    void update(float delta);
 
     // 移动控制
-    virtual void moveLeft();
-    virtual void moveRight();
-    virtual void stopMoving();
-    virtual void jump();
-    virtual void attack();
-    virtual void dodge();
+    void moveLeft(float delta);
+    void moveRight(float delta);
+    void stopMoving();
 
-    // 状态控制
-    void takeDamage(float damage);
-    void setState(PlayerState newState);
-    PlayerState getState() const { return m_currentState; }
+    // 状态管理
+    PlayerState getCurrentState() const { return _currentState; }
+    void setCurrentState(PlayerState state);
 
-    // 属性获取器
-    float getHealth() const { return m_health; }
-    float getMaxHealth() const { return m_maxHealth; }
-    bool isFacingRight() const { return m_isFacingRight; }
-    bool isGrounded() const { return m_isGrounded; }
-    bool isInvincible() const { return m_isInvincible; }
+    // 输入处理
+    void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode);
+    void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode);
 
-    // 碰撞检测
-    virtual Hurtbox& getHurtbox() { return m_hurtbox; }
-    virtual void updateHurtbox();
+private:
+    PlayerState _currentState;
+    cocos2d::Vec2 _velocity;
+    bool _isMovingLeft;
+    bool _isMovingRight;
+    bool _facingRight;  // 记录面向方向
+    float _moveSpeed;
 
-    CREATE_FUNC(Player);
+    // 动画相关
+    void setupAnimations();
+    void loadAnimations();
+    cocos2d::Animation* createAnimationFromFiles(const std::vector<std::string>& frames, float delay);
+
+    // 动画缓存
+    std::unordered_map<std::string, cocos2d::Animation*> _animations;
 };
 
-#endif // __PLAYER_H__
+#endif // PLAYER_H

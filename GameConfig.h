@@ -1,29 +1,36 @@
 #pragma once
-#ifndef __GAME_CONFIG_H__
-#define __GAME_CONFIG_H__
+// GameConfig.h
+#ifndef GAMECONFIG_H
+#define GAMECONFIG_H
 
-#include <string>
-
-namespace GameConfig
-{
-    // 窗口设置
+// 游戏常量配置
+namespace GameConfig {
+    // 窗口尺寸
     const int WINDOW_WIDTH = 1280;
     const int WINDOW_HEIGHT = 720;
-    const std::string WINDOW_TITLE = "ICEY Clone";
 
-    // 物理参数
-    const float GRAVITY = -980.0f;
-    const float PLAYER_JUMP_FORCE = 450.0f;
-    const float PLAYER_MOVE_SPEED = 300.0f;
+    // 玩家配置
+    const float PLAYER_SPEED = 400.0f;
+    const float GRAVITY = 1500.0f;
+    const float JUMP_FORCE = 600.0f;
 
-    // 游戏参数
-    const float DODGE_INVINCIBLE_TIME = 0.5f;
-    const float COMBO_TIMEOUT = 2.0f;
+    // 动画配置
+    namespace Animation {
+        const float RUN_FRAME_DELAY = 0.05f;  // 跑动动画每帧时间（秒）
+        const float IDLE_FRAME_DELAY = 0.1f;  // 待机动画每帧时间
+        const float ATTACK_FRAME_DELAY = 0.06f; // 攻击动画每帧时间
+    }
 
-    // 资源路径
-    const std::string TEXTURE_PATH = "Textures/";
-    const std::string SOUND_PATH = "Sounds/";
-    const std::string FONT_PATH = "Fonts/";
+    // 输入键位
+    namespace Input {
+        const char MOVE_LEFT = 'A';
+        const char MOVE_RIGHT = 'D';
+        const char JUMP = 'W';
+        const char ATTACK = 'J';
+        const char SKILL1 = 'K';
+        const char SKILL2 = 'L';
+        const char DASH = ' ';
+    }
 }
 
-#endif // __GAME_CONFIG_H__
+#endif // GAMECONFIG_H
