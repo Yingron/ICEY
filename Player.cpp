@@ -14,10 +14,192 @@ Player* Player::create(const std::string& spriteFile) {
     return nullptr;
 }
 
+// Player.cpp - ï¿½Ä½ï¿½ loadAnimations ï¿½ï¿½ï¿½ï¿½
+void Player::loadAnimations() {
+    log("=== Player loadAnimations ===");
+
+    // ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    for (auto& pair : _animations) {
+        CC_SAFE_RELEASE(pair.second);
+    }
+    _animations.clear();
+
+    // åŠ è½½å‘å³è·‘åŠ¨åŠ¨ç”»ï¼ˆ1-18å¸§ï¼‰
+    std::vector<std::string> rightRunFrames;
+    auto fileUtils = FileUtils::getInstance();
+    for (int i = 1; i <= 18; i++) {
+        // å°è¯•æ‰€æœ‰å¯èƒ½çš„è·¯å¾„ï¼Œä¼˜å…ˆä½¿ç”¨æ­£ç¡®çš„è·¯å¾„
+        std::vector<std::string> possiblePaths = {
+            StringUtils::format("images/characters/player/icey-run-to-right-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-run-to-right-%d.png", i),
+            StringUtils::format("icey-run-to-right-%d.png", i),
+            StringUtils::format("characters/player/icey-run-to-right-%d.png", i)
+        };
+
+        bool found = false;
+        for (const auto& path : possiblePaths) {
+            if (fileUtils->isFileExist(path)) {
+                rightRunFrames.push_back(path);
+                log("Found right run frame %d at: %s", i, path.c_str());
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            log("ERROR: Could not find right run frame %d", i);
+        }
+    }
+
+    // åŠ è½½å‘å·¦è·‘åŠ¨åŠ¨ç”»ï¼ˆ1-19å¸§ï¼‰
+    std::vector<std::string> leftRunFrames;
+    for (int i = 1; i <= 19; i++) {
+        // å°è¯•æ‰€æœ‰å¯èƒ½çš„è·¯å¾„ï¼Œä¼˜å…ˆä½¿ç”¨æ­£ç¡®çš„è·¯å¾„
+        std::vector<std::string> possiblePaths = {
+            StringUtils::format("images/characters/player/icey-run-to-left-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-run-to-left-%d.png", i),
+            StringUtils::format("icey-run-to-left-%d.png", i),
+            StringUtils::format("characters/player/icey-run-to-left-%d.png", i)
+        };
+
+        bool found = false;
+        for (const auto& path : possiblePaths) {
+            if (fileUtils->isFileExist(path)) {
+                leftRunFrames.push_back(path);
+                log("Found left run frame %d at: %s", i, path.c_str());
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            log("ERROR: Could not find left run frame %d", i);
+        }
+    }
+
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    if (rightRunFrames.empty() && leftRunFrames.empty()) {
+        log("ERROR: No animation frames found at all!");
+        return;
+    }
+
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½
+    if (!rightRunFrames.empty()) {
+        cocos2d::Animation* runRightAnim = createAnimationFromFiles(rightRunFrames, GameConfig::Animation::RUN_FRAME_DELAY);
+        if (runRightAnim) {
+            _animations["run_right"] = runRightAnim;
+            runRightAnim->retain();
+            log("Created right run animation with %d frames", (int)rightRunFrames.size());
+        }
+        else {
+            log("ERROR: Failed to create right run animation");
+        }
+    }
+
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½
+    if (!leftRunFrames.empty()) {
+        cocos2d::Animation* runLeftAnim = createAnimationFromFiles(leftRunFrames, GameConfig::Animation::RUN_FRAME_DELAY);
+        if (runLeftAnim) {
+            _animations["run_left"] = runLeftAnim;
+            runLeftAnim->retain();
+            log("Created left run animation with %d frames", (int)leftRunFrames.size());
+        }
+        else {
+            log("ERROR: Failed to create left run animation");
+        }
+    }
+
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½Ò»Ö¡ï¿½ï¿½
+    if (!rightRunFrames.empty()) {
+        std::vector<std::string> idleRightFrames;
+        idleRightFrames.push_back(rightRunFrames[0]);
+        cocos2d::Animation* idleRightAnim = createAnimationFromFiles(idleRightFrames, 1.0f);
+        if (idleRightAnim) {
+            _animations["idle_right"] = idleRightAnim;
+            idleRightAnim->retain();
+        }
+    }
+
+    if (!leftRunFrames.empty()) {
+        std::vector<std::string> idleLeftFrames;
+        idleLeftFrames.push_back(leftRunFrames[0]);
+        cocos2d::Animation* idleLeftAnim = createAnimationFromFiles(idleLeftFrames, 1.0f);
+        if (idleLeftAnim) {
+            _animations["idle_left"] = idleLeftAnim;
+            idleLeftAnim->retain();
+        }
+    }
+}
+
+cocos2d::Animation* Player::createAnimationFromFiles(const std::vector<std::string>& frames, float delay) {
+    if (frames.empty()) {
+        log("Warning: No frames provided for animation");
+        return nullptr;
+    }
+
+    auto animation = Animation::create();
+    int loadedFrames = 0;
+
+    for (const auto& frameName : frames) {
+        // æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+        if (!FileUtils::getInstance()->isFileExist(frameName)) {
+            log("File not found: %s", frameName.c_str());
+            continue;
+        }
+
+        // ä½¿ç”¨ SpriteFrameCache åŠ è½½ç²¾çµå¸§
+        SpriteFrame* spriteFrame = nullptr;
+
+        // é¦–å…ˆå°è¯•ä»ç¼“å­˜è·å–
+        spriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(frameName);
+
+        // å¦‚æœç¼“å­˜ä¸­æ²¡æœ‰ï¼Œåˆ™ä»æ–‡ä»¶åŠ è½½
+        if (!spriteFrame) {
+            // ä½¿ç”¨æ­£ç¡®çš„çº¹ç†åŠ è½½æ–¹å¼
+            auto texture = Director::getInstance()->getTextureCache()->addImage(frameName);
+            if (texture) {
+                // è·å–çº¹ç†çš„å®é™…å¤§å°
+                auto textureSize = texture->getContentSize();
+                // åˆ›å»ºåŒ…å«æ•´ä¸ªçº¹ç†çš„ç²¾çµå¸§
+                spriteFrame = SpriteFrame::createWithTexture(texture,
+                    Rect(0, 0, textureSize.width, textureSize.height));
+
+                // å°†ç²¾çµå¸§æ·»åŠ åˆ°ç¼“å­˜ä¸­
+                if (spriteFrame) {
+                    SpriteFrameCache::getInstance()->addSpriteFrame(spriteFrame, frameName);
+                }
+            }
+        }
+
+        if (spriteFrame && spriteFrame->getTexture()) {
+            animation->addSpriteFrame(spriteFrame);
+            loadedFrames++;
+            log("Successfully loaded frame: %s, texture size: %f x %f",
+                frameName.c_str(),
+                spriteFrame->getTexture()->getContentSize().width,
+                spriteFrame->getTexture()->getContentSize().height);
+        }
+        else {
+            log("Failed to create sprite frame for: %s", frameName.c_str());
+        }
+    }
+
+    if (loadedFrames == 0) {
+        log("ERROR: No frames loaded for animation");
+        return nullptr;
+    }
+
+    log("Loaded %d frames for animation", loadedFrames);
+    animation->setDelayPerUnit(delay);
+    animation->setRestoreOriginalFrame(false); // è®¾ç½®ä¸º falseï¼Œé¿å…åŠ¨ç”»ç»“æŸåæ¢å¤ç¬¬ä¸€å¸§
+
+    return animation;
+}
+
+// Player.cpp - ï¿½ï¿½È«ï¿½Ş¸ï¿½ init ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 bool Player::init(const std::string& spriteFile) {
     log("=== Player init ===");
 
-    // ¸üĞÂÂ·¾¶¼ì²é£¬¸ù¾İÄúµÄÊµ¼ÊÂ·¾¶
     auto fileUtils = FileUtils::getInstance();
     std::string playerFile = "icey-run-to-right-1.png";
 
@@ -26,18 +208,18 @@ bool Player::init(const std::string& spriteFile) {
     if (!fileUtils->isFileExist(playerFile)) {
         log("ERROR: Player file not found: %s", playerFile.c_str());
 
-        // ³¢ÊÔÆäËûÂ·¾¶ - ¸ù¾İÄúµÄÊµ¼ÊÄ¿Â¼½á¹¹µ÷Õû
         std::vector<std::string> possiblePaths = {
             "icey-run-to-right-1.png",
             "Resources/icey-run-to-right-1.png",
             "Resources/images/icey-run-to-right-1.png",
             "Resources/images/character/icey-run-to-right-1.png",
-            "Resources/images/characters/player/icey-run-to-right-1.png",  // ĞÂÔö
+            "Resources/images/characters/player/icey-run-to-right-1.png",
             "images/icey-run-to-right-1.png",
             "images/character/icey-run-to-right-1.png",
-            "images/characters/player/icey-run-to-right-1.png",           // ĞÂÔö
+            "images/characters/player/icey-run-to-right-1.png",
             "../Resources/icey-run-to-right-1.png"
         };
+
         bool found = false;
         for (const auto& path : possiblePaths) {
             if (fileUtils->isFileExist(path)) {
@@ -48,41 +230,29 @@ bool Player::init(const std::string& spriteFile) {
             }
         }
 
-        if (!found)
-        {
+        if (!found) {
             log("ERROR: Could not find player sprite anywhere!");
-            // Êä³öËùÓĞËÑË÷Â·¾¶
-            auto searchPaths = fileUtils->getSearchPaths();
-            log("Current search paths:");
-            for (const auto& path : searchPaths) {
-                log("  - %s", path.c_str());
-            }
-            // ´´½¨Ò»¸ö¼òµ¥µÄ¾ØĞÎ×÷ÎªÍæ¼Ò
             if (!Sprite::init()) {
                 return false;
             }
             this->setTextureRect(Rect(0, 0, 50, 100));
             this->setColor(Color3B::GREEN);
 
-            // ¼ÌĞø³õÊ¼»¯ÆäËû±äÁ¿
             _currentState = PlayerState::IDLE;
             _velocity = Vec2::ZERO;
             _isMovingLeft = false;
             _isMovingRight = false;
             _facingRight = true;
             _moveSpeed = 400.0f;
+            _currentAnimationKey = "";
 
-            // ÉèÖÃÃªµã
             this->setAnchorPoint(Vec2(0.5f, 0.5f));
-
-            // µ÷¶È¸üĞÂ
             this->scheduleUpdate();
 
             return true;
         }
     }
 
-    // Ê¹ÓÃµÚÒ»Ö¡×÷Îª³õÊ¼¾«Áé
     if (!Sprite::initWithFile(playerFile)) {
         log("ERROR: initWithFile failed for: %s", playerFile.c_str());
         return false;
@@ -90,179 +260,31 @@ bool Player::init(const std::string& spriteFile) {
 
     log("Player sprite loaded successfully, size: %f x %f",
         this->getContentSize().width, this->getContentSize().height);
-  
-    
+
     _currentState = PlayerState::IDLE;
     _velocity = Vec2::ZERO;
     _isMovingLeft = false;
     _isMovingRight = false;
-    _facingRight = true; 
+    _facingRight = true;
     _moveSpeed = GameConfig::PLAYER_SPEED;
+    _currentAnimationKey = "";
 
-    // ’MÀë•[ Z’Y‚m
-    auto body = PhysicsBody::createBox(this->getContentSize());
-    body->setGravityEnable(true);
-    body->setDynamic(true);
-    body->setRotationEnable(false);
-    body->setCollisionBitmask(0x01); 
-    body->setContactTestBitmask(0x02); 
-    this->setPhysicsBody(body);
+    // ï¿½ï¿½È«ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å£¬Ê¹ï¿½ï¿½Ö±ï¿½ï¿½Î»ï¿½Ã¿ï¿½ï¿½ï¿½
 
-    // ’MÀë°­İÇî£ÛãÎÂ
     this->setAnchorPoint(Vec2(0.5f, 0.5f));
 
-    // Â¥‹Cˆ~ô¬ĞÛÚQ
     loadAnimations();
 
-    // ñû½öÔØÚë
     this->scheduleUpdate();
 
     return true;
 }
 
-void Player::loadAnimations() {
-    log("=== Player loadAnimations ===");
 
-    // ÏòÓÒÅÜ¶¯¶¯»­£¨1-18Ö¡£©
-    std::vector<std::string> rightRunFrames;
-    for (int i = 1; i <= 18; i++) {
-        // ¸üĞÂÂ·¾¶ÁĞ±í
-        std::vector<std::string> possiblePaths = {
-            StringUtils::format("icey-run-to-right-%d.png", i),
-            StringUtils::format("images/character/icey-run-to-right-%d.png", i),
-            StringUtils::format("images/characters/player/icey-run-to-right-%d.png", i),  // ĞÂÔö
-            StringUtils::format("Resources/images/character/icey-run-to-right-%d.png", i),
-            StringUtils::format("Resources/images/characters/player/icey-run-to-right-%d.png", i),  // ĞÂÔö
-            StringUtils::format("character/icey-run-to-right-%d.png", i),
-            StringUtils::format("characters/player/icey-run-to-right-%d.png", i)  // ĞÂÔö
-        };
-
-        std::string foundPath = "";
-        for (const auto& path : possiblePaths) {
-            if (FileUtils::getInstance()->isFileExist(path)) {
-                foundPath = path;
-                break;
-            }
-        }
-
-        if (!foundPath.empty()) {
-            rightRunFrames.push_back(foundPath);
-            log("Found right run frame %d at: %s", i, foundPath.c_str());
-        }
-        else {
-            log("WARNING: Could not find right run frame %d", i);
-        }
-    }
-
-    // Ïò×óÅÜ¶¯¶¯»­£¨1-19Ö¡£©
-    std::vector<std::string> leftRunFrames;
-    for (int i = 1; i <= 19; i++) {
-        // ¸üĞÂÂ·¾¶ÁĞ±í
-        std::vector<std::string> possiblePaths = {
-            StringUtils::format("icey-run-to-left-%d.png", i),
-            StringUtils::format("images/character/icey-run-to-left-%d.png", i),
-            StringUtils::format("images/characters/player/icey-run-to-left-%d.png", i),  // ĞÂÔö
-            StringUtils::format("Resources/images/character/icey-run-to-left-%d.png", i),
-            StringUtils::format("Resources/images/characters/player/icey-run-to-left-%d.png", i),  // ĞÂÔö
-            StringUtils::format("character/icey-run-to-left-%d.png", i),
-            StringUtils::format("characters/player/icey-run-to-left-%d.png", i)  // ĞÂÔö
-        };
-
-        std::string foundPath = "";
-        for (const auto& path : possiblePaths) {
-            if (FileUtils::getInstance()->isFileExist(path)) {
-                foundPath = path;
-                break;
-            }
-        }
-
-        if (!foundPath.empty()) {
-            leftRunFrames.push_back(foundPath);
-            log("Found left run frame %d at: %s", i, foundPath.c_str());
-        }
-        else {
-            log("WARNING: Could not find left run frame %d", i);
-        }
-    }
-
-    // ´´½¨¶¯»­²¢»º´æ
-    cocos2d::Animation* runRightAnim = createAnimationFromFiles(rightRunFrames, GameConfig::Animation::RUN_FRAME_DELAY);
-    cocos2d::Animation* runLeftAnim = createAnimationFromFiles(leftRunFrames, GameConfig::Animation::RUN_FRAME_DELAY);
-
-    // ´´½¨´ı»ú¶¯»­£¨Ê¹ÓÃµÚÒ»Ö¡×÷Îª´ı»ú£©
-    std::vector<std::string> idleRightFrames;
-    if (!rightRunFrames.empty()) {
-        idleRightFrames.push_back(rightRunFrames[0]);
-    }
-    cocos2d::Animation* idleRightAnim = createAnimationFromFiles(idleRightFrames, 1.0f);
-
-    std::vector<std::string> idleLeftFrames;
-    if (!leftRunFrames.empty()) {
-        idleLeftFrames.push_back(leftRunFrames[0]);
-    }
-    cocos2d::Animation* idleLeftAnim = createAnimationFromFiles(idleLeftFrames, 1.0f);
-
-    // ½«¶¯»­Ìí¼Óµ½»º´æ
-    if (runRightAnim) {
-        _animations["run_right"] = runRightAnim;
-        runRightAnim->retain();
-        log("Right run animation created with %d frames", (int)rightRunFrames.size());
-    }
-
-    if (runLeftAnim) {
-        _animations["run_left"] = runLeftAnim;
-        runLeftAnim->retain();
-        log("Left run animation created with %d frames", (int)leftRunFrames.size());
-    }
-
-    if (idleRightAnim) {
-        _animations["idle_right"] = idleRightAnim;
-        idleRightAnim->retain();
-    }
-
-    if (idleLeftAnim) {
-        _animations["idle_left"] = idleLeftAnim;
-        idleLeftAnim->retain();
-    }
-
-    // ÉèÖÃ³õÊ¼×´Ì¬ÎªÏòÓÒ´ı»ú
-    this->setFlippedX(false);
-}
-
-cocos2d::Animation* Player::createAnimationFromFiles(const std::vector<std::string>& frames, float delay) {
-    auto animation = Animation::create();
-
-    for (const auto& frameName : frames) {
-        // ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
-        if (FileUtils::getInstance()->isFileExist(frameName)) {
-            // ´´½¨¾«ÁéÖ¡
-            auto spriteFrame = SpriteFrame::create(frameName, Rect(0, 0, 0, 0));
-            if (spriteFrame) {
-                animation->addSpriteFrame(spriteFrame);
-            }
-            else {
-                log("Failed to create sprite frame: %s", frameName.c_str());
-            }
-        }
-        else {
-            log("File not found: %s", frameName.c_str());
-        }
-    }
-
-    if (animation->getFrames().empty()) {
-        log("Warning: No frames loaded for animation");
-        return nullptr;
-    }
-
-    animation->setDelayPerUnit(delay);
-    animation->setRestoreOriginalFrame(false); // ²»»Ö¸´Ô­Ê¼Ö¡£¬±£³Ö×îºóÒ»Ö¡
-
-    return animation;
-}
-
-// Player.cpp - ĞŞ¸Ä update º¯Êı
+// Player.cpp - ï¿½Ş¸ï¿½ update ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ö±ï¿½ï¿½Î»ï¿½Ã¿ï¿½ï¿½ï¿½
 void Player::update(float delta) {
-    // ´¦ÀíÒÆ¶¯
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     if (_isMovingLeft) {
         moveLeft(delta);
     }
@@ -273,105 +295,171 @@ void Player::update(float delta) {
         stopMoving();
     }
 
-    // ¸üĞÂÎ»ÖÃ - Ê¹ÓÃÎïÀíÒıÇæ»òÕßÖ±½ÓÉèÖÃÎ»ÖÃ
-    auto physicsBody = this->getPhysicsBody();
-    if (physicsBody) {
-        // ÉèÖÃËÙ¶ÈÊ±±£³ÖYÖáËÙ¶ÈÎª0£¨·ÀÖ¹ÖØÁ¦Ó°Ïì£©
-        _velocity.y = 0;
-        physicsBody->setVelocity(_velocity);
+    // Ö±ï¿½Ó¸ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    auto currentPos = this->getPosition();
+    float newX = currentPos.x + _velocity.x * delta;
+    float newY = currentPos.y + _velocity.y * delta;
 
-        // ±£³Ö½ÇÉ«ÔÚµØÃæÉÏ
-        auto pos = this->getPosition();
-        if (pos.y < 100) { // µØÃæ¸ß¶È
-            this->setPositionY(100);
-            physicsBody->setVelocity(Vec2(_velocity.x, 0));
-        }
-    }
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½İ³ï¿½ï¿½ï¿½ï¿½ß½ç£©
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    if (newX < 0) newX = 0;
+    if (newX > visibleSize.width) newX = visibleSize.width;
+
+    // ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½Î»ï¿½Ã²ï¿½ï¿½ï¿½
+    newY = currentPos.y;
+
+    this->setPosition(Vec2(newX, newY));
 }
 
-// Player.cpp - ¸Ä½øÒÆ¶¯º¯Êı
+// Player.cpp - ä¿®æ”¹ moveLeft å’Œ moveRight å‡½æ•°
 void Player::moveLeft(float delta) {
+    bool wasFacingRight = _facingRight;
     _velocity.x = -_moveSpeed;
-    _facingRight = false;  // È·±£ÃæÏò·½ÏòÕıÈ·
-    if (_currentState != PlayerState::RUNNING) {
+    _facingRight = false; // å‘å·¦ç§»åŠ¨ï¼Œé¢å‘å·¦
+
+    // å¦‚æœçŠ¶æ€ä¸æ˜¯RUNNINGï¼Œæˆ–è€…æ–¹å‘æ”¹å˜äº†ï¼Œéƒ½éœ€è¦æ›´æ–°åŠ¨ç”»
+    if (_currentState != PlayerState::RUNNING || wasFacingRight != _facingRight) {
         setCurrentState(PlayerState::RUNNING);
     }
-    this->setFlippedX(true);  // Ïò×ó·­×ª
+    // æ³¨æ„ï¼šä¸è¦è®¾ç½®setFlippedX(true)ï¼Œå› ä¸ºæˆ‘ä»¬ä½¿ç”¨ä¸“é—¨çš„å‘å·¦åŠ¨ç”»
 }
 
 void Player::moveRight(float delta) {
+    bool wasFacingRight = _facingRight;
     _velocity.x = _moveSpeed;
-    _facingRight = true;   // È·±£ÃæÏò·½ÏòÕıÈ·
-    if (_currentState != PlayerState::RUNNING) {
+    _facingRight = true; // å‘å³ç§»åŠ¨ï¼Œé¢å‘å³
+
+    // å¦‚æœçŠ¶æ€ä¸æ˜¯RUNNINGï¼Œæˆ–è€…æ–¹å‘æ”¹å˜äº†ï¼Œéƒ½éœ€è¦æ›´æ–°åŠ¨ç”»
+    if (_currentState != PlayerState::RUNNING || wasFacingRight != _facingRight) {
         setCurrentState(PlayerState::RUNNING);
     }
-    this->setFlippedX(false);  // ²»·­×ª£¨ÏòÓÒ£©
+    // æ³¨æ„ï¼šä¸è¦è®¾ç½®setFlippedX(false)ï¼Œå› ä¸ºæˆ‘ä»¬ä½¿ç”¨ä¸“é—¨çš„å‘å³åŠ¨ç”»
 }
 
-// Player.cpp - ¸Ä½øÍ£Ö¹ÒÆ¶¯º¯Êı
 void Player::stopMoving() {
     _velocity.x = 0;
-    _velocity.y = 0;
     if (_currentState == PlayerState::RUNNING) {
         setCurrentState(PlayerState::IDLE);
     }
 }
-// Player.cpp - ĞŞ¸´¶¯»­²¥·ÅÂß¼­
+// Player.cpp - ä¿®æ”¹çŠ¶æ€è®¾ç½®é€»è¾‘
+// Player.cpp - ä¿®æ”¹ setCurrentState å‡½æ•°
 void Player::setCurrentState(PlayerState state) {
-    if (_currentState != state) {
+    bool stateChanged = (_currentState != state);
+    bool needUpdateAnimation = false;
+    
+    // ç¡®å®šéœ€è¦æ’­æ”¾çš„åŠ¨ç”»é”®
+    std::string targetAnimationKey = "";
+    if (state == PlayerState::RUNNING) {
+        if (_velocity.x > 0 || _facingRight) {
+            targetAnimationKey = "run_right";
+        } else {
+            targetAnimationKey = "run_left";
+        }
+        // å¦‚æœçŠ¶æ€æ”¹å˜ï¼Œæˆ–è€…åŠ¨ç”»é”®æ”¹å˜ï¼Œéƒ½éœ€è¦æ›´æ–°åŠ¨ç”»
+        needUpdateAnimation = stateChanged || (_currentAnimationKey != targetAnimationKey);
+    } else if (state == PlayerState::IDLE) {
+        needUpdateAnimation = stateChanged;
+    } else {
+        needUpdateAnimation = stateChanged;
+    }
+    
+    if (needUpdateAnimation) {
         _currentState = state;
-
-        // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
+        
+        // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
         this->stopAllActions();
-
-        // ¸ù¾İ×´Ì¬²¥·Å¶¯»­
+        
+        // æ ¹æ®çŠ¶æ€æ’­æ”¾åŠ¨ç”»
         switch (_currentState) {
         case PlayerState::IDLE:
         {
-            // ¸ù¾İÃæÏò·½Ïò²¥·Å´ı»ú¶¯»­
+            // å¾…æœºçŠ¶æ€æ˜¾ç¤ºç¬¬ä¸€å¸§
             if (_facingRight) {
-                auto it = _animations.find("run_right");
-                if (it != _animations.end()) {
-                    // È¡µÚÒ»Ö¡×÷Îª´ı»ú
+                auto it = _animations.find("idle_right");
+                if (it != _animations.end() && it->second->getFrames().size() > 0) {
                     auto spriteFrame = it->second->getFrames().front()->getSpriteFrame();
                     this->setSpriteFrame(spriteFrame);
+                    this->setFlippedX(false); // é¢å‘å³ï¼Œä¸ç¿»è½¬
+                    log("Set idle right frame");
+                }
+                else {
+                    // å¦‚æœidleåŠ¨ç”»ä¸å­˜åœ¨ï¼Œä½¿ç”¨ç¬¬ä¸€å¸§
+                    it = _animations.find("run_right");
+                    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+                        auto spriteFrame = it->second->getFrames().front()->getSpriteFrame();
+                        this->setSpriteFrame(spriteFrame);
+                        this->setFlippedX(false); // é¢å‘å³ï¼Œä¸ç¿»è½¬
+                        log("Using run right first frame for idle");
+                    }
                 }
             }
             else {
-                auto it = _animations.find("run_left");
-                if (it != _animations.end()) {
+                auto it = _animations.find("idle_left");
+                if (it != _animations.end() && it->second->getFrames().size() > 0) {
                     auto spriteFrame = it->second->getFrames().front()->getSpriteFrame();
                     this->setSpriteFrame(spriteFrame);
+                    this->setFlippedX(false); // é¢å‘å·¦ï¼Œä¹Ÿä¸ç¿»è½¬
+                    log("Set idle left frame");
+                }
+                else {
+                    it = _animations.find("run_left");
+                    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+                        auto spriteFrame = it->second->getFrames().front()->getSpriteFrame();
+                        this->setSpriteFrame(spriteFrame);
+                        this->setFlippedX(false); // é¢å‘å·¦ï¼Œä¹Ÿä¸ç¿»è½¬
+                        log("Using run left first frame for idle");
+                    }
                 }
             }
+            _currentAnimationKey = "";
         }
         break;
 
+        // Player.cpp - ä¿®æ”¹ setCurrentState å‡½æ•°ä¸­çš„åŠ¨ç”»æ’­æ”¾éƒ¨åˆ†
         case PlayerState::RUNNING:
         {
-            // ²¥·ÅÅÜ¶¯¶¯»­
+            // æ’­æ”¾è·‘åŠ¨åŠ¨ç”»
             std::string animationKey;
-            if (_velocity.x > 0) { // ÏòÓÒÒÆ¶¯
+            if (_velocity.x > 0) { // é€Ÿåº¦ä¸ºæ­£ï¼Œå‘å³ç§»åŠ¨
                 animationKey = "run_right";
                 _facingRight = true;
-                this->setFlippedX(false);
+                this->setFlippedX(false); // ä¸ç¿»è½¬ï¼Œä½¿ç”¨å‘å³è·‘çš„åŠ¨ç”»
             }
-            else { // Ïò×óÒÆ¶¯
+            else if (_velocity.x < 0) { // é€Ÿåº¦ä¸ºè´Ÿï¼Œå‘å·¦ç§»åŠ¨
                 animationKey = "run_left";
                 _facingRight = false;
-                this->setFlippedX(true);
+                this->setFlippedX(false); // ä¸ç¿»è½¬ï¼Œä½¿ç”¨å‘å·¦è·‘çš„åŠ¨ç”»
+            }
+            else {
+                // å¦‚æœé€Ÿåº¦ä¸º0ï¼Œæ ¹æ®é¢å‘æ–¹å‘å†³å®šåŠ¨ç”»
+                if (_facingRight) {
+                    animationKey = "run_right";
+                    this->setFlippedX(false);
+                }
+                else {
+                    animationKey = "run_left";
+                    this->setFlippedX(false);
+                }
             }
 
+            _currentAnimationKey = animationKey;
+
             auto it = _animations.find(animationKey);
-            if (it != _animations.end()) {
+            if (it != _animations.end() && it->second->getFrames().size() > 0) {
                 auto animate = Animate::create(it->second);
                 this->runAction(RepeatForever::create(animate));
+                log("Playing %s animation with %d frames",
+                    animationKey.c_str(), (int)it->second->getFrames().size());
+            }
+            else {
+                log("ERROR: Animation not found or empty: %s", animationKey.c_str());
             }
         }
         break;
 
         default:
-            break;
+        break;
         }
     }
 }
@@ -395,19 +483,19 @@ void Player::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode) {
         _isMovingRight = false;
     }
 
-    // Èç¹û×óÓÒ¼ü¶¼ÊÍ·ÅÁË£¬Í£Ö¹ÒÆ¶¯
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¼ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ë£ï¿½Í£Ö¹ï¿½Æ¶ï¿½
     if (!_isMovingLeft && !_isMovingRight) {
         stopMoving();
     }
 }
 
 void Player::setupAnimations() {
-    // ÕâÀï¿ÉÒÔ³õÊ¼»¯¸÷ÖÖ¶¯»­
-    // Ä¿Ç°ÎÒÃÇ»áÔÚÔËĞĞÊ±´´½¨ÅÜ¶¯¶¯»­
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½
+    // Ä¿Ç°ï¿½ï¿½ï¿½Ç»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
 Player::~Player() {
-    // ÊÍ·ÅËùÓĞ»º´æµÄ¶¯»­
+    // ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½
     for (auto& pair : _animations) {
         CC_SAFE_RELEASE(pair.second);
     }

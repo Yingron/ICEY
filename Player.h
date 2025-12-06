@@ -1,5 +1,5 @@
+// Player.h - ï¿½ï¿½ï¿½Óµï¿½ï¿½Ô·ï¿½ï¿½ï¿½
 #pragma once
-// Player.h
 #ifndef PLAYER_H
 #define PLAYER_H
 
@@ -8,45 +8,42 @@
 
 class Player : public cocos2d::Sprite {
 public:
-    // ´´½¨º¯Êı
     static Player* create(const std::string& spriteFile);
-
-    // ³õÊ¼»¯
     virtual bool init(const std::string& spriteFile);
-
-    // Îö¹¹º¯Êı
     virtual ~Player();
 
-    // ¸üĞÂ
     void update(float delta);
 
-    // ÒÆ¶¯¿ØÖÆ
+    // ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½
     void moveLeft(float delta);
     void moveRight(float delta);
     void stopMoving();
 
-    // ×´Ì¬¹ÜÀí
+    // ×´Ì¬ï¿½ï¿½È¡
     PlayerState getCurrentState() const { return _currentState; }
     void setCurrentState(PlayerState state);
 
-    // ÊäÈë´¦Àí
+    // ï¿½ï¿½ï¿½ë´¦ï¿½ï¿½
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode);
     void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode);
+
+    // ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½
+    cocos2d::Vec2 getCurrentVelocity() const { return _velocity; }
 
 private:
     PlayerState _currentState;
     cocos2d::Vec2 _velocity;
     bool _isMovingLeft;
     bool _isMovingRight;
-    bool _facingRight;  // ¼ÇÂ¼ÃæÏò·½Ïò
+    bool _facingRight;
     float _moveSpeed;
+    std::string _currentAnimationKey;  // è·Ÿè¸ªå½“å‰æ’­æ”¾çš„åŠ¨ç”»é”®
 
-    // ¶¯»­Ïà¹Ø
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     void setupAnimations();
     void loadAnimations();
     cocos2d::Animation* createAnimationFromFiles(const std::vector<std::string>& frames, float delay);
 
-    // ¶¯»­»º´æ
     std::unordered_map<std::string, cocos2d::Animation*> _animations;
 };
 

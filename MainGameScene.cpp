@@ -7,9 +7,9 @@ USING_NS_CC;
 
 // 添加缺失的 createScene() 函数
 Scene* MainGameScene::createScene() {
-    auto scene = Scene::createWithPhysics();
-    scene->getPhysicsWorld()->setGravity(Vec2(0, -GameConfig::GRAVITY));
-    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+    // 创建普通场景，而不是物理场景
+    auto scene = Scene::create();
+    // 移除物理世界设置
 
     auto layer = MainGameScene::create();
     scene->addChild(layer);
@@ -17,58 +17,37 @@ Scene* MainGameScene::createScene() {
     return scene;
 }
 
-// MainGameScene.cpp - 确保地面位置正确
+// MainGameScene.cpp - 在 initPlayer 后添加调试信息
+// MainGameScene.cpp - 修改 initPlayer 函数
 void MainGameScene::initPlayer() {
     log("=== initPlayer ===");
 
     // 创建玩家
     _player = Player::create("icey-run-to-right-1.png");
     if (_player) {
-        auto visibleSize = Director::getInstance()->getVisibleSize();
-        log("Window size for player placement: %f x %f", visibleSize.width, visibleSize.height);
-
-        // 设置玩家位置（场景中央，靠近地面）
-        float groundHeight = 50.0f;
-        float playerY = groundHeight + _player->getContentSize().height / 2 * 2.0f; // 考虑缩放
-
-        _player->setPosition(Vec2(visibleSize.width / 2, playerY));
+        // 设置玩家初始位置为 (400, 200)
+        _player->setPosition(Vec2(400, 200));
 
         // 调整玩家缩放
         _player->setScale(2.0f);
 
-        // 设置玩家物理属性 - 简化版本，避免重力问题
-        auto physicsBody = PhysicsBody::createBox(Size(_player->getContentSize().width * 0.8,
-            _player->getContentSize().height * 0.8));
-        physicsBody->setDynamic(true);
-        physicsBody->setGravityEnable(false);  // 暂时禁用重力
-        physicsBody->setRotationEnable(false);
-        physicsBody->setCategoryBitmask(0x01);
-        physicsBody->setContactTestBitmask(0x02);
-        physicsBody->setCollisionBitmask(0x02);
-        _player->setPhysicsBody(physicsBody);
-
         this->addChild(_player, 1);
 
-        // 添加地面 - 确保位置正确
-        auto ground = Sprite::create();
-        ground->setTextureRect(Rect(0, 0, visibleSize.width, groundHeight));
-        ground->setColor(Color3B::GREEN);
-        ground->setPosition(Vec2(visibleSize.width / 2, groundHeight / 2));
+        // 调试：检查玩家精灵帧
+        if (_player->getSpriteFrame()) {
+            log("Player sprite frame loaded successfully");
+        }
+        else {
+            log("WARNING: Player sprite frame is null!");
+        }
 
-        auto groundBody = PhysicsBody::createBox(ground->getContentSize());
-        groundBody->setDynamic(false);
-        groundBody->setCategoryBitmask(0x02);
-        groundBody->setCollisionBitmask(0x01);
-        ground->setPhysicsBody(groundBody);
-
-        this->addChild(ground, 0);
-
-        log("Player created at position: %f, %f", visibleSize.width / 2, playerY);
+        log("Player created at position: 400, 200");
     }
     else {
         log("ERROR: Failed to create player!");
     }
 }
+
 // 添加缺失的 initInput() 函数
 void MainGameScene::initInput() {
     log("=== initInput ===");
@@ -92,6 +71,11 @@ void MainGameScene::initInput() {
 void MainGameScene::update(float delta) {
     if (_player) {
         _player->update(delta);
+
+        // 调试：显示玩家位置
+        auto pos = _player->getPosition();
+        auto state = _player->getCurrentState();
+        log("Player Pos: (%.1f, %.1f), State: %d", pos.x, pos.y, (int)state);
     }
 }
 
