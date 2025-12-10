@@ -22,6 +22,7 @@ private:
     void onStartClicked(cocos2d::Ref* sender);
     void onExitClicked(cocos2d::Ref* sender);
     void createUI();
+    //void loadSceneResources();
 };
 
 #endif // __START_SCENE_H__

@@ -40,6 +40,8 @@ public:
     // 更新接口（新增）
     void updateHealth(float health);     // 更新血量显示
     void updateSheld(int sheld);         // 更新护盾显示
+    void setMaxHealth(float health);
+    void setMaxSheld(int sheld);
     // 连击数接口（新增）
     void addCombo();                    // 增加连击数
     void resetCombo();                  // 重置连击数

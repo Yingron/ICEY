@@ -104,6 +104,33 @@ void HudLayer::createSheldBar()
     this->addChild(m_sheldBar);
 }
 
+void HudLayer::setMaxHealth(float maxHealth)
+{
+    if (m_healthBar)
+    {
+        m_healthBar->setMaxHealth(maxHealth);
+        log("HudLayer: Max health set to %.1f", maxHealth);
+    }
+    else
+    {
+        log("HudLayer: HealthBar not available when setting max health");
+    }
+}
+
+// 设置最大护盾
+void HudLayer::setMaxSheld(int maxSheld)
+{
+    if (m_sheldBar)
+    {
+        m_sheldBar->setMaxSheld(maxSheld);
+        log("HudLayer: Max shield set to %d", maxSheld);
+    }
+    else
+    {
+        log("HudLayer: SheldBar not available when setting max shield");
+    }
+}
+
 // 新增：更新血量显示
 void HudLayer::updateHealth(float health)
 {
@@ -204,12 +231,12 @@ void HudLayer::addCombo()
             m_comboLabel->enableGlow(Color4B(255, 105, 180, 255)); // 粉色辉光
 
             // 添加闪烁动画
-            /*auto blink = Sequence::create(
+            auto blink = Sequence::create(
                 FadeTo::create(0.3f, 150),
                 FadeTo::create(0.3f, 255),
                 nullptr
             );
-            m_comboLabel->runAction(RepeatForever::create(blink));*/
+            m_comboLabel->runAction(RepeatForever::create(blink));
         }
         else if (m_currentCombo >= 15)
         {

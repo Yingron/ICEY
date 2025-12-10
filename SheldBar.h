@@ -29,6 +29,8 @@ public:
     // 设置当前护盾格数
     void setSheld(int sheld);
 
+    void setMaxSheld(int maxSheld);
+
     // 获取当前护盾格数
     int getCurrentSheld() const { return m_currentSheld; }
 

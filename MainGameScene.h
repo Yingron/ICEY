@@ -20,6 +20,7 @@ public:
     void update(float delta);
 
 
+
     // 创建方法
     CREATE_FUNC(MainGameScene);
 
@@ -28,6 +29,8 @@ private:
     Player* _player;
     cocos2d::Node* _background;  // 将 Sprite* 改为 Node*
     HudLayer* _hudLayer;  // 添加 HUD 层指针
+
+
   
     // 初始化方法
     void initBackground();

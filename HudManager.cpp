@@ -102,7 +102,7 @@ void HudManager::setMaxHealth(float maxHealth)
     }
 
     // 如果需要在HudLayer中添加setMaxHealth方法
-    // instance->m_hudLayer->setMaxHealth(maxHealth);
+     instance->m_hudLayer->setMaxHealth(maxHealth);
     log("HudManager: setMaxHealth called with %.1f", maxHealth);
 }
 
@@ -118,7 +118,7 @@ void HudManager::setMaxSheld(int maxSheld)
     }
 
     // 如果需要在HudLayer中添加setMaxSheld方法
-    // instance->m_hudLayer->setMaxSheld(maxSheld);
+     instance->m_hudLayer->setMaxSheld(maxSheld);
     log("HudManager: setMaxSheld called with %d", maxSheld);
 }
 

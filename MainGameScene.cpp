@@ -4,6 +4,7 @@
 #include"HudLayer.h"
 #include "MainGameScene.h"
 #include "GameConfig.h"
+#include"PauseScene.h"
 
 USING_NS_CC;
 
@@ -18,6 +19,7 @@ Scene* MainGameScene::createScene()
     return scene;
 }
 
+
 // 初始化 HUD*********
 void MainGameScene::initHud()
 {
@@ -28,6 +30,13 @@ void MainGameScene::initHud()
     if (_hudLayer) 
     {
         // 设置暂停按钮回调
+        _hudLayer->setPauseCallback([this](Ref* sender) {
+            Director::getInstance()->pause();
+            auto pauseScene = PauseScene::createScene();
+            Director::getInstance()->pushScene(pauseScene);
+
+            log("Game paused");
+            });
 
         // 将 HUD 添加到场景中，确保在最上层显示
         this->addChild(_hudLayer, 100); // 使用较高的 z-order
@@ -114,7 +123,20 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
     if (_player) {
         _player->onKeyPressed(keyCode);
     }
-    //测试HudManager
+    
+    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//按esc暂停
+    {
+        Director::getInstance()->pause();
+        auto pauseScene = PauseScene::createScene();
+        Director::getInstance()->pushScene(pauseScene);
+
+        log("Game paused");
+        event->stopPropagation();
+        return;
+    }
+
+
+    //测试HudManager可删除
     switch (keyCode) {
         case cocos2d::EventKeyboard::KeyCode::KEY_1:
             HudManager::updateHealth(30.0f);
@@ -126,18 +148,27 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             HudManager::updateSheld(3);
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_4:
+            HudManager::updateHealth(0.0f);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_5:
             // 增加连击数
             HudManager::addCombo();
             break;
-        case cocos2d::EventKeyboard::KeyCode::KEY_5:
+        case cocos2d::EventKeyboard::KeyCode::KEY_6:
             // 重置连击数
             HudManager::resetCombo();
             break;
-        case cocos2d::EventKeyboard::KeyCode::KEY_6:
+        case cocos2d::EventKeyboard::KeyCode::KEY_7:
             // 设置特定连击数
             HudManager::setCombo(10);
             break;
-        case cocos2d::EventKeyboard::KeyCode::KEY_7:
+        case cocos2d::EventKeyboard::KeyCode::KEY_8:
+            HudManager::setMaxSheld(5);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_9:
+            HudManager::setMaxHealth(150.0f);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_0:
             static bool hudVisible = true;
             hudVisible = !hudVisible;
             HudManager::showHud(hudVisible);

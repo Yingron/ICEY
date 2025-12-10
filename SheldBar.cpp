@@ -200,3 +200,18 @@ void SheldBar::updateDisplay()
     std::string sheldStr = StringUtils::format("%d/%d", m_currentSheld, m_maxSheld);
     m_sheldText->setString(sheldStr);
 }
+
+void SheldBar::setMaxSheld(int maxSheld)
+{
+    if (maxSheld <= 0) return;
+
+    m_maxSheld = maxSheld;
+
+    // ¸üÐÂÏÔÊ¾
+    if (m_currentSheld > m_maxSheld)
+    {
+        m_currentSheld = m_maxSheld;
+    }
+
+    updateDisplay();
+}

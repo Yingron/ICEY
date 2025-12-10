@@ -20,7 +20,8 @@ public:
     virtual bool init(float maxHealth);
 
     void setHealth(float health);
-    void updateColorByHealth(float percent);
+    void setMaxHealth(float maxHealth);
+    //void updateColorByHealth(float percent);
     void updateDisplay();
     
 

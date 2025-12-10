@@ -129,14 +129,14 @@ void HealthBar::updateDisplay()
     m_healthBar->setPercent(percent);
 
     // 根据血量变化颜色
-    updateColorByHealth(percent);
+    //updateColorByHealth(percent);
 
     // 更新文本显示
     std::string healthStr = StringUtils::format("%.0f/%.0f", m_currentHealth, m_maxHealth);
     m_healthText->setString(healthStr);
 }
 
-// 根据血量百分比更新血条颜色
+/*// 根据血量百分比更新血条颜色(有点丑先注释掉了)
 void HealthBar::updateColorByHealth(float percent)
 {
     Color3B color;
@@ -158,7 +158,23 @@ void HealthBar::updateColorByHealth(float percent)
     }
 
     m_healthBar->setColor(color);
+}*/
+
+void HealthBar::setMaxHealth(float maxHealth)
+{
+    if (maxHealth <= 0) return;
+
+    m_maxHealth = maxHealth;
+
+    // 更新显示
+    if (m_currentHealth > m_maxHealth)
+    {
+        m_currentHealth = m_maxHealth;
+    }
+
+    updateDisplay();
 }
+
 
 // 可选：添加动画效果的血量变化
 /*void HealthBar::setHealthWithAnimation(float health, float duration)
