@@ -126,10 +126,23 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             HudManager::updateSheld(3);
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_4:
+            // 增加连击数
+            HudManager::addCombo();
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_5:
+            // 重置连击数
+            HudManager::resetCombo();
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_6:
+            // 设置特定连击数
+            HudManager::setCombo(10);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_7:
             static bool hudVisible = true;
             hudVisible = !hudVisible;
             HudManager::showHud(hudVisible);
             break;
+        
     }
 }
 
