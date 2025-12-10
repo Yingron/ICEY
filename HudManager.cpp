@@ -58,7 +58,7 @@ void HudManager::updateHealth(float health)
     // 调用HudLayer的更新方法（需要HudLayer中有这些方法）
     if (auto healthBar = instance->m_hudLayer->getHealthBar())
     {
-        healthBar->setHealth(health);
+        healthBar->setHealthWithAnimation(health,0.5);
         log("HudManager: Updated health to %.1f", health);
     }
     else

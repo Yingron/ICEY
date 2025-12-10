@@ -177,36 +177,63 @@ void HealthBar::setMaxHealth(float maxHealth)
 
 
 // 可选：添加动画效果的血量变化
-/*void HealthBar::setHealthWithAnimation(float health, float duration)
+void HealthBar::setHealthWithAnimation(float targetHealth, float duration)
 {
     if (duration <= 0)
     {
-        setHealth(health);
+        setHealth(targetHealth);
         return;
     }
 
     // 停止之前的动画
+    this->unschedule("health_animation_update");
+    m_healthBar->stopAllActions();
     this->stopAllActions();
 
-    // 计算需要变化的总血量
-    float deltaHealth = health - m_currentHealth;
+    // 计算起始和结束百分比
+    float startHealth = m_currentHealth;
 
-    // 创建动作序列
-    auto updateAction = CallFunc::create([this, health]() {
-        setHealth(health);
-        });
+    // 使用 clamp 确保血量在合理范围内
+    float endHealth = targetHealth;
+    if (endHealth < 0) endHealth = 0;
+    if (endHealth > m_maxHealth) endHealth = m_maxHealth;
 
-    // 如果希望平滑过渡，可以使用进度动画
-    auto progressTo = ProgressTo::create(duration, (health / m_maxHealth) * 100);
-    auto updateProgress = CallFunc::create([this, progressTo]() {
-        m_healthBar->runAction(progressTo);
-        });
+    // 计算百分比
+    float startPercent = (startHealth / m_maxHealth) * 100;
+    float endPercent = (endHealth / m_maxHealth) * 100;
 
-    // 运行动画
-    this->runAction(Sequence::create(
-        updateProgress,
-        DelayTime::create(duration),
-        updateAction,
-        nullptr
-    ));
-}*/
+    // 创建平滑动画
+    auto progressTo = ProgressTo::create(duration, endPercent);
+    m_healthBar->runAction(progressTo);
+
+    // 使用成员变量记录动画开始时间
+    m_animationStartTime = std::chrono::steady_clock::now();
+    m_animationStartHealth = startHealth;
+    m_animationTargetHealth = endHealth;
+    m_animationDuration = duration;
+
+    // 每帧更新文本
+    this->schedule([this](float dt)
+        {
+        auto now = std::chrono::steady_clock::now();
+        float elapsedTime = std::chrono::duration<float>(now - m_animationStartTime).count();
+        float progress = MIN(elapsedTime / m_animationDuration, 1.0f);
+
+        // 线性插值计算当前血量
+        float currentHealth = m_animationStartHealth +
+            (m_animationTargetHealth - m_animationStartHealth) * progress;
+
+        // 更新显示文本
+        std::string healthStr = StringUtils::format("%.0f/%.0f", currentHealth, m_maxHealth);
+        m_healthText->setString(healthStr);
+
+        // 动画结束后更新实际血量并停止调度
+        if (progress >= 1.0f) {
+            m_currentHealth = m_animationTargetHealth;
+            this->unschedule("health_animation_update");
+
+            // 最终确保显示准确
+            updateDisplay();
+        }
+        }, "health_animation_update");
+}

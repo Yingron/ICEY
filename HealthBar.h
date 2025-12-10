@@ -15,6 +15,12 @@ private:
     float m_currentHealth;
     float m_maxHealth;
 
+    // 动画相关变量
+    std::chrono::steady_clock::time_point m_animationStartTime;
+    float m_animationStartHealth;
+    float m_animationTargetHealth;
+    float m_animationDuration;
+
 public:
     static HealthBar* create(float maxHealth);
     virtual bool init(float maxHealth);
@@ -23,6 +29,7 @@ public:
     void setMaxHealth(float maxHealth);
     //void updateColorByHealth(float percent);
     void updateDisplay();
+    void HealthBar::setHealthWithAnimation(float health, float duration);
     
 
 private:
