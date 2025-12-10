@@ -91,17 +91,63 @@ void StartScene::createUI()
 			throw std::runtime_error("背景图加载失败：" + bgPath);
 		}
 
-		//创建标题，使用系统自带的字体
-		m_titleLabel = Label::createWithTTF(u8"艾希","fonts/forui.ttf", 128);
+
+		//创建标题
+		m_titleLabel = Label::createWithTTF(u8"艾希","fonts/forui.ttf", 188);
 		if (!m_titleLabel)
 		{
 			throw std::runtime_error("标题Label创建失败");
 		}
 		m_titleLabel->setPosition(origin.x + visibleSize.width / 2,
-			origin.y + visibleSize.height * 0.7f);
-		m_titleLabel->setTextColor(Color4B::WHITE);  // 文字颜色白色
-		m_titleLabel->enableShadow(Color4B::BLACK, Size(2, -2), 2);  // 添加黑色阴影
+			origin.y + visibleSize.height * 0.8f);
+		m_titleLabel->setTextColor(Color4B(176, 224, 230, 255));  // 蓝紫色
+		m_titleLabel->enableShadow(Color4B::WHITE, Size(2, -2), 2);  // 白色阴影
+		m_titleLabel->enableOutline(Color4B(75, 0, 130, 255), 3);    // 靛蓝色描边
+		m_titleLabel->setHorizontalAlignment(TextHAlignment::CENTER);
+		m_titleLabel->setVerticalAlignment(TextVAlignment::CENTER);
 		this->addChild(m_titleLabel, 1);  // 添加到场景
+
+
+		// 创建副标题
+		m_subTitleLabel = Label::createWithTTF(u8"ICEY", "fonts/forui2.ttf", 48);
+		if (!m_subTitleLabel)
+		{
+			// 如果副标题字体不存在，使用系统字体
+			m_subTitleLabel = Label::createWithSystemFont(u8"ICEY", "Arial", 48);
+			if (!m_subTitleLabel)
+			{
+				CCLOG("副标题创建失败");
+			}
+		}
+
+		if (m_subTitleLabel)
+		{
+			// 设置副标题位置（在主标题下方）
+			m_subTitleLabel->setPosition(origin.x + visibleSize.width / 2,
+				m_titleLabel->getPositionY() - 120);  // 在主标题下方120像素
+
+			// 设置副标题颜色（比主标题浅一些的紫色）
+			m_subTitleLabel->setTextColor(Color4B(186, 85, 211, 255));  // 中兰花紫
+			m_subTitleLabel->enableShadow(Color4B::WHITE, Size(1, -1), 1);  // 白色阴影
+			m_subTitleLabel->enableGlow(Color4B(221, 160, 221, 128));       // 浅紫色发光
+			m_subTitleLabel->setHorizontalAlignment(TextHAlignment::CENTER);
+			m_subTitleLabel->setVerticalAlignment(TextVAlignment::CENTER);
+
+			this->addChild(m_subTitleLabel, 1);
+
+			// 副标题添加淡入动画
+			m_subTitleLabel->setOpacity(0);
+			auto fadeIn = FadeIn::create(1.5f);
+			auto delay = DelayTime::create(0.5f);
+			m_subTitleLabel->runAction(Sequence::create(delay, fadeIn, nullptr));
+
+			// 添加呼吸动画
+			auto scaleUp = ScaleTo::create(1.2f, 1.05f);
+			auto scaleDown = ScaleTo::create(1.2f, 0.95f);
+			auto breathSequence = Sequence::create(scaleUp, scaleDown, nullptr);
+			auto breathRepeat = RepeatForever::create(breathSequence);
+			m_subTitleLabel->runAction(breathRepeat);
+		}
 
 		//开始按钮
 
@@ -126,7 +172,7 @@ void StartScene::createUI()
 			m_startButton->addClickEventListener(CC_CALLBACK_1(StartScene::onStartClicked, this));
 
 			// 给按钮添加文字标签
-			auto startLabel = Label::createWithTTF(u8"开始游戏", "fonts/forui.ttf", 32);
+			auto startLabel = Label::createWithTTF(u8"开始游戏", "fonts/forui2.ttf", 32);
 			if (!startLabel)
 			{
 				throw std::runtime_error("开始按钮Label创建失败");
@@ -162,7 +208,7 @@ void StartScene::createUI()
 			m_exitButton->addClickEventListener(CC_CALLBACK_1(StartScene::onExitClicked, this));
 
 			// 给按钮添加文字标签
-			auto exitLabel = Label::createWithTTF(u8"退出游戏", "fonts/forui.ttf", 32);
+			auto exitLabel = Label::createWithTTF(u8"退出游戏", "fonts/forui2.ttf", 32);
 			if (!exitLabel)
 			{
 				throw std::runtime_error("退出按钮Label创建失败");

@@ -11,6 +11,7 @@ private:
     cocos2d::ui::Button* m_startButton;
     cocos2d::ui::Button* m_exitButton;
     cocos2d::Label* m_titleLabel;
+    cocos2d::Label* m_subTitleLabel;
 
 public:
     static cocos2d::Scene* createScene();
