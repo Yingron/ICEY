@@ -5,6 +5,7 @@
 
 #include "cocos2d.h"
 #include "Player.h"
+#include"HudLayer.h"
 
 class MainGameScene : public cocos2d::Scene 
 {
@@ -18,6 +19,7 @@ public:
     // 更新
     void update(float delta);
 
+
     // 创建方法
     CREATE_FUNC(MainGameScene);
 
@@ -25,11 +27,13 @@ private:
 
     Player* _player;
     cocos2d::Node* _background;  // 将 Sprite* 改为 Node*
+    HudLayer* _hudLayer;  // 添加 HUD 层指针
   
     // 初始化方法
     void initBackground();
     void initPlayer();
     void initInput();
+    void initHud();
 
     // 输入监听器
     cocos2d::EventListenerKeyboard* _keyboardListener;

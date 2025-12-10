@@ -1,20 +1,50 @@
 // MainGameScene.cpp
 // MainGameScene.cpp
+#include"HudManager.h"
+#include"HudLayer.h"
 #include "MainGameScene.h"
 #include "GameConfig.h"
 
 USING_NS_CC;
 
 // 添加缺失的 createScene() 函数
-Scene* MainGameScene::createScene() {
+Scene* MainGameScene::createScene()
+{
     // 创建普通场景，而不是物理场景
     auto scene = Scene::create();
     // 移除物理世界设置
-
     auto layer = MainGameScene::create();
     scene->addChild(layer);
-
     return scene;
+}
+
+// 初始化 HUD*********
+void MainGameScene::initHud()
+{
+    log("=== initHUD ===");
+
+    // 创建 HUD 层
+    _hudLayer = HudLayer::create();
+    if (_hudLayer) 
+    {
+        // 设置暂停按钮回调
+
+        // 将 HUD 添加到场景中，确保在最上层显示
+        this->addChild(_hudLayer, 100); // 使用较高的 z-order
+
+        // 注册到HUD管理器（新增）
+        HudManager::getInstance()->setHudLayer(_hudLayer);
+
+        // 设置初始值
+        _hudLayer->updateHealth(100.0f);  // 初始满血
+        _hudLayer->updateSheld(10);       // 初始满护盾
+
+        log("HUD Layer initialized successfully");
+    }
+    else 
+    {
+        log("ERROR: Failed to create HUD Layer!");
+    }
 }
 
 // MainGameScene.cpp - 在 initPlayer 后添加调试信息
@@ -84,6 +114,23 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
     if (_player) {
         _player->onKeyPressed(keyCode);
     }
+    //测试HudManager
+    switch (keyCode) {
+        case cocos2d::EventKeyboard::KeyCode::KEY_1:
+            HudManager::updateHealth(30.0f);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_2:
+            HudManager::updateHealth(90.0f);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_3:
+            HudManager::updateSheld(3);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_4:
+            static bool hudVisible = true;
+            hudVisible = !hudVisible;
+            HudManager::showHud(hudVisible);
+            break;
+    }
 }
 
 // 添加缺失的 onKeyReleased() 函数
@@ -123,6 +170,9 @@ bool MainGameScene::init() {
 
     // 初始化输入
     initInput();
+
+    //添加Hud界面
+    initHud();
 
     // 调度更新
     this->scheduleUpdate();
