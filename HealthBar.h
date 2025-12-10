@@ -20,14 +20,12 @@ public:
     virtual bool init(float maxHealth);
 
     void setHealth(float health);
-    void setMaxHealth(float maxHealth);
-
+    void updateColorByHealth(float percent);
     void updateDisplay();
+    
 
 private:
     void createHealthBar();
-
-    CREATE_FUNC(HealthBar);
 };
 
 #endif // __HEALTH_BAR_H__
