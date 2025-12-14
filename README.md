@@ -1,2 +1,1 @@
-# ICEY
-A 2D game
+# proj.win32
