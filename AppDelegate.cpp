@@ -84,8 +84,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if (!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        // 修改窗口大小为 1280x720
-        glview = GLViewImpl::createWithRect("ICEY Game", cocos2d::Rect(0, 0, 1280, 720));
+        // 创建全屏窗口
+        glview = GLViewImpl::createWithFullScreen("ICEY Game");
 #else
         glview = GLViewImpl::create("ICEY Game");
 #endif
@@ -98,12 +98,31 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // set FPS. the default value is 1.0/60 if you don't call this
     director->setAnimationInterval(1.0f / 60);
 
-    // Set the design resolution
-    // 使用 EXACT_FIT 或 NO_BORDER 策略
-    glview->setDesignResolutionSize(1280, 720, ResolutionPolicy::EXACT_FIT);
+    // 获取实际屏幕大小
+    auto frameSize = glview->getFrameSize();
+    log("Screen resolution: %.0f x %.0f", frameSize.width, frameSize.height);
 
-    // 或者使用 NO_BORDER（推荐）
-    // glview->setDesignResolutionSize(1280, 720, ResolutionPolicy::NO_BORDER);
+    // 设置设计分辨率
+    // 使用 NO_BORDER 策略，保持设计分辨率宽高比，填满屏幕
+    glview->setDesignResolutionSize(1280, 720, ResolutionPolicy::NO_BORDER);
+
+    // 计算内容缩放因子
+    float scaleFactor = 1.0f;
+    float designAspect = 1280.0f / 720.0f;
+    float screenAspect = frameSize.width / frameSize.height;
+
+    if (screenAspect > designAspect) {
+        // 屏幕更宽，基于高度缩放
+        scaleFactor = frameSize.height / 720.0f;
+    }
+    else {
+        // 屏幕更高，基于宽度缩放
+        scaleFactor = frameSize.width / 1280.0f;
+    }
+
+    // 设置内容缩放因子
+    director->setContentScaleFactor(scaleFactor);
+    log("Content scale factor: %.2f", scaleFactor);
 
     // 添加资源搜索路径
     auto fileUtils = FileUtils::getInstance();
@@ -113,11 +132,13 @@ bool AppDelegate::applicationDidFinishLaunching() {
     searchPaths.push_back("Resources/images");
     searchPaths.push_back("Resources/images/environment");
     searchPaths.push_back("Resources/images/environment/background");
-    searchPaths.push_back("Resources/images/characters/player");  // 注意这里是复数 characters
-    searchPaths.push_back("Resources/images/character/player");   // 保持原路径作为备用
-    searchPaths.push_back("Resources/images/character");          // 原路径
-    searchPaths.push_back("images/characters/player");            // 相对路径
-    searchPaths.push_back("images/character/player");             // 相对路径
+    searchPaths.push_back("Resources/images/characters/player");
+    searchPaths.push_back("Resources/images/character/player");
+    searchPaths.push_back("Resources/images/character");
+    searchPaths.push_back("images/characters/player");
+    searchPaths.push_back("images/character/player");
+    searchPaths.push_back("images/environment/background");  // 添加Level2背景路径
+    searchPaths.push_back("C:/aishi/test2/Resources/images/environment/background");  // Level2绝对路径
     searchPaths.push_back(".");
     fileUtils->setSearchPaths(searchPaths);
 
