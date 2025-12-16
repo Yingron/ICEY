@@ -75,7 +75,7 @@ void StartScene::createUI()
 		Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
 		//创建背景
-		std::string bgPath = /*GameConfig::TEXTURE_PATH + */"start_bg.png";
+		std::string bgPath = /*GameConfig::TEXTURE_PATH + */"images/ui/start_bg.png";
 		auto background = Sprite::create(bgPath);
 		if (background)
 		{
@@ -152,8 +152,8 @@ void StartScene::createUI()
 		//开始按钮
 
 		// 按钮2种状态的图片路径（正常/按下）
-		std::string startNormal = "ui/start&exit_btn_normal.png";
-		std::string startPressed = "ui/start&exit_btn_pressed.png";
+		std::string startNormal = "images/ui/start&exit_btn_normal.png";
+		std::string startPressed = "images/ui/start&exit_btn_pressed.png";
 
 
 
@@ -188,8 +188,8 @@ void StartScene::createUI()
 		//退出按钮
 
 		// 按钮2种状态的图片路径（正常/按下）
-		std::string exitNormal = "ui/start&exit_btn_normal.png";
-		std::string exitPressed = "ui/start&exit_btn_pressed.png";
+		std::string exitNormal = "images/ui/start&exit_btn_normal.png";
+		std::string exitPressed = "images/ui/start&exit_btn_pressed.png";
 
 
 

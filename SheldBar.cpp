@@ -56,7 +56,7 @@ bool SheldBar::init(int maxSheld)
 void SheldBar::createSheldBar()
 {
     // 护盾图标
-    m_sheldIcon = Sprite::create("sheld_icon.png");
+    m_sheldIcon = Sprite::create("images/ui/sheld_icon.png");
     if (!m_sheldIcon)
     {
         // 如果图标不存在，创建简单的盾牌形状
@@ -119,7 +119,7 @@ void SheldBar::createCells()
     // 创建每个护盾格子
     for (int i = 0; i < m_maxSheld; i++)
     {
-        Sprite* cell = Sprite::create("sheld_cell.png");
+        Sprite* cell = Sprite::create("images/ui/sheld_cell.png");
         if (!cell)
         {
             // 如果图片不存在，创建矩形格子

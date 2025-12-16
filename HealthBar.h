@@ -24,6 +24,7 @@ private:
 public:
     static HealthBar* create(float maxHealth);
     virtual bool init(float maxHealth);
+    float getCurrentHealth() const { return m_currentHealth; }
 
     void setHealth(float health);
     void setMaxHealth(float maxHealth);

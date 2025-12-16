@@ -50,7 +50,7 @@ void PauseScene::createUI()
         
 
         // 创建标题 - 使用TTF字体显示中文
-        auto titleLabel = Label::createWithTTF(u8"游戏暂停", "fonts/forui.ttf", 64);
+        auto titleLabel = Label::createWithTTF(u8"游戏暂停", "fonts/forui2.ttf", 64);
         // 如果TTF创建失败，使用备选方案
         if (!titleLabel || titleLabel->getContentSize().width <= 0) {
             titleLabel = Label::createWithSystemFont("GAME PAUSED", "", 64); // 英文备选
@@ -61,8 +61,8 @@ void PauseScene::createUI()
         titleLabel->enableShadow(Color4B::BLACK, Size(2, -2), 2);
         this->addChild(titleLabel, 1);
 
-        std::string btnNormal = "ui/start&exit_btn_normal.png";
-        std::string btnPressed = "ui/start&exit_btn_pressed.png";
+        std::string btnNormal = "images/ui/start&exit_btn_normal.png";
+        std::string btnPressed = "images/ui/start&exit_btn_pressed.png";
 
         // 继续按钮
         m_resumeButton = Button::create(btnNormal, btnPressed);
@@ -72,7 +72,7 @@ void PauseScene::createUI()
             m_resumeButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onResumeClicked, this));
 
             // 按钮文字使用TTF字体
-            auto resumeLabel = Label::createWithTTF(u8"继续游戏", "fonts/forui.ttf", 32);
+            auto resumeLabel = Label::createWithTTF(u8"继续游戏", "fonts/forui2.ttf", 32);
             if (!resumeLabel || resumeLabel->getContentSize().width <= 0) {
                 resumeLabel = Label::createWithSystemFont("RESUME", "", 32);
             }
@@ -92,7 +92,7 @@ void PauseScene::createUI()
             m_restartButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.45f));
             m_restartButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onRestartClicked, this));
 
-            auto restartLabel = Label::createWithTTF(u8"重新开始", "fonts/forui.ttf", 32);
+            auto restartLabel = Label::createWithTTF(u8"重新开始", "fonts/forui2.ttf", 32);
             if (!restartLabel || restartLabel->getContentSize().width <= 0)
             {
                 restartLabel = Label::createWithSystemFont("RESTART", "", 32);
@@ -113,7 +113,7 @@ void PauseScene::createUI()
             m_exitButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.35f));
             m_exitButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onExitClicked, this));
 
-            auto exitLabel = Label::createWithTTF(u8"返回菜单", "fonts/forui.ttf", 32);
+            auto exitLabel = Label::createWithTTF(u8"返回菜单", "fonts/forui2.ttf", 32);
             if (!exitLabel || exitLabel->getContentSize().width <= 0) {
                 exitLabel = Label::createWithSystemFont("MAIN MENU", "", 32);
             }

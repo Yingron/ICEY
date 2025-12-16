@@ -1,6 +1,7 @@
 #include "HUDLayer.h"
 #include "HealthBar.h"
 #include"SheldBar.h"
+#include "DashBar.h"
 
 using namespace cocos2d;
 using namespace ui;
@@ -24,6 +25,7 @@ bool HudLayer::init()
     createPauseButton();
     createHealthBar();
     createSheldBar();
+    createDashBar();
     createCombo();
 
     return true;
@@ -35,7 +37,7 @@ void HudLayer::createPauseButton()
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
     // 创建暂停按钮
-    m_pauseButton = Button::create("pause_button.png", "pause_button_pressed.png");
+    m_pauseButton = Button::create("images/ui/pause_button.png", "images/ui/pause_button_pressed.png");
     if (!m_pauseButton)
     {
         // 如果图片不存在，创建默认按钮
@@ -151,6 +153,7 @@ void HudLayer::updateSheld(int sheld)
     }
 }
 
+
 // 创建连击数显示***************************************
 void HudLayer::createCombo()
 {
@@ -160,7 +163,7 @@ void HudLayer::createCombo()
     m_currentCombo = 0;
 
     // ================== COMBO文本 ==================
-    m_comboTextLabel = Label::createWithTTF("COMBO", "fonts/Marker Felt.ttf", 24);
+    m_comboTextLabel = Label::createWithTTF("COMBO", "fonts/forui2.ttf", 24);
     if (!m_comboTextLabel)
     {
         m_comboTextLabel = Label::createWithSystemFont("COMBO", "Arial", 24);
@@ -182,7 +185,7 @@ void HudLayer::createCombo()
     this->addChild(m_comboTextLabel, 3);
 
     // ================== 连击数字显示 ==================
-    m_comboLabel = Label::createWithTTF("0", "fonts/Marker Felt.ttf", 36);
+    m_comboLabel = Label::createWithTTF("0", "fonts/forui2.ttf", 36);
     if (!m_comboLabel)
     {
         m_comboLabel = Label::createWithSystemFont("0", "Arial", 36);
@@ -310,5 +313,83 @@ void HudLayer::updateComboDisplay()
             m_comboLabel->setVisible(false);
             m_comboTextLabel->setVisible(false);
         }
+    }
+}
+
+
+void HudLayer::createDashBar()
+{
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 冲刺条参数：最大冲刺次数，充能时间（秒）
+    int maxDashes = 3;           // 默认3次冲刺
+    float rechargeTime = 2.0f;   // 默认2秒充能一格
+
+    m_dashBar = DashBar::create(maxDashes, rechargeTime);
+
+    if (!m_dashBar)
+    {
+        log("Failed to create dash bar!");
+        return;
+    }
+
+    // 设置冲刺条位置（屏幕底部中央）
+    m_dashBar->setPosition(Vec2(
+        visibleSize.width / 2,
+        50  // 离底部50像素
+    ));
+
+    this->addChild(m_dashBar);
+    log("Dash bar created successfully");
+}
+
+// Dash相关接口实现
+bool HudLayer::useDash()
+{
+    if (m_dashBar)
+    {
+        return m_dashBar->useDash();
+    }
+    return false;
+}
+
+void HudLayer::rechargeDash()
+{
+    if (m_dashBar)
+    {
+        m_dashBar->rechargeDash();
+    }
+}
+
+void HudLayer::rechargeAllDashes()
+{
+    if (m_dashBar)
+    {
+        m_dashBar->rechargeAll();
+    }
+}
+
+int HudLayer::getAvailableDashes() const
+{
+    if (m_dashBar)
+    {
+        return m_dashBar->getAvailableDashes();
+    }
+    return 0;
+}
+
+void HudLayer::setMaxDashes(int maxDashes)
+{
+    if (m_dashBar)
+    {
+        m_dashBar->setMaxDashes(maxDashes);
+    }
+}
+
+void HudLayer::setDashRechargeTime(float time)
+{
+    if (m_dashBar)
+    {
+        m_dashBar->setRechargeTime(time);
     }
 }

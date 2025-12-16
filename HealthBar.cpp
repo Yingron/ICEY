@@ -46,7 +46,7 @@ bool HealthBar::init(float maxHealth)
 void HealthBar::createHealthBar()
 {
     // 血条背景（灰色）
-    m_healthBarBackground = LoadingBar::create("health_bar_background.png");
+    m_healthBarBackground = LoadingBar::create("images/ui/health_bar_background.png");
     if (!m_healthBarBackground)
     {
         // 如果图片不存在，创建红色矩形作为背景
@@ -57,7 +57,7 @@ void HealthBar::createHealthBar()
     }
 
     // 血条前景（绿色，根据血量变化）
-    m_healthBar = LoadingBar::create("health_bar.png");
+    m_healthBar = LoadingBar::create("images/ui/health_bar.png");
     if (!m_healthBar)
     {
         // 如果图片不存在，创建绿色矩形作为血条

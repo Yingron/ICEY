@@ -32,7 +32,7 @@ public:
     // 检查HUD层是否可用
     bool isHudLayerAvailable() const { return m_hudLayer != nullptr; }
 
-    // === 便捷更新方法 ===
+    static float getCurrentHealth();
 
     // 更新血量
     static void updateHealth(float health);
@@ -60,6 +60,30 @@ public:
 
     // 显示/隐藏HUD
     static void showHud(bool show);
+
+    // 使用一次冲刺
+    static bool useDash();
+
+    // 恢复一次冲刺
+    static void rechargeDash();
+
+    // 立即恢复所有冲刺
+    static void rechargeAllDashes();
+
+    // 获取可用冲刺次数
+    static int getAvailableDashes();
+
+    // 设置最大冲刺次数
+    static void setMaxDashes(int maxDashes);
+
+    // 设置冲刺恢复时间
+    static void setDashRechargeTime(float time);
+
+    // 是否正在充能
+    static bool isDashRecharging();
+
+    // 获取剩余充能时间
+    static float getDashRemainingRechargeTime();
 
 private:
     // 防止拷贝
