@@ -5,15 +5,26 @@
 
 USING_NS_CC;
 
+// MainGameScene.cpp - 修改createScene函数
 Scene* MainGameScene::createScene() {
-    auto scene = Scene::create();
+    // 使用createWithPhysics创建带有物理世界的场景
+    auto scene = Scene::createWithPhysics();
     auto layer = MainGameScene::create();
     scene->addChild(layer);
+
+    // 设置物理世界参数
+    auto physicsWorld = scene->getPhysicsWorld();
+    if (physicsWorld) {
+        physicsWorld->setGravity(Vec2(0, -500.0f));
+        physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+        log("Physics world created with gravity: (0, -500)");
+    }
+
     return scene;
 }
 
 bool MainGameScene::init() {
-    if (!Scene::init()) {
+    if (!Layer::init()) {
         return false;
     }
 
@@ -51,8 +62,200 @@ bool MainGameScene::init() {
     // 调度更新
     this->scheduleUpdate();
 
+    // 初始化物品
+    initItems();
+
+    // 初始化收集UI
+    showCollectionUI();
+
     return true;
 }
+
+void MainGameScene::onEnter() {
+    Layer::onEnter();
+
+    // 直接通过父场景获取物理世界
+    auto scene = dynamic_cast<cocos2d::Scene*>(this->getParent());
+    if (scene) {
+        auto physicsWorld = scene->getPhysicsWorld();
+        if (physicsWorld) {
+            physicsWorld->setGravity(Vec2(0, -500.0f));
+            physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+            log("Physics world configured successfully");
+
+            // 设置碰撞监听器
+            auto contactListener = EventListenerPhysicsContact::create();
+            contactListener->onContactBegin = CC_CALLBACK_1(MainGameScene::onContactBegin, this);
+            _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
+            log("Physics contact listener added");
+        }
+    }
+    else {
+        log("WARNING: Physics world not available");
+    }
+}
+
+void MainGameScene::onExit() {
+    Layer::onExit();
+    // 清理代码...
+}
+
+// MainGameScene.cpp - 修复initItems函数
+void MainGameScene::initItems() {
+    // 清空现有物品
+    for (auto item : _levelItems) {
+        item->removeFromParent();
+    }
+    _levelItems.clear();
+
+    auto itemManager = ItemManager::getInstance();
+    auto currentLevel = _levelManager->getCurrentLevel();
+
+    log("Initializing items for level: %d", (int)currentLevel);
+
+    // 根据当前关卡放置物品
+    if (currentLevel == LevelManager::LevelState::LEVEL1) {
+        // 在樱花大道放置物品
+        placeItemAt("study_block", 500, 100);
+        placeItemAt("oolong_tea", 1200, 150);
+        placeItemAt("campus_card", 1800, 100);
+        placeItemAt("know_not", 2200, 120);
+    }
+    else if (currentLevel == LevelManager::LevelState::LEVEL2_1) {
+        // 在体育馆放置物品
+        placeItemAt("safety_helmet", 600, 100);
+        placeItemAt("poster", 900, 120);
+    }
+    else if (currentLevel == LevelManager::LevelState::LEVEL2_2) {
+        placeItemAt("takeout", 500, 100);
+        placeItemAt("donation_proof", 800, 120);
+    }
+    else if (currentLevel == LevelManager::LevelState::LEVEL2_3) {
+        placeItemAt("hanoi_tower", 600, 100);
+        placeItemAt("sj_larry", 900, 120);
+    }
+    else if (currentLevel == LevelManager::LevelState::LEVEL2_4) {
+        placeItemAt("code_65472", 500, 100);
+    }
+    else if (currentLevel == LevelManager::LevelState::LEVEL3_1) {
+        placeItemAt("bulletin_board", 500, 120);
+    }
+    else if (currentLevel == LevelManager::LevelState::LEVEL3_2) {
+        placeItemAt("trash_bin_1", 600, 100);
+    }
+    // 可以根据需要为其他关卡添加物品
+
+    log("Total items in level: %d", _levelItems.size());
+}
+
+// MainGameScene.cpp - 更新placeItemAt函数
+void MainGameScene::placeItemAt(const std::string& itemId, float worldX, float worldY) {
+    Item* item = ItemManager::getInstance()->createItem(itemId);
+    if (item) {
+        // 设置世界位置
+        item->setWorldPosition(worldX, worldY);
+
+        // 设置标签以便识别
+        item->setTag(1000);
+
+        // 添加到场景
+        this->addChild(item, 5);
+
+        // 添加到物品列表
+        _levelItems.push_back(item);
+
+        log("Placed item %s at (%.0f, %.0f)", itemId.c_str(), worldX, worldY);
+    }
+    else {
+        log("ERROR: Failed to create item: %s", itemId.c_str());
+    }
+}
+
+void MainGameScene::checkItemCollisions(float delta) {
+    if (!_player) return;
+
+    auto playerRect = _player->getBoundingBox();
+
+    for (auto it = _levelItems.begin(); it != _levelItems.end();) {
+        auto item = *it;
+        auto itemRect = item->getBoundingBox();
+
+        if (playerRect.intersectsRect(itemRect)) {
+            item->collect();
+            it = _levelItems.erase(it);
+
+            // 更新UI
+            updateCollectionUI();
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+// MainGameScene.cpp - 修复showCollectionUI函数
+void MainGameScene::showCollectionUI() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    _collectionLabel = Label::createWithSystemFont("物品收集: 0/13", "Arial", 20);
+    _collectionLabel->setPosition(Vec2(visibleSize.width - 120, visibleSize.height - 30));
+    _collectionLabel->setColor(Color3B::GREEN);
+    _collectionLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
+    this->addChild(_collectionLabel, 100);
+
+    // 初始更新一次UI
+    updateCollectionUI();
+}
+
+// MainGameScene.cpp - 更新updateCollectionUI函数
+void MainGameScene::updateCollectionUI() {
+    if (!_collectionLabel) return;
+
+    auto itemManager = ItemManager::getInstance();
+    int collected = itemManager->getCollectedCount();
+    int total = itemManager->getTotalItemCount();
+
+    _collectionLabel->setString(StringUtils::format("物品收集: %d/%d", collected, total));
+
+    // 收集到所有物品时显示特殊效果
+    if (collected == total) {
+        _collectionLabel->setColor(Color3B::RED);
+        _collectionLabel->stopAllActions();
+        _collectionLabel->runAction(RepeatForever::create(
+            Sequence::create(
+                ScaleTo::create(0.5f, 1.2f),
+                ScaleTo::create(0.5f, 1.0f),
+                nullptr
+            )
+        ));
+    }
+}
+
+bool MainGameScene::onContactBegin(PhysicsContact& contact) {
+    auto nodeA = contact.getShapeA()->getBody()->getNode();
+    auto nodeB = contact.getShapeB()->getBody()->getNode();
+
+    // 检查是否是玩家和物品的碰撞
+    if ((nodeA == _player && dynamic_cast<Item*>(nodeB)) ||
+        (nodeB == _player && dynamic_cast<Item*>(nodeA))) {
+
+        Item* item = dynamic_cast<Item*>(nodeA != _player ? nodeA : nodeB);
+        if (item) {
+            item->collect();
+
+            // 从_levelItems中移除
+            auto it = std::find(_levelItems.begin(), _levelItems.end(), item);
+            if (it != _levelItems.end()) {
+                _levelItems.erase(it);
+            }
+
+            updateCollectionUI();
+        }
+    }
+
+    return true;
+}
+
 
 void MainGameScene::initCamera() {
     _cameraOffsetX = 0.0f;
@@ -116,26 +319,37 @@ void MainGameScene::initBackground() {
     }
 }
 
+// MainGameScene.cpp - 修改 initPlayer 函数
 void MainGameScene::initPlayer() {
     log("=== initPlayer ===");
 
-    // 创建玩家
     _player = Player::create("icey-idle-1.png");
     if (_player) {
         auto visibleSize = Director::getInstance()->getVisibleSize();
 
-        // 设置玩家初始世界位置
-        float initialWorldX = _screenWidth * 0.1f; // 从屏幕左侧10%位置开始
-        float initialWorldY = 0.0f+100.0;               // 初始在地面
+        float initialWorldX = _screenWidth * 0.1f; 
+        float initialWorldY = 0.0f;              
+
+        // 设置玩家的物理属性
+        auto physicsBody = _player->getPhysicsBody();
+        if (physicsBody) {
+            physicsBody->setDynamic(true);
+            physicsBody->setGravityEnable(false); // 禁用物理引擎的重力，使用自定义重力
+            physicsBody->setRotationEnable(false);
+
+            // 设置碰撞掩码
+            physicsBody->setCategoryBitmask(0x01); // 玩家类别
+            physicsBody->setCollisionBitmask(0x02); // 与物品碰撞
+            physicsBody->setContactTestBitmask(0x02); // 监听与物品的接触
+        }
 
         _player->setWorldPositionX(initialWorldX);
         _player->setWorldPositionY(initialWorldY);
 
-        // 初始屏幕位置
         float screenCenterY = visibleSize.height * GameConfig::PLAYER_GROUND_Y_PERCENT;
         _player->setPosition(Vec2(_screenWidth * 0.1f, screenCenterY));
-        // 增加玩家缩放
-        _player->setScale(4.0f);
+
+        _player->setScale(2.0f);
 
         this->addChild(_player, 10);
 
@@ -165,6 +379,7 @@ void MainGameScene::initInput() {
     log("Input initialized");
 }
 
+// MainGameScene.cpp - 修复 initDebugUI 函数中的重复定义
 void MainGameScene::initDebugUI() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
@@ -186,9 +401,9 @@ void MainGameScene::initDebugUI() {
     _levelLabel->setColor(Color3B::GREEN);
     this->addChild(_levelLabel, 100);
 
-    // 创建操作提示标签 - 添加跳跃提示
+    // 创建操作提示标签 - 合并冲刺提示
     auto instructionLabel = Label::createWithSystemFont(
-        "A: Move Left | D: Move Right | W: Jump | K: Attack | Reach right end to next level",
+        "A: Move Left | D: Move Right | W: Jump | K: Attack | SPACE: Dash | Reach right end to next level",
         "Arial", 16
     );
     instructionLabel->setPosition(Vec2(visibleSize.width * 0.5f, 30));
@@ -218,14 +433,13 @@ void MainGameScene::initDebugUI() {
     this->addChild(boundaryLabel, 99);
 }
 
+// MainGameScene.cpp - 修改 updateCamera 函数
 void MainGameScene::updateCamera(float delta) {
     if (!_player || !_currentBackground) return;
 
-    // 获取玩家世界位置
     float playerWorldX = _player->getWorldPositionX();
     float playerWorldY = _player->getWorldPositionY();
 
-    // 限制玩家世界位置在有效范围内
     if (playerWorldX < 0) {
         playerWorldX = 0;
         _player->setWorldPositionX(0);
@@ -235,53 +449,59 @@ void MainGameScene::updateCamera(float delta) {
         _player->setWorldPositionX(_worldWidth);
     }
 
-    // Y方向限制（不能低于地面）
     if (playerWorldY < 0) {
         playerWorldY = 0;
         _player->setWorldPositionY(0);
     }
 
-    // 计算摄像机偏移 - 让玩家保持在屏幕的40%位置（更靠前）
     float targetPlayerScreenX = _screenWidth * 0.4f;
     float targetCameraOffset = targetPlayerScreenX - playerWorldX;
 
-    // 确保背景不会移出边界
     if (_worldWidth > _screenWidth) {
-        // 背景比屏幕宽，需要滚动
+
         float minOffset = -(_worldWidth - _screenWidth);
         float maxOffset = 0.0f;
 
-        // 添加平滑过渡
-        float smoothFactor = 0.1f; // 平滑因子
+        float smoothFactor = 0.1f;
         targetCameraOffset = _cameraOffsetX + (targetCameraOffset - _cameraOffsetX) * smoothFactor;
 
-        // 确保偏移量在合理范围内
         targetCameraOffset = MAX(targetCameraOffset, minOffset);
         targetCameraOffset = MIN(targetCameraOffset, maxOffset);
     }
     else {
-        // 背景宽度等于屏幕宽度，不需要移动
+
         targetCameraOffset = 0.0f;
     }
 
-    // 应用摄像机偏移
     _cameraOffsetX = targetCameraOffset;
 
-    // 更新背景位置
     _currentBackground->updateWithCameraOffset(_cameraOffsetX);
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
-    // 根据实际摄像机偏移重新计算玩家屏幕位置
-    float actualPlayerScreenX = playerWorldX + _cameraOffsetX;
-    float actualPlayerScreenY = visibleSize.height * GameConfig::PLAYER_GROUND_Y_PERCENT + playerWorldY;
-    _player->setPosition(Vec2(actualPlayerScreenX, actualPlayerScreenY));
 
-    // 调试信息
+    float actualPlayerScreenX = playerWorldX + _cameraOffsetX;
+
+    // 修改这里：玩家屏幕Y位置应该固定，不受世界Y位置影响（除非有特殊需求）
+    // 因为跳跃等动作已经在玩家的世界坐标中处理，这里只需要正确映射到屏幕
+    float groundScreenY = visibleSize.height * GameConfig::PLAYER_GROUND_Y_PERCENT;
+
+    // 如果玩家在地面上，使用固定的地面Y位置
+    if (_player->isGrounded()) {
+        _player->setPosition(Vec2(actualPlayerScreenX, groundScreenY));
+    }
+    else {
+        // 如果玩家在跳跃中，将世界Y坐标映射到屏幕（适当缩放）
+        // 需要调整缩放因子，使跳跃看起来自然
+        float jumpScaleFactor = 0.5f; // 调整这个值使跳跃看起来更自然
+        float actualPlayerScreenY = groundScreenY + (playerWorldY * jumpScaleFactor);
+        _player->setPosition(Vec2(actualPlayerScreenX, actualPlayerScreenY));
+    }
+
     static int frameCount = 0;
     frameCount++;
     if (frameCount % 120 == 0) {
         log("[Camera] PlayerWorldPos: (%.0f, %.0f), CameraOffset: %.0f, ScreenPos: (%.0f, %.0f)",
-            playerWorldX, playerWorldY, _cameraOffsetX, actualPlayerScreenX, actualPlayerScreenY);
+            playerWorldX, playerWorldY, _cameraOffsetX, actualPlayerScreenX, _player->getPositionY());
     }
 }
 
@@ -331,6 +551,7 @@ void MainGameScene::update(float delta) {
         }
     }
 
+
     // 检查关卡切换
     checkLevelTransition(delta);
 
@@ -349,6 +570,9 @@ void MainGameScene::update(float delta) {
         // 只有在非切换状态下才更新摄像机
         updateCamera(delta);
     }
+
+    // 检查物品碰撞
+    checkItemCollisions(delta);
 
     // 更新调试信息
     if (_player && _debugLabel) {
@@ -521,6 +745,15 @@ void MainGameScene::switchToNextLevel() {
 
     // 立即更新摄像机位置
     updateCamera(0);
+
+    // 清理旧物品
+    for (auto item : _levelItems) {
+        item->removeFromParent();
+    }
+    _levelItems.clear();
+
+    // 初始化新关卡的物品
+    initItems();
 
     // 结束切换状态
     _isTransitioning = false;

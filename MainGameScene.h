@@ -5,10 +5,12 @@
 
 #include "cocos2d.h"
 #include "Player.h"
-#include "Level1SceneBackground.h"  // 包含SceneBackground的头文件
+#include "Level1SceneBackground.h"
 #include "LevelManager.h"
+#include "ItemManager.h"
+#include "Item.h"
 
-class MainGameScene : public cocos2d::Scene
+class MainGameScene : public cocos2d::Layer
 {
 public:
     static cocos2d::Scene* createScene();
@@ -18,7 +20,7 @@ public:
 
 private:
     Player* _player;
-    SceneBackground* _currentBackground;  // 使用SceneBackground类
+    SceneBackground* _currentBackground;
 
     // 关卡管理
     LevelManager* _levelManager;
@@ -33,7 +35,11 @@ private:
     // 关卡切换相关
     bool _isTransitioning;
     float _transitionTimer;
-    const float TRANSITION_DURATION = 1.0f; // 关卡切换持续时间（秒）
+    const float TRANSITION_DURATION = 1.0f;
+
+    // 物品系统
+    std::vector<Item*> _levelItems;
+    cocos2d::Label* _collectionLabel;
 
     // 初始化方法
     void initBackground();
@@ -41,11 +47,19 @@ private:
     void initInput();
     void initDebugUI();
     void initCamera();
+    void initItems();
+    void showCollectionUI();
 
     // 更新方法
     void updateCamera(float delta);
     void checkLevelTransition(float delta);
     void switchToNextLevel();
+    void checkItemCollisions(float delta);
+    void updateCollectionUI();
+
+    // 辅助函数
+    bool isPlayerAtRightBoundary();
+    void placeItemAt(const std::string& itemId, float worldX, float worldY);
 
     // 输入处理监听器
     cocos2d::EventListenerKeyboard* _keyboardListener;
@@ -56,9 +70,12 @@ private:
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
 
-    // 辅助函数
-    void forceUpdateBackground();  // 强制更新背景
-    bool isPlayerAtRightBoundary();  // 检查玩家是否到达右边界
+    // 物理碰撞回调
+    bool onContactBegin(cocos2d::PhysicsContact& contact);
+
+    // 场景生命周期函数
+    virtual void onEnter() override;
+    virtual void onExit() override;
 };
 
 #endif // MAINGAMESCENE_H

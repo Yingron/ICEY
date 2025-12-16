@@ -1,4 +1,4 @@
-
+﻿
 // Player.cpp
 #include "Player.h"
 #include "GameConfig.h"
@@ -15,6 +15,28 @@ Player* Player::create(const std::string& spriteFile) {
     return nullptr;
 }
 
+// Player.cpp - 修复 optimizeAttackFrames 函数中的警告
+std::vector<std::string> Player::optimizeAttackFrames(const std::vector<std::string>& originalFrames, int targetFrameCount) {
+    if ((int)originalFrames.size() <= targetFrameCount) {  // 将 originalFrames.size() 转换为 int
+        return originalFrames;
+    }
+
+    std::vector<std::string> optimizedFrames;
+    float step = (float)originalFrames.size() / targetFrameCount;
+
+    for (int i = 0; i < targetFrameCount; i++) {
+        int index = (int)(i * step);
+        if (index < (int)originalFrames.size()) {  // 将 originalFrames.size() 转换为 int
+            optimizedFrames.push_back(originalFrames[index]);
+        }
+    }
+
+    log("Optimized attack frames from %d to %d",
+        (int)originalFrames.size(), (int)optimizedFrames.size());
+
+    return optimizedFrames;
+}
+
 // Player.cpp - 在 loadAnimations 函数中添加攻击动画加载
 void Player::loadAnimations() {
     log("=== Player loadAnimations ===");
@@ -25,9 +47,10 @@ void Player::loadAnimations() {
     }
     _animations.clear();
 
+    auto fileUtils = FileUtils::getInstance();
+
     // 1. 加载待机动画（27帧）
     std::vector<std::string> idleFrames;
-    auto fileUtils = FileUtils::getInstance(); // 在这里定义一次
     for (int i = 1; i <= 27; i++) {
         std::vector<std::string> possiblePaths = {
             StringUtils::format("images/characters/player/icey-idle-%d.png", i),
@@ -129,7 +152,7 @@ void Player::loadAnimations() {
             log("WARNING: Could not find normal attack right frame %d", i);
         }
     }
-
+    std::vector<std::string> optimizedAttackFrames = optimizeAttackFrames(normalAttackRightFrames, 20);
     // 5. 加载跳跃动画（1-17帧）- 使用已定义的 fileUtils
     std::vector<std::string> jumpFrames;
     for (int i = 1; i <= 17; i++) {
@@ -153,6 +176,77 @@ void Player::loadAnimations() {
 
         if (!found) {
             log("WARNING: Could not find jump frame %d", i);
+        }
+    }
+    // 6. 加载冲刺动画
+     // 向右冲刺动画（使用向右跑动动画的帧）
+    std::vector<std::string> dashRightFrames;
+    for (int i = 1; i <= 18; i++) {
+        std::vector<std::string> possiblePaths = {
+            StringUtils::format("images/characters/player/icey-run-to-right-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-run-to-right-%d.png", i),
+            StringUtils::format("icey-run-to-right-%d.png", i),
+            StringUtils::format("characters/player/icey-run-to-right-%d.png", i),
+            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-run-to-right-%d.png", i)
+        };
+
+        bool found = false;
+        for (const auto& path : possiblePaths) {
+            if (fileUtils->isFileExist(path)) {
+                dashRightFrames.push_back(path);
+                log("Found dash right frame %d at: %s", i, path.c_str());
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            log("WARNING: Could not find dash right frame %d", i);
+        }
+    }
+
+    // 向左冲刺动画（使用向左跑动动画的帧）
+    std::vector<std::string> dashLeftFrames;
+    for (int i = 1; i <= 19; i++) {
+        std::vector<std::string> possiblePaths = {
+            StringUtils::format("images/characters/player/icey-run-to-left-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-run-to-left-%d.png", i),
+            StringUtils::format("icey-run-to-left-%d.png", i),
+            StringUtils::format("characters/player/icey-run-to-left-%d.png", i),
+            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-run-to-left-%d.png", i)
+        };
+
+        bool found = false;
+        for (const auto& path : possiblePaths) {
+            if (fileUtils->isFileExist(path)) {
+                dashLeftFrames.push_back(path);
+                log("Found dash left frame %d at: %s", i, path.c_str());
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            log("WARNING: Could not find dash left frame %d", i);
+        }
+    }
+    // 创建向右冲刺动画（使用更快的帧延迟）
+    if (!dashRightFrames.empty()) {
+        cocos2d::Animation* dashRightAnim = createAnimationFromFiles(dashRightFrames, 0.03f); // 比跑步快
+        if (dashRightAnim) {
+            _animations["dash_right"] = dashRightAnim;
+            dashRightAnim->retain();
+            log("Created dash right animation with %d frames", (int)dashRightFrames.size());
+        }
+    }
+
+    // 创建向左冲刺动画（使用更快的帧延迟）
+    if (!dashLeftFrames.empty()) {
+        cocos2d::Animation* dashLeftAnim = createAnimationFromFiles(dashLeftFrames, 0.03f); // 比跑步快
+        if (dashLeftAnim) {
+            _animations["dash_left"] = dashLeftAnim;
+            dashLeftAnim->retain();
+            log("Created dash left animation with %d frames", (int)dashLeftFrames.size());
         }
     }
 
@@ -233,17 +327,26 @@ void Player::loadAnimations() {
 }
 
 void Player::jump() {
-    if (_isGrounded && _canJump && _currentState != PlayerState::ATTACKING) {
+    // 获取当前时间
+    auto currentTime = cocos2d::utils::getTimeInMilliseconds() / 1000.0f;
+
+    // 重置跳跃计数的条件：如果在地上，或者距离上次跳跃超过0.5秒
+    if (_isGrounded || (currentTime - _lastJumpTime > 0.5f)) {
+        _jumpCount = 0;
+    }
+
+    // 检查是否可以跳跃（未超过最大跳跃次数）
+    if (_jumpCount < _maxJumpCount) {
         _isGrounded = false;
-        _canJump = false;
         _velocity.y = _jumpForce;
+        _jumpCount++;
+        _lastJumpTime = currentTime;
         _currentState = PlayerState::JUMPING;
         setCurrentState(PlayerState::JUMPING);
 
-        log("Player jumps with force: %.0f", _jumpForce);
+        log("Player jumps (count: %d) with force: %.0f", _jumpCount, _jumpForce);
     }
 }
-
 cocos2d::Animation* Player::createAnimationFromFiles(const std::vector<std::string>& frames, float delay) {
     if (frames.empty()) {
         log("Warning: No frames provided for animation");
@@ -313,6 +416,7 @@ bool Player::init(const std::string& spriteFile) {
 
     log("=== Player init ===");
 
+    _keyStates.clear();
     // 首先初始化所有成员变量
     _currentState = PlayerState::IDLE;
     _velocity = Vec2::ZERO;
@@ -325,10 +429,39 @@ bool Player::init(const std::string& spriteFile) {
 
     // 初始化跳跃相关变量
     _isGrounded = true;
-    _canJump = true;
-    _jumpForce = 600.0f;      // 跳跃力量
-    _gravity = 1500.0f;       // 重力加速度
+    _jumpForce = 600.0f;      // 减小跳跃力量
+    _gravity = 800.0f;        // 减小重力加速度
     _worldPositionY = 0.0f;   // 初始Y位置
+    _jumpCount = 0;           // 初始化跳跃计数
+    _maxJumpCount = 2;        // 最大二连跳
+    _lastJumpTime = 0.0f;     // 初始化上次跳跃时间
+
+    // 初始化连击相关变量
+    _canCombo = false;
+    _comboCount = 0;
+    _comboTimer = 0.0f;
+
+    // 初始化冲刺相关变量
+    _canDash = true;              // 初始可以冲刺
+    _dashSpeed = 1500.0f;         // 冲刺速度（比跑步快很多）
+    _dashDistance = 300.0f;       // 冲刺距离
+    _dashDuration = 0.2f;         // 冲刺持续时间（秒）
+    _dashCooldown = 0.0f;         // 冲刺冷却时间
+    _currentDashDistance = 0.0f;  // 当前已冲刺距离
+    _isDashLeft = false;          // 默认向右冲刺
+
+    // 冲刺动画键
+    _dashLeftAnimKey = "dash_left";
+    _dashRightAnimKey = "dash_right";
+
+    // 添加物理体
+    auto physicsBody = PhysicsBody::createBox(this->getContentSize());
+    physicsBody->setDynamic(true);
+    physicsBody->setGravityEnable(false); // 禁用物理引擎重力
+    physicsBody->setCategoryBitmask(0x01); // 玩家类别
+    physicsBody->setCollisionBitmask(0x02); // 与物品碰撞
+    physicsBody->setContactTestBitmask(0x02);
+    this->setPhysicsBody(physicsBody);
 
     auto fileUtils = FileUtils::getInstance();
     std::string playerFile = "icey-idle-1.png";  // 使用待机动画的第一帧作为初始图像
@@ -402,6 +535,23 @@ bool Player::init(const std::string& spriteFile) {
 
 // Player.cpp - 修改 update 函数
 void Player::update(float delta) {
+    // 更新连击计时器
+    if (_comboTimer > 0) {
+        _comboTimer -= delta;
+        if (_comboTimer <= 0) {
+            _comboCount = 0;
+            _canCombo = false;
+        }
+    }
+    // 防止无限下落 - 添加最大下落限制
+    if (_worldPositionY < -1000.0f) {
+        _worldPositionY = 0;
+        _velocity.y = 0;
+        _isGrounded = true;
+        log("WARNING: Player fell too far, resetting position!");
+    }
+    // 更新冲刺
+    updateDash(delta);
     // 更新物理（包括重力）
     updatePhysics(delta);
 
@@ -409,19 +559,20 @@ void Player::update(float delta) {
     updateWorldPosition(delta);
 }
 
+// Player.cpp - 修改 updatePhysics 函数
 void Player::updatePhysics(float delta) {
     // 应用重力
     _velocity.y -= _gravity * delta;
 
     // 更新Y方向的世界位置
-    _worldPositionY += _velocity.y * delta;
+    float newWorldY = _worldPositionY + _velocity.y * delta;
 
-    // 检查是否落地
-    if (_worldPositionY <= 0) {
+    // 检查是否落地 - 添加更严格的边界检查
+    if (newWorldY <= 0) {
         _worldPositionY = 0;
         _velocity.y = 0;
         _isGrounded = true;
-        _canJump = true;
+        _jumpCount = 0; // 落地时重置跳跃计数
 
         // 如果之前是跳跃状态，落地后恢复之前的移动状态
         if (_currentState == PlayerState::JUMPING) {
@@ -435,11 +586,16 @@ void Player::updatePhysics(float delta) {
             }
         }
     }
+    else {
+        _worldPositionY = newWorldY;
+        _isGrounded = false;
+    }
 }
 
+// Player.cpp - 修改updateWorldPosition函数
 void Player::updateWorldPosition(float delta) {
     // 如果正在攻击或跳跃，不更新X方向位置（或减小移动速度）
-    if (_currentState == PlayerState::ATTACKING) {
+    if (_currentState == PlayerState::ATTACKING || _currentState == PlayerState::DASHING) {
         return;
     }
 
@@ -484,7 +640,6 @@ void Player::stopMoving() {
 void Player::setCurrentState(PlayerState state) {
     bool stateChanged = (_currentState != state);
     bool needUpdateAnimation = false;
-
     // 跳跃期间不能切换到其他动画
     if (_currentState == PlayerState::JUMPING && state != PlayerState::JUMPING) {
         // 只有在落地后才能切换状态
@@ -493,6 +648,14 @@ void Player::setCurrentState(PlayerState state) {
         }
         else {
             return; // 空中保持跳跃状态
+        }
+    }
+
+    // 冲刺期间不能切换到其他动画（除了攻击）
+    if (_currentState == PlayerState::DASHING && state != PlayerState::DASHING) {
+        // 只有冲刺结束后才能切换状态
+        if (!_canDash) {
+            return; // 冲刺中保持冲刺状态
         }
     }
 
@@ -532,6 +695,10 @@ void Player::setCurrentState(PlayerState state) {
     else if (state == PlayerState::JUMPING) {
         targetAnimationKey = "jump";
         needUpdateAnimation = true;
+    }
+    else if (state == PlayerState::DASHING) {
+        // 冲刺状态已经在dash方法中处理，这里不需要重复处理
+        return;
     }
     else {
         needUpdateAnimation = stateChanged;
@@ -614,7 +781,7 @@ void Player::setCurrentState(PlayerState state) {
 
         case PlayerState::ATTACKING:
         {
-            // 播放攻击动画
+            // 播放攻击动画 - 不使用循环，只播放一次
             std::string animationKey;
             if (_facingRight) {
                 animationKey = "normal_attack_right";
@@ -622,32 +789,49 @@ void Player::setCurrentState(PlayerState state) {
             }
             else {
                 animationKey = "normal_attack_right";
-                this->setFlippedX(true); // 向左时翻转
+                this->setFlippedX(true);
             }
 
             _currentAnimationKey = animationKey;
 
             auto it = _animations.find(animationKey);
             if (it != _animations.end() && it->second->getFrames().size() > 0) {
+                // 停止当前所有动作
+                this->stopAllActions();
+
+                // 创建攻击动画 - 设置不恢复原始帧，立即开始
                 auto animate = Animate::create(it->second);
 
-                // 创建回调序列：攻击动画完成后返回待机状态
                 auto callback = CallFunc::create([this]() {
                     if (_currentState == PlayerState::ATTACKING) {
-                        setCurrentState(PlayerState::IDLE);
+                        // 允许连击
+                        _canCombo = true;
+
+                        // 如果还有连击时间窗口，等待下一击
+                        if (_comboTimer > 0 && _comboCount < 3) {
+                            // 保持攻击姿态一小段时间
+                            auto delay = DelayTime::create(0.1f);
+                            auto reset = CallFunc::create([this]() {
+                                if (_currentState == PlayerState::ATTACKING) {
+                                    setCurrentState(PlayerState::IDLE);
+                                }
+                                });
+                            auto sequence = Sequence::create(delay, reset, nullptr);
+                            this->runAction(sequence);
+                        }
+                        else {
+                            setCurrentState(PlayerState::IDLE);
+                        }
                     }
                     });
 
+                // 创建序列：攻击动画 -> 回调
                 auto sequence = Sequence::create(animate, callback, nullptr);
                 this->runAction(sequence);
 
-                log("Playing %s animation with %d frames",
-                    animationKey.c_str(), (int)it->second->getFrames().size());
-            }
-            else {
-                log("ERROR: Attack animation not found or empty: %s", animationKey.c_str());
-                // 如果没有攻击动画，直接回到待机状态
-                setCurrentState(PlayerState::IDLE);
+                log("Playing attack animation with %d frames, duration: %.2f seconds",
+                    (int)it->second->getFrames().size(),
+                    it->second->getDuration());
             }
         }
         break;
@@ -680,17 +864,161 @@ void Player::setCurrentState(PlayerState state) {
         }
     }
 }
+// Player.cpp - 添加冲刺方法实现
+void Player::dash() {
+    // 默认向右冲刺
+    dashRight();
+}
 
+void Player::dashRight() {
+    if (!canDash() || _currentState == PlayerState::ATTACKING) {
+        return;
+    }
 
+    // 设置冲刺状态
+    _currentState = PlayerState::DASHING;
+    _facingRight = true;
+    _isDashLeft = false;
+    _currentDashDistance = 0.0f;
+    _canDash = false;
+    _dashCooldown = 0.5f;  // 冲刺冷却时间
+
+    // 停止当前所有动作
+    this->stopAllActions();
+
+    // 播放冲刺动画
+    std::string dashKey = "dash_right";
+    auto it = _animations.find(dashKey);
+    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+        // 设置面向右
+        this->setFlippedX(false);
+
+        // 播放冲刺动画（不循环）
+        auto animate = Animate::create(it->second);
+        auto callback = CallFunc::create([this]() {
+            // 冲刺动画结束后，根据情况回到跑步或待机状态
+            if (_isMovingLeft || _isMovingRight) {
+                setCurrentState(PlayerState::RUNNING);
+            }
+            else {
+                setCurrentState(PlayerState::IDLE);
+            }
+            });
+
+        auto sequence = Sequence::create(animate, callback, nullptr);
+        this->runAction(sequence);
+
+        log("Playing dash right animation");
+    }
+    else {
+        // 如果没有冲刺动画，使用跑步动画但更快
+        setCurrentState(PlayerState::RUNNING);
+        // 设置一个标志表示正在冲刺
+        _currentState = PlayerState::DASHING;
+    }
+}
+
+void Player::dashLeft() {
+    if (!canDash() || _currentState == PlayerState::ATTACKING) {
+        return;
+    }
+
+    // 设置冲刺状态
+    _currentState = PlayerState::DASHING;
+    _facingRight = false;
+    _isDashLeft = true;
+    _currentDashDistance = 0.0f;
+    _canDash = false;
+    _dashCooldown = 0.5f;  // 冲刺冷却时间
+
+    // 停止当前所有动作
+    this->stopAllActions();
+
+    // 播放冲刺动画
+    std::string dashKey = "dash_left";
+    auto it = _animations.find(dashKey);
+    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+        // 设置面向左
+        this->setFlippedX(true);
+
+        // 播放冲刺动画（不循环）
+        auto animate = Animate::create(it->second);
+        auto callback = CallFunc::create([this]() {
+            // 冲刺动画结束后，根据情况回到跑步或待机状态
+            if (_isMovingLeft || _isMovingRight) {
+                setCurrentState(PlayerState::RUNNING);
+            }
+            else {
+                setCurrentState(PlayerState::IDLE);
+            }
+            });
+
+        auto sequence = Sequence::create(animate, callback, nullptr);
+        this->runAction(sequence);
+
+        log("Playing dash left animation");
+    }
+    else {
+        // 如果没有冲刺动画，使用跑步动画但更快
+        setCurrentState(PlayerState::RUNNING);
+        // 设置一个标志表示正在冲刺
+        _currentState = PlayerState::DASHING;
+    }
+}
+
+void Player::updateDash(float delta) {
+    if (_currentState == PlayerState::DASHING) {
+        // 计算冲刺移动
+        float dashMove = _dashSpeed * delta;
+        _currentDashDistance += dashMove;
+
+        // 根据冲刺方向移动
+        if (_isDashLeft) {
+            _worldPositionX -= dashMove;
+            // 防止移动到世界左侧边界之外
+            if (_worldPositionX < 0) {
+                _worldPositionX = 0;
+                // 碰到边界则结束冲刺
+                setCurrentState(PlayerState::IDLE);
+            }
+        }
+        else {
+            _worldPositionX += dashMove;
+        }
+
+        // 检查是否达到最大冲刺距离
+        if (_currentDashDistance >= _dashDistance) {
+            // 冲刺结束，根据情况回到跑步或待机状态
+            if (_isMovingLeft || _isMovingRight) {
+                setCurrentState(PlayerState::RUNNING);
+            }
+            else {
+                setCurrentState(PlayerState::IDLE);
+            }
+        }
+    }
+
+    // 更新冲刺冷却时间
+    if (_dashCooldown > 0.0f) {
+        _dashCooldown -= delta;
+        if (_dashCooldown <= 0.0f) {
+            _canDash = true;
+            log("Dash cooldown finished, can dash again");
+        }
+    }
+}
+
+// Player.cpp - 修改onKeyPressed函数中的冲刺部分
 void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
+    // 记录按键状态
+    _keyStates[keyCode] = true;
     if (keyCode == EventKeyboard::KeyCode::KEY_A) {
         _isMovingLeft = true;
-        _isMovingRight = false;
         _facingRight = false;
 
-        // 如果不是正在攻击，才能移动
-        if (_currentState != PlayerState::ATTACKING) {
-            // 跳跃时可以移动，但速度会降低
+        // 如果不是正在攻击或冲刺，可以移动
+        if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING) {
+            // 如果已经在跳跃中，保持跳跃状态
             if (_currentState != PlayerState::JUMPING) {
                 _currentState = PlayerState::RUNNING;
                 setCurrentState(PlayerState::RUNNING);
@@ -699,12 +1027,11 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
     }
     else if (keyCode == EventKeyboard::KeyCode::KEY_D) {
         _isMovingRight = true;
-        _isMovingLeft = false;
         _facingRight = true;
 
-        // 如果不是正在攻击，才能移动
-        if (_currentState != PlayerState::ATTACKING) {
-            // 跳跃时可以移动，但速度会降低
+        // 如果不是正在攻击或冲刺，可以移动
+        if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING) {
+            // 如果已经在跳跃中，保持跳跃状态
             if (_currentState != PlayerState::JUMPING) {
                 _currentState = PlayerState::RUNNING;
                 setCurrentState(PlayerState::RUNNING);
@@ -714,31 +1041,78 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
     else if (keyCode == EventKeyboard::KeyCode::KEY_K) {
         // K键：普通攻击
         // 只有在非攻击状态且在地面时才能触发攻击
-        if (_currentState != PlayerState::ATTACKING && _isGrounded) {
-            // 检查是否面朝右方
-            if (_facingRight) {
-                _currentState = PlayerState::ATTACKING;
-                setCurrentState(PlayerState::ATTACKING);
+        if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING && _isGrounded) {
+            _currentState = PlayerState::ATTACKING;
+            setCurrentState(PlayerState::ATTACKING);
 
-                // 攻击时停止移动
-                _isMovingLeft = false;
-                _isMovingRight = false;
-                _velocity.x = 0;
+            // 攻击时停止移动
+            _isMovingLeft = false;
+            _isMovingRight = false;
+            _velocity.x = 0;
 
-                log("Player performs normal attack to the right");
-            }
-            else {
-                log("Player is not facing right, cannot perform right normal attack");
-            }
+            log("Player performs normal attack");
         }
     }
     else if (keyCode == EventKeyboard::KeyCode::KEY_W) {
-        // W键：跳跃
+        // W键：跳跃 - 可以与移动同时进行
         jump();
+    }
+    else if (keyCode == EventKeyboard::KeyCode::KEY_SPACE) {
+        // 空格键：冲刺
+        if (canDash()) {
+            // 使用按键状态表来判断方向
+            bool aPressed = (_keyStates.find(EventKeyboard::KeyCode::KEY_A) != _keyStates.end() &&
+                _keyStates[EventKeyboard::KeyCode::KEY_A]);
+            bool dPressed = (_keyStates.find(EventKeyboard::KeyCode::KEY_D) != _keyStates.end() &&
+                _keyStates[EventKeyboard::KeyCode::KEY_D]);
+
+            // 优先处理A+D同时按下的情况
+            if (aPressed && !dPressed) {
+                // A键按下：向左冲刺
+                dashLeft();
+                log("Player dashes left (A pressed)");
+            }
+            else if (dPressed && !aPressed) {
+                // D键按下：向右冲刺
+                dashRight();
+                log("Player dashes right (D pressed)");
+            }
+            else if (aPressed && dPressed) {
+                // A和D同时按下：根据当前面向方向冲刺
+                if (_facingRight) {
+                    dashRight();
+                    log("Player dashes right (A+D, facing right)");
+                }
+                else {
+                    dashLeft();
+                    log("Player dashes left (A+D, facing left)");
+                }
+            }
+            else {
+                // 只按空格：根据当前面向方向冲刺
+                if (_facingRight) {
+                    dashRight();
+                    log("Player dashes right (space only, default)");
+                }
+                else {
+                    dashLeft();
+                    log("Player dashes left (space only, default)");
+                }
+            }
+        }
+    }
+
+    // 处理同时按下的情况
+    if (_currentState == PlayerState::JUMPING && (_isMovingLeft || _isMovingRight)) {
+        // 保持跳跃状态，但允许水平移动
+        // 这已经在 updateWorldPosition 中处理了
     }
 }
 
+// Player.cpp - 修改 onKeyReleased 函数
 void Player::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode) {
+    // 更新按键状态
+    _keyStates[keyCode] = false;
     if (keyCode == EventKeyboard::KeyCode::KEY_A) {
         _isMovingLeft = false;
     }
@@ -748,14 +1122,14 @@ void Player::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode) {
 
     // 如果两个移动键都释放了
     if (!_isMovingLeft && !_isMovingRight) {
-        // 跳跃中不改变状态
+        // 跳跃中保持跳跃状态
         if (_currentState != PlayerState::JUMPING && _currentState != PlayerState::ATTACKING) {
             _currentState = PlayerState::IDLE;
             setCurrentState(PlayerState::IDLE);
         }
     }
     else {
-        // 如果还有一个键按下，强制更新RUNNING状态（除非在跳跃中）
+        // 如果还有一个移动键按下，且不在跳跃或攻击状态
         if (_currentState != PlayerState::JUMPING && _currentState != PlayerState::ATTACKING) {
             _currentState = PlayerState::RUNNING;
             setCurrentState(PlayerState::RUNNING);
@@ -771,6 +1145,8 @@ std::string Player::getDebugInfo() const {
     info += ", MovingLeft: " + std::string(_isMovingLeft ? "Yes" : "No");
     info += ", MovingRight: " + std::string(_isMovingRight ? "Yes" : "No");
     info += ", Grounded: " + std::string(_isGrounded ? "Yes" : "No");
+    info += ", CanDash: " + std::string(canDash() ? "Yes" : "No");
+    info += ", DashCooldown: " + std::to_string(_dashCooldown);
     info += ", WorldPos: (" + std::to_string(_worldPositionX) + ", " + std::to_string(_worldPositionY) + ")";
     return info;
 }
