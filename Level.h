@@ -5,6 +5,7 @@
 #include "cocos2d.h"
 #include "Platform.h"
 #include "Enemy.h"
+#include "EnemyType.h"
 #include "SceneTrigger.h"
 #include <vector>
 #include <memory>
@@ -22,12 +23,13 @@ private:
     std::string m_levelName;
 
 public:
+    void showFinalChoiceUI();
     static Level* createWithTMX(const std::string& tmxFile);
     virtual bool initWithTMX(const std::string& tmxFile);
     virtual void update(float delta) override;
 
     void spawnEnemies();
-    void spawnEnemyAtPoint(const cocos2d::Vec2& point, EnemyType type);
+    void spawnEnemyAtPoint(const cocos2d::Vec2& point, std::string typeName);
     void checkTriggers(const cocos2d::Vec2& playerPosition);
 
     // Åö×²¼ì²â

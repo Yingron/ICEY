@@ -1,226 +1,314 @@
 #include "EliteEnemy.h"
-#include "EnemyType.h"
 #include "GameUtils.h"
-#include <stdexcept> // [新增]
+#include "ResourceManager.h"
+#include "EnemyType.h"
+#include <stdexcept>
+#include <cmath>
+
+extern cocos2d::Animation* getOrCreateAnimation(const std::string& folder, const std::string& prefix, int frameCount, float delay);
 
 bool EliteEnemy::init()
 {
     if (!Enemy::init()) return false;
 
     std::string name = this->getName();
-    std::string bossImage = "";
+    std::string folder = "cxk";
 
-    // 确定图片路径
-    if (name == "CaiXunKun") {
-        bossImage = "Boss_CaiXunKun.png";
-        m_maxHealth = 400.0f;
-        m_speed = 200.0f;
-    }
-    else if (name == "NaiLong") {
-        bossImage = "Boss_NaiLong.png";
-        m_maxHealth = 800.0f;
-        m_speed = 80.0f;
-        this->setScale(2.0f);
-    }
-    else if (name == "MaoDie") {
-        bossImage = "Boss_MaoDie.png";
-        m_maxHealth = 500.0f;
-    }
-    else if (name == "KuMingYuanYang") {
-        bossImage = "Boss_KuMing.png";
-        m_maxHealth = 600.0f;
-    }
-    else {
-        bossImage = "Elite_Generic.png";
-    }
+    if (name == "CaiXunKun") folder = "cxk";
+    else if (name == "NaiLong") folder = "nl";
+    else if (name == "MaoDie") folder = "md";
+    else if (name == "KuMingYuanYang") folder = "kmyy"; // 苦命鸳鸯
 
-    // ============================================================
-    // [异常处理模块 - BOSS资源加载]
-    // ============================================================
+    // [异常处理]: 初始图
     try {
-        auto texture = cocos2d::Director::getInstance()->getTextureCache()->addImage(bossImage);
+        std::string path = "images/characters/enemies/" + folder + "/walk1.png";
+        auto tex = ResourceManager::getInstance()->getTexture(path);
+        if (!tex) tex = cocos2d::Director::getInstance()->getTextureCache()->addImage(path);
 
-        // BOSS 图片丢失是严重问题，这里我们记录一个 Error 级别的日志，但依然不让游戏崩
-        if (!texture) {
-            throw std::runtime_error("CRITICAL: BOSS Image [" + bossImage + "] Missing!");
-        }
-
-        this->setTexture(texture);
-        this->setTextureRect(cocos2d::Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height));
+        if (!tex) throw std::runtime_error("BOSS Img Missing: " + path);
+        this->setTexture(tex);
+        this->setTextureRect(cocos2d::Rect(0, 0, tex->getContentSize().width, tex->getContentSize().height));
     }
     catch (const std::exception& e) {
-        // [加分项]: 详细的错误处理
-        GameUtils::log(std::string("EXCEPTION CAUGHT: ") + e.what());
-
-        // 视觉提示错误：品红色块（标准的 Missing Texture 颜色）
         this->setTextureRect(cocos2d::Rect(0, 0, 100, 100));
         this->setColor(cocos2d::Color3B::MAGENTA);
-
-        // 可以添加一个额外的 Label 显示 BOSS 名字，防止玩家不知道这是谁
-        auto label = cocos2d::Label::createWithSystemFont(name, "Arial", 24);
-        label->setPosition(cocos2d::Vec2(50, 120));
-        this->addChild(label);
     }
-    // ============================================================
 
     m_type = EnemyType::ELITE;
-    m_health = m_maxHealth;
+    m_maxHealth = 500.0f;
     m_currentPhase = 1;
-    m_phaseTransitionHealth = m_maxHealth * 0.5f;
     m_isEnraged = false;
-
-    createSpecialAttacks();
+    m_attackRange = 60.0f;
 
     return true;
 }
 
 void EliteEnemy::updateAI(float delta)
 {
-    // Log 输出本身一般不抛出异常，但为了保险起见
     try {
-        static float logTimer = 0.0f;
-        logTimer += delta;
-        if (logTimer > 8.0f && m_targetPlayer) {
-            logTimer = 0.0f;
-            if (getName() == "CaiXunKun") GameUtils::log("旁白: 考试时间还剩5分钟...");
-            else if (getName() == "NaiLong") GameUtils::log("旁白: 身体极限...");
+        if (m_aiState == EnemyState::DEAD) return;
+
+        // --------------------------------------------------------
+        // [BOSS特殊逻辑]: 苦命鸳鸯 - 飞天阶段 (Phase 2)
+        // --------------------------------------------------------
+        if (getName() == "KuMingYuanYang" && m_currentPhase == 2) {
+            static float flyTime = 0.0f; flyTime += delta;
+            float moveX = std::sin(flyTime * 0.5f) * 250.0f;
+            float moveY = 350.0f + std::cos(flyTime * 1.0f) * 30.0f;
+
+            if (m_targetPlayer) {
+                cocos2d::Vec2 targetSkyPos = m_targetPlayer->getPosition() + cocos2d::Vec2(moveX, moveY);
+                this->setPosition(GameUtils::lerp(this->getPosition(), targetSkyPos, delta * 1.5f));
+            }
+            this->setRotation(this->getRotation() + 360.0f * delta);
+
+            m_attackTimer -= delta;
+            if (m_attackTimer <= 0.0f) {
+                useSpecialAttack(3); // 空中远程打击
+                m_attackTimer = 1.2f;
+            }
+            return;
         }
 
-        checkPhaseTransition();
         Enemy::updateAI(delta);
+
+        // --------------------------------------------------------
+        // [视觉效果]: 行走动画 (8帧)
+        // --------------------------------------------------------
+        if (m_aiState == EnemyState::CHASE && !this->getActionByTag(99)) {
+            std::string folder = "cxk";
+            if (getName() == "NaiLong") folder = "nl";
+            if (getName() == "MaoDie") folder = "md";
+            if (getName() == "KuMingYuanYang") folder = "kmyy";
+
+            auto anim = getOrCreateAnimation(folder, "walk", 8, 0.15f);
+            if (anim) {
+                auto repeat = cocos2d::RepeatForever::create(cocos2d::Animate::create(anim));
+                repeat->setTag(99);
+                this->runAction(repeat);
+            }
+        }
+        else if (m_aiState != EnemyState::CHASE) {
+            this->stopActionByTag(99);
+        }
+
     }
-    catch (...) {
-        // 捕获所有未知异常
+    catch (const std::exception& e) {
+        GameUtils::log(std::string("EliteAI Error: ") + e.what());
     }
 }
 
 void EliteEnemy::attack()
 {
-    if (m_aiState == EnemyState::DEAD) return;
+    int skillIndex = 0;
+    std::string name = getName();
 
-    if (GameUtils::randomInt(0, 100) < 30) {
-        int skillIdx = GameUtils::randomInt(0, 1);
-        useSpecialAttack(skillIdx);
+    if (name == "KuMingYuanYang") {
+        int r = GameUtils::randomInt(0, 100);
+        if (r < 40) skillIndex = 0;
+        else if (r < 80) skillIndex = 1;
+        else skillIndex = 2;
     }
     else {
-        Enemy::attack();
+        skillIndex = GameUtils::randomInt(0, 1);
     }
+    useSpecialAttack(skillIndex);
 }
 
-void EliteEnemy::createSpecialAttacks() {}
-
-void EliteEnemy::useSpecialAttack(int attackIndex)
+void EliteEnemy::useSpecialAttack(int index)
 {
     if (m_aiState == EnemyState::DEAD) return;
     setState(EnemyState::ATTACK);
-    m_attackTimer = 2.0f;
+    m_attackTimer = 2.5f;
 
-    // ============================================================
-    // [异常处理模块 - 技能特效加载]
-    // ============================================================
-    // 在 Lambda 表达式中使用 try-catch
+    std::string name = getName();
+    std::string folder = "cxk";
+    if (name == "NaiLong") folder = "nl";
+    if (name == "MaoDie") folder = "md";
+    if (name == "KuMingYuanYang") folder = "kmyy";
 
-    if (attackIndex == 0) {
-        GameUtils::log(getName() + " 释放技能1: 压力冲击!");
+    try {
+        // ==========================================================
+        // 1. [BOSS: 菜需捆] (CaiXunKun)
+        // ==========================================================
+        if (name == "CaiXunKun") {
+            if (index == 0) {
+                // --- 技能1: 近战冲撞 (jz系列) ---
+                GameUtils::log("菜需捆: 冲撞!");
+                auto anim = getOrCreateAnimation(folder, "jz", 6, 0.1f);
 
-        auto skillAction = cocos2d::Sequence::create(
-            cocos2d::ScaleTo::create(0.2f, 2.2f),
-            cocos2d::CallFunc::create([this]() {
-                try {
-                    // 尝试加载特效
-                    auto effect = cocos2d::Sprite::create("Skill_Shockwave.png");
-                    if (!effect) throw std::runtime_error("Effect Texture Missing");
+                auto seq = cocos2d::Sequence::create(
+                    cocos2d::CallFunc::create([this, anim]() {
+                        if (anim) this->runAction(cocos2d::Animate::create(anim));
+                        }),
+                    cocos2d::DelayTime::create(0.3f), // 前摇
+                    cocos2d::MoveBy::create(0.3f, cocos2d::Vec2(isFlippedX() ? -300 : 300, 0)), // 位移
+                    cocos2d::CallFunc::create([this]() {
+                        // [判定]
+                        if (m_targetPlayer && this->getPosition().distance(m_targetPlayer->getPosition()) < 60.0f) {
+                            GameUtils::log("菜需捆 冲撞命中!");
+                            // damage...
+                        }
+                        }),
+                    nullptr
+                );
+                this->runAction(seq);
+            }
+            else {
+                // --- 技能2: 远战投掷 (yz系列) ---
+                GameUtils::log("菜需捆: 投掷!");
+                auto anim = getOrCreateAnimation(folder, "yz", 6, 0.1f);
 
-                    effect->setPosition(this->getContentSize() / 2);
-                    this->addChild(effect, 20);
-                    effect->runAction(cocos2d::Sequence::create(
-                        cocos2d::ScaleTo::create(0.5f, 3.0f),
-                        cocos2d::RemoveSelf::create(), nullptr));
-                }
-                catch (const std::exception& e) {
-                    GameUtils::log("Skill Effect Failed: " + std::string(e.what()));
-                    // 特效失败就不显示了，或者闪烁一下
-                    this->runAction(cocos2d::Blink::create(0.5f, 5));
-                }
-                }),
-            cocos2d::ScaleTo::create(0.2f, 2.0f),
-            nullptr
-        );
-        this->runAction(skillAction);
+                this->runAction(cocos2d::Sequence::create(
+                    cocos2d::Animate::create(anim),
+                    cocos2d::CallFunc::create([this]() {
+                        auto ball = cocos2d::Sprite::create("images/characters/enemies/Projectile_Basketball.png");
+                        if (!ball) ball = cocos2d::Sprite::create();
+                        ball->setPosition(this->getPosition());
+                        this->getParent()->addChild(ball, 10);
+                        auto move = cocos2d::MoveTo::create(0.8f, m_targetPlayer->getPosition());
+                        ball->runAction(cocos2d::Sequence::create(move, cocos2d::RemoveSelf::create(), nullptr));
+                        }),
+                    nullptr
+                ));
+            }
+        }
+        // ==========================================================
+        // 2. [BOSS: 奶龙] (NaiLong)
+        // ==========================================================
+        else if (name == "NaiLong") {
+            if (index == 0) {
+                // --- 技能1: 近战抬举 (jz系列) ---
+                GameUtils::log("奶龙: 抬举!");
+                auto anim = getOrCreateAnimation(folder, "jz", 6, 0.1f);
+
+                auto seq = cocos2d::Sequence::create(
+                    cocos2d::Animate::create(anim),
+                    cocos2d::CallFunc::create([this]() {
+                        // [判定]
+                        if (m_targetPlayer && this->getPosition().distance(m_targetPlayer->getPosition()) < 60.0f) {
+                            GameUtils::log("奶龙 抬举命中!");
+                            // JumpBy...
+                        }
+                        }),
+                    nullptr
+                );
+                this->runAction(seq);
+            }
+            else {
+                // --- 技能2: 远战音波 (yz系列) ---
+                GameUtils::log("奶龙: 音波!");
+                auto anim = getOrCreateAnimation(folder, "yz", 6, 0.1f);
+
+                this->runAction(cocos2d::Sequence::create(
+                    cocos2d::Animate::create(anim),
+                    cocos2d::CallFunc::create([this]() {
+                        auto wave = cocos2d::Sprite::create("images/characters/enemies/Effect_SonicWave.png");
+                        if (!wave) wave = cocos2d::Sprite::create();
+                        wave->setPosition(this->getPosition());
+                        this->addChild(wave);
+                        wave->runAction(cocos2d::Spawn::create(cocos2d::ScaleTo::create(0.6f, 8.0f), cocos2d::FadeOut::create(0.6f), nullptr));
+                        }),
+                    nullptr
+                ));
+            }
+        }
+        // ==========================================================
+        // 3. [BOSS: 耄耋] (MaoDie)
+        // ==========================================================
+        else if (name == "MaoDie") {
+            if (index == 0) {
+                // --- 技能1: 抬举/冲刺 (jz系列) ---
+                GameUtils::log("耄耋: 冲刺!");
+                auto anim = getOrCreateAnimation(folder, "jz", 6, 0.1f);
+
+                auto seq = cocos2d::Sequence::create(
+                    cocos2d::Animate::create(anim),
+                    cocos2d::MoveBy::create(0.2f, cocos2d::Vec2(isFlippedX() ? -200 : 200, 0)),
+                    cocos2d::CallFunc::create([this]() {
+                        if (m_targetPlayer && this->getPosition().distance(m_targetPlayer->getPosition()) < 60.0f) {
+                            GameUtils::log("耄耋 冲刺命中!");
+                        }
+                        }),
+                    nullptr
+                );
+                this->runAction(seq);
+            }
+            else {
+                // --- 技能2: 远战音波 (yz系列) ---
+                GameUtils::log("耄耋: 音波!");
+                auto anim = getOrCreateAnimation(folder, "yz", 6, 0.1f);
+
+                this->runAction(cocos2d::Sequence::create(
+                    cocos2d::Animate::create(anim),
+                    cocos2d::CallFunc::create([this]() {
+                        GameUtils::log("耄耋 音波释放");
+                        }),
+                    nullptr
+                ));
+            }
+        }
+        // ==========================================================
+        // 4. [BOSS: 苦命鸳鸯] (KuMingYuanYang)
+        // ==========================================================
+        else if (name == "KuMingYuanYang") {
+            if (index == 0) {
+                // 技能1: 旋转 (jz系列)
+                auto anim = getOrCreateAnimation(folder, "jz", 6, 0.1f);
+                this->runAction(cocos2d::Spawn::create(
+                    cocos2d::RotateBy::create(1.0f, 720.0f),
+                    cocos2d::Animate::create(anim), nullptr
+                ));
+            }
+            else if (index == 1) {
+                // 技能2: 念力弹 (yz系列)
+                auto anim = getOrCreateAnimation(folder, "yz", 6, 0.1f);
+                this->runAction(cocos2d::Sequence::create(
+                    cocos2d::Animate::create(anim),
+                    cocos2d::CallFunc::create([this]() { /* 发射 bullet */ }), nullptr
+                ));
+            }
+            else if (index == 2) {
+                // 技能3: 飞天
+                m_currentPhase = 2;
+                GameUtils::log("苦命鸳鸯: 升空!");
+                // 升空动作
+                this->runAction(cocos2d::MoveBy::create(1.5f, cocos2d::Vec2(0, 300)));
+            }
+            else if (index == 3) {
+                // 技能3-2: 空对地 (空中触发)
+                auto bullet = cocos2d::Sprite::create("images/characters/enemies/Magic_Bullet.png");
+                if (!bullet) bullet = cocos2d::Sprite::create();
+                bullet->setPosition(this->getPosition());
+                this->getParent()->addChild(bullet, 10);
+                auto move = cocos2d::MoveTo::create(0.8f, m_targetPlayer->getPosition());
+                bullet->runAction(cocos2d::Sequence::create(move, cocos2d::RemoveSelf::create(), nullptr));
+            }
+        }
+    }
+    catch (...) {}
+}
+
+void EliteEnemy::die()
+{
+    this->stopAllActions();
+    m_aiState = EnemyState::DEAD;
+    std::string name = getName();
+    std::string folder = "cxk";
+    if (name == "NaiLong") folder = "nl";
+    if (name == "MaoDie") folder = "md";
+    if (name == "KuMingYuanYang") folder = "kmyy";
+
+    // [中文注释]: 播放死亡动画 (hit系列 5帧)
+    auto anim = getOrCreateAnimation(folder, "hit", 5, 0.2f);
+
+    if (anim) {
+        this->runAction(cocos2d::Sequence::create(
+            cocos2d::Animate::create(anim),
+            cocos2d::RemoveSelf::create(), nullptr
+        ));
     }
     else {
-        GameUtils::log(getName() + " 释放技能2: 绝望冲撞!");
-        cocos2d::Vec2 targetPos = m_targetPlayer ? m_targetPlayer->getPosition() : this->getPosition();
-
-        auto skillAction = cocos2d::Sequence::create(
-            cocos2d::TintTo::create(0.2f, 255, 255, 0),
-            cocos2d::MoveTo::create(0.3f, targetPos),
-            cocos2d::CallFunc::create([this]() {
-                // 冲刺结束逻辑
-                }),
-                cocos2d::TintTo::create(0.2f, 255, 255, 255),
-                nullptr
-                );
-        this->runAction(skillAction);
+        Enemy::die();
     }
-}
-
-void EliteEnemy::takeDamage(float damage)
-{
-    // ============================================================
-    // [异常处理模块 - 护盾特效]
-    // ============================================================
-
-    if (GameUtils::randomInt(0, 100) < 20) {
-        GameUtils::log(getName() + " 格挡了攻击！");
-
-        try {
-            auto shield = cocos2d::Sprite::create("Effect_Shield.png");
-            if (!shield) throw std::runtime_error("Shield Texture Missing");
-
-            shield->setPosition(this->getContentSize() / 2);
-            this->addChild(shield);
-            shield->runAction(cocos2d::Sequence::create(
-                cocos2d::FadeOut::create(0.5f),
-                cocos2d::RemoveSelf::create(), nullptr));
-        }
-        catch (...) {
-            // 简单处理：没有图片就闪蓝色
-            this->runAction(cocos2d::TintTo::create(0.1f, 0, 0, 255));
-        }
-
-        return;
-    }
-
-    float finalDamage = damage;
-    if (m_isEnraged) finalDamage *= 0.8f;
-    if (getName() == "NaiLong") finalDamage *= 0.6f;
-
-    Enemy::takeDamage(finalDamage);
-}
-
-void EliteEnemy::checkPhaseTransition()
-{
-    if (m_currentPhase == 1 && m_health <= m_phaseTransitionHealth) {
-        transitionToNextPhase();
-    }
-}
-
-void EliteEnemy::transitionToNextPhase()
-{
-    m_currentPhase = 2;
-    enrage();
-    GameUtils::log("系统警告: " + getName() + " 进入第二阶段!");
-
-    this->runAction(cocos2d::Spawn::create(
-        cocos2d::TintTo::create(0.5f, 255, 50, 50),
-        cocos2d::ScaleBy::create(0.5f, 1.2f),
-        nullptr
-    ));
-}
-
-void EliteEnemy::enrage()
-{
-    m_isEnraged = true;
-    m_speed *= 1.3f;
 }

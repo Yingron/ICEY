@@ -15,6 +15,7 @@ private:
     int m_currentPhase;
     float m_phaseTransitionHealth;
     bool m_isEnraged;
+    void die();
 
 public:
     virtual bool init() override;
@@ -30,6 +31,7 @@ private:
     void createSpecialAttacks();
     void checkPhaseTransition();
 
+public:
     CREATE_FUNC(EliteEnemy);
 };
 
