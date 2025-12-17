@@ -13,6 +13,7 @@ public:
 // 修改枚举类 LevelState
    // LevelManager.h
 // 修改枚举类 LevelState
+  // LevelManager.h - 确保枚举类包含所有关卡
     enum class LevelState {
         LEVEL1,      // 第一关
         LEVEL2_1,    // 第二关第1张图
@@ -27,12 +28,12 @@ public:
         LEVEL3_4,    // 第三关第4张图
         LEVEL3_5,    // 第三关第5张图
         LEVEL3_6,    // 第三关第6张图
-        LEVEL4_1,    // 第四关第1张图（新增）
-        LEVEL4_2,    // 第四关第2张图（新增）
-        LEVEL4_3,    // 第四关第3张图（新增）
-        LEVEL4_4,    // 第四关第4张图（新增）
-        LEVEL4_5,    // 第四关第5张图（新增）
-        LEVEL4_6,    // 第四关第6张图（新增）
+        LEVEL4_1,    // 第四关第1张图
+        LEVEL4_2,    // 第四关第2张图
+        LEVEL4_3,    // 第四关第3张图
+        LEVEL4_4,    // 第四关第4张图
+        LEVEL4_5,    // 第四关第5张图
+        LEVEL4_6,    // 第四关第6张图
         COMPLETED    // 所有关卡完成
     };
 

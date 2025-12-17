@@ -1,11 +1,12 @@
+// HudLayer.h
 #pragma once
 #ifndef __HUD_LAYER_H__
 #define __HUD_LAYER_H__
 
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
-#include"HealthBar.h"
-#include"SheldBar.h"
+#include "HealthBar.h"
+#include "SheldBar.h"
 #include "DashBar.h"
 
 class HealthBar;
@@ -23,6 +24,7 @@ private:
     cocos2d::Label* m_comboLabel;      // 连击数字显示
     cocos2d::Label* m_comboTextLabel;  // "COMBO"文本
     int m_currentCombo;                // 当前连击数
+
 public:
     virtual bool init() override;
 
@@ -36,18 +38,18 @@ public:
     void createCombo();
     CREATE_FUNC(HudLayer);
 
-    // 获取UI组件（新增）
+    // 获取UI组件
     HealthBar* getHealthBar() { return m_healthBar; }
     SheldBar* getSheldBar() { return m_sheldBar; }
-    DashBar* getDashBar() const { return m_dashBar; }
+    DashBar* getDashBar() { return m_dashBar; }  // 只保留一个声明
 
-    // 更新接口（新增）
+    // 更新接口
     void updateHealth(float health);     // 更新血量显示
     void updateSheld(int sheld);         // 更新护盾显示
     void setMaxHealth(float health);
     void setMaxSheld(int sheld);
 
-    // Dash相关接口（新增）
+    // Dash相关接口
     bool useDash();                       // 使用一次冲刺
     void rechargeDash();                  // 恢复一次冲刺
     void rechargeAllDashes();             // 恢复所有冲刺
@@ -55,7 +57,7 @@ public:
     void setMaxDashes(int maxDashes);     // 设置最大冲刺次数
     void setDashRechargeTime(float time); // 设置冲刺恢复时间
 
-    // 连击数接口（新增）
+    // 连击数接口
     void addCombo();                    // 增加连击数
     void resetCombo();                  // 重置连击数
     void setCombo(int combo);           // 直接设置连击数

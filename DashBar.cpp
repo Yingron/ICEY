@@ -53,10 +53,9 @@ bool DashBar::init(int maxDashes, float rechargeTime)
     return true;
 }
 
-// 创建冲刺条UI
+// 创建冲刺条UI - 这个是 DashBar 自己的方法
 void DashBar::createDashBar()
 {
-
     // 冲刺次数文本
     m_dashText = Label::createWithTTF("", "fonts/Marker Felt.ttf", 14);
     if (!m_dashText)
@@ -67,7 +66,6 @@ void DashBar::createDashBar()
     // 设置文本样式
     m_dashText->setColor(Color3B::WHITE);
     m_dashText->enableOutline(Color4B::BLACK, 1);
-
 
     // 添加组件到节点
     this->addChild(m_dashText, 2);

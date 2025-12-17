@@ -5,6 +5,7 @@
 
 #include "cocos2d.h"
 #include "PlayerState.h"
+#include "DashBar.h"
 
 class Player : public cocos2d::Sprite {
 public:
@@ -46,13 +47,17 @@ public:
     // 跳跃状态查询
     bool isGrounded() const { return _isGrounded; }
     bool isJumping() const { return _currentState == PlayerState::JUMPING; }
+    // 添加DashBar引用
+    DashBar* _dashBar;
 
+    // 修改冲刺相关方法声明
+    bool canDash() const;  // 改为公有方法以便访问
+    void setDashBar(DashBar* dashBar) { _dashBar = dashBar; }
     // 冲刺相关方法
     void dashLeft();
     void dashRight();
     void dash();  // 默认向右冲刺
     bool isDashing() const { return _currentState == PlayerState::DASHING; }
-    bool canDash() const { return _dashCooldown <= 0.0f; }
 
 private:
     PlayerState _currentState;

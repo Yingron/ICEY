@@ -1,4 +1,4 @@
-// Classes/Utils/AnimationLoader.h
+// AnimationLoader.h
 #ifndef ANIMATIONLOADER_H
 #define ANIMATIONLOADER_H
 

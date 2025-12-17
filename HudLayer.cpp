@@ -317,18 +317,17 @@ void HudLayer::updateComboDisplay()
 }
 
 
-void HudLayer::createDashBar()
-{
+// HudLayer.cpp - 添加正确的 createDashBar 函数
+void HudLayer::createDashBar() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // 冲刺条参数：最大冲刺次数，充能时间（秒）
-    int maxDashes = 3;           // 默认3次冲刺
-    float rechargeTime = 2.0f;   // 默认2秒充能一格
+    // 冲刺条参数：最大冲刺次数，充能时间（秒）- 修改为3秒
+    int maxDashes = 3;           // 最大3次冲刺
+    float rechargeTime = 3.0f;   // 3秒充能一格（符合要求）
 
     m_dashBar = DashBar::create(maxDashes, rechargeTime);
 
-    if (!m_dashBar)
-    {
+    if (!m_dashBar) {
         log("Failed to create dash bar!");
         return;
     }
@@ -340,7 +339,8 @@ void HudLayer::createDashBar()
     ));
 
     this->addChild(m_dashBar);
-    log("Dash bar created successfully");
+    log("Dash bar created successfully with %d max dashes and %.1f second recharge",
+        maxDashes, rechargeTime);
 }
 
 // Dash相关接口实现

@@ -442,17 +442,19 @@ bool Player::init(const std::string& spriteFile) {
     _comboTimer = 0.0f;
 
     // 初始化冲刺相关变量
-    _canDash = true;              // 初始可以冲刺
-    _dashSpeed = 1500.0f;         // 冲刺速度（比跑步快很多）
-    _dashDistance = 300.0f;       // 冲刺距离
-    _dashDuration = 0.2f;         // 冲刺持续时间（秒）
-    _dashCooldown = 0.0f;         // 冲刺冷却时间
-    _currentDashDistance = 0.0f;  // 当前已冲刺距离
-    _isDashLeft = false;          // 默认向右冲刺
+    _dashSpeed = 1500.0f;
+    _dashDistance = 300.0f;
+    _dashDuration = 0.2f;
+    // _dashCooldown = 0.0f; // 删除这行，改为使用DashBar管理
+    _currentDashDistance = 0.0f;
+    _isDashLeft = false;
 
     // 冲刺动画键
     _dashLeftAnimKey = "dash_left";
     _dashRightAnimKey = "dash_right";
+
+    // 初始化DashBar引用为nullptr
+    _dashBar = nullptr;
 
     // 添加物理体
     auto physicsBody = PhysicsBody::createBox(this->getContentSize());
@@ -651,12 +653,39 @@ void Player::setCurrentState(PlayerState state) {
         }
     }
 
-    // 冲刺期间不能切换到其他动画（除了攻击）
+    // 如果正在冲刺，允许切换到其他状态（特别是结束冲刺时）
     if (_currentState == PlayerState::DASHING && state != PlayerState::DASHING) {
-        // 只有冲刺结束后才能切换状态
-        if (!_canDash) {
-            return; // 冲刺中保持冲刺状态
+        // 允许从冲刺状态切换到其他状态
+        _currentState = state;
+
+        // 停止所有动作
+        this->stopAllActions();
+
+        // 根据新状态设置动画
+        switch (state) {
+        case PlayerState::IDLE:
+            _currentAnimationKey = "idle";
+            break;
+        case PlayerState::RUNNING:
+            if (_facingRight) {
+                _currentAnimationKey = "run_right";
+            }
+            else {
+                _currentAnimationKey = "run_left";
+            }
+            break;
+        default:
+            break;
         }
+
+        // 播放对应动画
+        auto it = _animations.find(_currentAnimationKey);
+        if (it != _animations.end() && it->second->getFrames().size() > 0) {
+            auto animate = Animate::create(it->second);
+            this->runAction(RepeatForever::create(animate));
+        }
+
+        return;
     }
 
     // 如果当前正在攻击，并且不是要切换到攻击状态，需要特殊处理
@@ -864,24 +893,100 @@ void Player::setCurrentState(PlayerState state) {
         }
     }
 }
+// Player.cpp - 修改canDash方法
+bool Player::canDash() const {
+    // 使用DashBar管理冲刺次数
+    if (_dashBar) {
+        return _dashBar->canDash();
+    }
+
+    // 如果没有DashBar，使用原来的逻辑（向后兼容）
+    return (_dashCooldown <= 0.0f && _currentState != PlayerState::ATTACKING);
+}
 // Player.cpp - 添加冲刺方法实现
 void Player::dash() {
     // 默认向右冲刺
     dashRight();
 }
 
-void Player::dashRight() {
+// Player.cpp - 修改 dashLeft 函数中的动画设置
+void Player::dashLeft() {
     if (!canDash() || _currentState == PlayerState::ATTACKING) {
+        log("Cannot dash: canDash=%d, state=%d", canDash(), (int)_currentState);
+        return;
+    }
+
+    if (_dashBar && !_dashBar->useDash()) {
+        log("Failed to use dash from DashBar");
         return;
     }
 
     // 设置冲刺状态
     _currentState = PlayerState::DASHING;
-    _facingRight = true;
+    _facingRight = false;  // 面向左
+    _isDashLeft = true;
+    _currentDashDistance = 0.0f;
+
+    // 停止当前所有动作
+    this->stopAllActions();
+
+    // 播放冲刺动画
+    std::string dashKey = "dash_left";
+    auto it = _animations.find(dashKey);
+    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+        // 关键修复：向左冲刺时，如果使用向右的动画，需要水平翻转
+        if (dashKey == "dash_right") {
+            this->setFlippedX(true);  // 水平翻转，使其面向左
+        }
+        else {
+            this->setFlippedX(false); // 如果已经是向左动画，不需要翻转
+        }
+
+        // 播放冲刺动画（不循环）
+        auto animate = Animate::create(it->second);
+        auto callback = CallFunc::create([this]() {
+            // 冲刺动画结束后，根据情况回到跑步或待机状态
+            if (_isMovingLeft || _isMovingRight) {
+                setCurrentState(PlayerState::RUNNING);
+            }
+            else {
+                setCurrentState(PlayerState::IDLE);
+            }
+            });
+
+        auto sequence = Sequence::create(animate, callback, nullptr);
+        this->runAction(sequence);
+
+        log("Playing dash left animation, remaining dashes: %d",
+            _dashBar ? _dashBar->getAvailableDashes() : 0);
+    }
+    else {
+        // 如果没有冲刺动画，使用跑步动画但更快，并设置翻转
+        _currentState = PlayerState::RUNNING;
+        this->setFlippedX(true);  // 面向左时水平翻转
+        setCurrentState(PlayerState::RUNNING);
+        // 设置一个标志表示正在冲刺
+        _currentState = PlayerState::DASHING;
+    }
+}
+
+// Player.cpp - 修改 dashRight 函数中的动画设置
+void Player::dashRight() {
+    if (!canDash() || _currentState == PlayerState::ATTACKING) {
+        log("Cannot dash: canDash=%d, state=%d", canDash(), (int)_currentState);
+        return;
+    }
+
+    if (_dashBar && !_dashBar->useDash()) {
+        log("Failed to use dash from DashBar");
+        return;
+    }
+
+    // 设置冲刺状态
+    _currentState = PlayerState::DASHING;
+    _facingRight = true;   // 面向右
     _isDashLeft = false;
     _currentDashDistance = 0.0f;
-    _canDash = false;
-    _dashCooldown = 0.5f;  // 冲刺冷却时间
 
     // 停止当前所有动作
     this->stopAllActions();
@@ -890,7 +995,7 @@ void Player::dashRight() {
     std::string dashKey = "dash_right";
     auto it = _animations.find(dashKey);
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
-        // 设置面向右
+        // 关键修复：确保面向右时不翻转
         this->setFlippedX(false);
 
         // 播放冲刺动画（不循环）
@@ -908,64 +1013,20 @@ void Player::dashRight() {
         auto sequence = Sequence::create(animate, callback, nullptr);
         this->runAction(sequence);
 
-        log("Playing dash right animation");
+        log("Playing dash right animation, remaining dashes: %d",
+            _dashBar ? _dashBar->getAvailableDashes() : 0);
     }
     else {
         // 如果没有冲刺动画，使用跑步动画但更快
+        _currentState = PlayerState::RUNNING;
+        this->setFlippedX(false);  // 面向右时不翻转
         setCurrentState(PlayerState::RUNNING);
         // 设置一个标志表示正在冲刺
         _currentState = PlayerState::DASHING;
     }
 }
 
-void Player::dashLeft() {
-    if (!canDash() || _currentState == PlayerState::ATTACKING) {
-        return;
-    }
-
-    // 设置冲刺状态
-    _currentState = PlayerState::DASHING;
-    _facingRight = false;
-    _isDashLeft = true;
-    _currentDashDistance = 0.0f;
-    _canDash = false;
-    _dashCooldown = 0.5f;  // 冲刺冷却时间
-
-    // 停止当前所有动作
-    this->stopAllActions();
-
-    // 播放冲刺动画
-    std::string dashKey = "dash_left";
-    auto it = _animations.find(dashKey);
-    if (it != _animations.end() && it->second->getFrames().size() > 0) {
-        // 设置面向左
-        this->setFlippedX(true);
-
-        // 播放冲刺动画（不循环）
-        auto animate = Animate::create(it->second);
-        auto callback = CallFunc::create([this]() {
-            // 冲刺动画结束后，根据情况回到跑步或待机状态
-            if (_isMovingLeft || _isMovingRight) {
-                setCurrentState(PlayerState::RUNNING);
-            }
-            else {
-                setCurrentState(PlayerState::IDLE);
-            }
-            });
-
-        auto sequence = Sequence::create(animate, callback, nullptr);
-        this->runAction(sequence);
-
-        log("Playing dash left animation");
-    }
-    else {
-        // 如果没有冲刺动画，使用跑步动画但更快
-        setCurrentState(PlayerState::RUNNING);
-        // 设置一个标志表示正在冲刺
-        _currentState = PlayerState::DASHING;
-    }
-}
-
+// Player.cpp - 修改 updateDash 函数
 void Player::updateDash(float delta) {
     if (_currentState == PlayerState::DASHING) {
         // 计算冲刺移动
@@ -990,20 +1051,21 @@ void Player::updateDash(float delta) {
         if (_currentDashDistance >= _dashDistance) {
             // 冲刺结束，根据情况回到跑步或待机状态
             if (_isMovingLeft || _isMovingRight) {
+                // 先停止所有动作
+                this->stopAllActions();
+                _currentState = PlayerState::RUNNING;
                 setCurrentState(PlayerState::RUNNING);
             }
             else {
+                // 先停止所有动作
+                this->stopAllActions();
+                _currentState = PlayerState::IDLE;
                 setCurrentState(PlayerState::IDLE);
             }
-        }
-    }
 
-    // 更新冲刺冷却时间
-    if (_dashCooldown > 0.0f) {
-        _dashCooldown -= delta;
-        if (_dashCooldown <= 0.0f) {
-            _canDash = true;
-            log("Dash cooldown finished, can dash again");
+            // 重置冲刺变量
+            _currentDashDistance = 0.0f;
+            _isDashLeft = false;
         }
     }
 }
@@ -1057,6 +1119,7 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
         // W键：跳跃 - 可以与移动同时进行
         jump();
     }
+    // Player.cpp - 修改 onKeyPressed 函数中的冲刺部分
     else if (keyCode == EventKeyboard::KeyCode::KEY_SPACE) {
         // 空格键：冲刺
         if (canDash()) {
@@ -1066,7 +1129,7 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
             bool dPressed = (_keyStates.find(EventKeyboard::KeyCode::KEY_D) != _keyStates.end() &&
                 _keyStates[EventKeyboard::KeyCode::KEY_D]);
 
-            // 优先处理A+D同时按下的情况
+            // 明确的方向优先级
             if (aPressed && !dPressed) {
                 // A键按下：向左冲刺
                 dashLeft();
@@ -1099,6 +1162,9 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
                     log("Player dashes left (space only, default)");
                 }
             }
+        }
+        else {
+            log("Cannot dash: no dash available");
         }
     }
 

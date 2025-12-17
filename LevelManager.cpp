@@ -75,14 +75,24 @@ void LevelManager::initLevelConfigs() {
     LevelConfig level3_1;
     level3_1.level = LevelState::LEVEL3_1;
     level3_1.name = "Level 3-1";
-    level3_1.backgroundImages = { "background-level3-1.png" };
+    level3_1.backgroundImages = {
+        "background-level3-1-1.png",
+        "background-level3-1-2.png",
+        "background-level3-1-3.png",
+        "background-level3-1-4.png",
+        "background-level3-1-5.png"
+    };
     _levelConfigs.push_back(level3_1);
 
     // Level3-2: 第三关第2张图（新增）
     LevelConfig level3_2;
     level3_2.level = LevelState::LEVEL3_2;
     level3_2.name = "Level 3-2";
-    level3_2.backgroundImages = { "background-level3-2.png" };
+    level3_2.backgroundImages = {
+        "background-level3-2-1.png",
+        "background-level3-2-2.png",
+        "background-level3-2-3.png"
+    };
     _levelConfigs.push_back(level3_2);
 
     // Level3-3: 第三关第3张图（新增）
@@ -131,7 +141,11 @@ void LevelManager::initLevelConfigs() {
     LevelConfig level4_3;
     level4_3.level = LevelState::LEVEL4_3;
     level4_3.name = "Level 4-3";
-    level4_3.backgroundImages = { "background-level4-3.png" };
+    level4_3.backgroundImages = {
+        "background-level4-3-1.png",
+        "background-level4-3-2.png",
+        "background-level4-3-3.png"
+    };
     _levelConfigs.push_back(level4_3);
 
     // Level4-4: 第四关第4张图（新增）
@@ -145,14 +159,22 @@ void LevelManager::initLevelConfigs() {
     LevelConfig level4_5;
     level4_5.level = LevelState::LEVEL4_5;
     level4_5.name = "Level 4-5";
-    level4_5.backgroundImages = { "background-level4-5.png" };
+    level4_5.backgroundImages = {
+        "background-level4-5-1.png",
+        "background-level4-5-2.png",
+        "background-level4-5-3.png"
+    };
     _levelConfigs.push_back(level4_5);
 
     // Level4-6: 第四关第6张图（新增）
     LevelConfig level4_6;
     level4_6.level = LevelState::LEVEL4_6;
     level4_6.name = "Level 4-6";
-    level4_6.backgroundImages = { "background-level4-6.png" };
+    level4_6.backgroundImages = {
+        "background-level4-6-1.png",
+        "background-level4-6-2.png",
+        "background-level4-6-3.png"
+    };
     _levelConfigs.push_back(level4_6);
 }
 
@@ -161,7 +183,7 @@ bool LevelManager::canSwitchToNextLevel(float playerWorldX) {
 
     // 玩家到达当前关卡边界时，可以切换到下一关卡
     // 使用更宽松的条件：距离边界100像素时就可以切换
-    if (playerWorldX >= maxWorldX - 200.0f) {
+    if (playerWorldX >= maxWorldX - 10.0f) {
         // 检查是否可以切换到下一关卡（不是最后一个关卡）
         LevelState nextLevel = _currentLevel;
         switch (_currentLevel) {

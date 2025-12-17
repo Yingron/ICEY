@@ -20,9 +20,6 @@ public:
     // 立即恢复所有冲刺
     void rechargeAll();
 
-    // 获取当前可用冲刺次数
-    int getAvailableDashes() const { return m_availableDashes; }
-
     // 获取最大冲刺次数
     int getMaxDashes() const { return m_maxDashes; }
 
@@ -46,6 +43,12 @@ public:
 
     // 强制更新冲刺状态
     void forceUpdate();
+
+    // 添加canDash方法
+    bool canDash() const { return m_availableDashes > 0; }
+
+    // 获取当前可用冲刺次数
+    int getAvailableDashes() const { return m_availableDashes; }
 
 private:
     void createDashBar();

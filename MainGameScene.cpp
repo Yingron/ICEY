@@ -77,15 +77,13 @@ bool MainGameScene::init() {
     return true;
 }
 
-// 初始化 HUD*********hy
-void MainGameScene::initHud()
-{
+// MainGameScene.cpp - 在initHud函数中添加连接代码
+void MainGameScene::initHud() {
     log("=== initHUD ===");
 
     // 创建 HUD 层
     _hudLayer = HudLayer::create();
-    if (_hudLayer)
-    {
+    if (_hudLayer) {
         // 设置暂停按钮回调
         _hudLayer->setPauseCallback([this](Ref* sender) {
             Director::getInstance()->pause();
@@ -95,20 +93,25 @@ void MainGameScene::initHud()
             log("Game paused");
             });
 
-        // 将 HUD 添加到场景中，确保在最上层显示
+        // 将 HUD 添加到场景中，确保在最顶层显示
         this->addChild(_hudLayer, 1000); // 使用较高的 z-order
 
-        // 注册到HUD管理器（新增）
+        // 注册到HUD管理器
         HudManager::getInstance()->setHudLayer(_hudLayer);
 
         // 设置初始值
-        _hudLayer->updateHealth(100.0f);  // 初始满血
-        _hudLayer->updateSheld(10);       // 初始满护盾
+        _hudLayer->updateHealth(100.0f);
+        _hudLayer->updateSheld(10);
+
+        // !!! 重要：将DashBar连接到Player !!!
+        if (_player && _hudLayer->getDashBar()) {
+            _player->setDashBar(_hudLayer->getDashBar());
+            log("DashBar connected to Player successfully");
+        }
 
         log("HUD Layer initialized successfully");
     }
-    else
-    {
+    else {
         log("ERROR: Failed to create HUD Layer!");
     }
 }

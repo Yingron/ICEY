@@ -40,7 +40,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
     auto levelManager = LevelManager::getInstance();
     auto currentLevel = levelManager->getCurrentLevel();
 
-    // 根据当前关卡返回不同的背景图片
+    // 根据关卡枚举返回对应的背景图片
     if (currentLevel == LevelManager::LevelState::LEVEL1) {
         images = {
             "background-level1-1.png",
@@ -69,10 +69,22 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         images = { "background-level2-6.png" };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_1) {
-        images = { "background-level3-1.png" };
+        // 扩展为长卷轴：5张图片
+        images = {
+            "background-level3-1-1.png",
+            "background-level3-1-2.png",
+            "background-level3-1-3.png",
+            "background-level3-1-4.png",
+            "background-level3-1-5.png"
+        };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_2) {
-        images = { "background-level3-2.png" };
+        // 扩展为长卷轴：3张图片
+        images = {
+            "background-level3-2-1.png",
+            "background-level3-2-2.png",
+            "background-level3-2-3.png"
+        };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_3) {
         images = { "background-level3-3.png" };
@@ -86,29 +98,44 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
     else if (currentLevel == LevelManager::LevelState::LEVEL3_6) {
         images = { "background-level3-6.png" };
     }
-    else if (currentLevel == LevelManager::LevelState::LEVEL4_1) {  // 新增
+    else if (currentLevel == LevelManager::LevelState::LEVEL4_1) {
         images = { "background-level4-1.png" };
     }
-    else if (currentLevel == LevelManager::LevelState::LEVEL4_2) {  // 新增
+    else if (currentLevel == LevelManager::LevelState::LEVEL4_2) {
         images = { "background-level4-2.png" };
     }
-    else if (currentLevel == LevelManager::LevelState::LEVEL4_3) {  // 新增
-        images = { "background-level4-3.png" };
+    else if (currentLevel == LevelManager::LevelState::LEVEL4_3) {
+        // 扩展为长卷轴：3张图片
+        images = {
+            "background-level4-3-1.png",
+            "background-level4-3-2.png",
+            "background-level4-3-3.png"
+        };
     }
-    else if (currentLevel == LevelManager::LevelState::LEVEL4_4) {  // 新增
+    else if (currentLevel == LevelManager::LevelState::LEVEL4_4) {
         images = { "background-level4-4.png" };
     }
-    else if (currentLevel == LevelManager::LevelState::LEVEL4_5) {  // 新增
-        images = { "background-level4-5.png" };
+    else if (currentLevel == LevelManager::LevelState::LEVEL4_5) {
+        // 扩展为长卷轴：3张图片
+        images = {
+            "background-level4-5-1.png",
+            "background-level4-5-2.png",
+            "background-level4-5-3.png"
+        };
     }
-    else if (currentLevel == LevelManager::LevelState::LEVEL4_6) {  // 新增
-        images = { "background-level4-6.png" };
+    else if (currentLevel == LevelManager::LevelState::LEVEL4_6) {
+        // 扩展为长卷轴：3张图片
+        images = {
+            "background-level4-6-1.png",
+            "background-level4-6-2.png",
+            "background-level4-6-3.png"
+        };
     }
 
     auto fileUtils = FileUtils::getInstance();
     std::vector<std::string> verifiedImages;
 
-    // 验证文件是否存在，并添加完整路径
+    // 检查文件是否存在，添加完整路径
     for (const auto& filename : images) {
         std::vector<std::string> basePaths = {
             "",
@@ -117,7 +144,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
             "images/",
             "../Resources/images/environment/background/",
             "../../Resources/images/environment/background/",
-            "C:/aishi/test2/Resources/images/environment/background/"  // 您的绝对路径
+            "C:/aishi/test2/Resources/images/environment/background/"  // 绝对路径
         };
 
         bool found = false;
@@ -133,7 +160,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
 
         if (!found) {
             log("WARNING: Could not find background image: %s", filename.c_str());
-            verifiedImages.push_back(""); // 占位符
+            verifiedImages.push_back(""); // 占位
         }
     }
 
