@@ -2,6 +2,10 @@
 #include "GameConfig.h"
 #include "Level1SceneBackground.h"  // 确保包含正确的头文件
 #include "LevelManager.h"
+#include"PauseScene.h"
+#include"HudManager.h"
+#include"HudLayer.h"
+#include"GameOverScene.h"
 
 USING_NS_CC;
 
@@ -52,6 +56,8 @@ bool MainGameScene::init() {
     // 初始化输入
     initInput();
 
+    initHud();//hy
+
     // 初始化调试UI
     initDebugUI();
 
@@ -69,6 +75,42 @@ bool MainGameScene::init() {
     showCollectionUI();
 
     return true;
+}
+
+// 初始化 HUD*********hy
+void MainGameScene::initHud()
+{
+    log("=== initHUD ===");
+
+    // 创建 HUD 层
+    _hudLayer = HudLayer::create();
+    if (_hudLayer)
+    {
+        // 设置暂停按钮回调
+        _hudLayer->setPauseCallback([this](Ref* sender) {
+            Director::getInstance()->pause();
+            auto pauseScene = PauseScene::createScene();
+            Director::getInstance()->pushScene(pauseScene);
+
+            log("Game paused");
+            });
+
+        // 将 HUD 添加到场景中，确保在最上层显示
+        this->addChild(_hudLayer, 1000); // 使用较高的 z-order
+
+        // 注册到HUD管理器（新增）
+        HudManager::getInstance()->setHudLayer(_hudLayer);
+
+        // 设置初始值
+        _hudLayer->updateHealth(100.0f);  // 初始满血
+        _hudLayer->updateSheld(10);       // 初始满护盾
+
+        log("HUD Layer initialized successfully");
+    }
+    else
+    {
+        log("ERROR: Failed to create HUD Layer!");
+    }
 }
 
 void MainGameScene::onEnter() {
@@ -555,6 +597,8 @@ void MainGameScene::update(float delta) {
     // 检查关卡切换
     checkLevelTransition(delta);
 
+    checkPlayerHealth();//******************hy
+
     // 处理关卡切换过渡效果
     if (_isTransitioning) {
         _transitionTimer += delta;
@@ -601,9 +645,163 @@ void MainGameScene::update(float delta) {
     }
 }
 
+// 检查玩家血量//****************hy
+void MainGameScene::checkPlayerHealth() {
+    // 获取当前血量
+    float currentHealth = HudManager::getCurrentHealth();
+
+    // 如果血量为0且游戏未结束，触发游戏结束
+    if (currentHealth <= 0.0f && !_isGameOver) {
+        log("玩家血量为0，触发游戏结束");
+        showGameOver();
+    }
+}
+
+// 显示游戏结束界面//********hy
+void MainGameScene::showGameOver() {
+    log("玩家死亡，显示游戏结束界面");
+
+    // 设置游戏结束标志
+    _isGameOver = true;
+
+    // 停止玩家移动
+    if (_player) {
+        _player->stopMoving();
+        _player->setCurrentState(PlayerState::IDLE);
+    }
+
+    // 显示游戏结束场景
+    auto gameOverScene = GameOverScene::createScene();
+    Director::getInstance()->pushScene(gameOverScene);
+
+    log("游戏结束界面已显示");
+}
+
 void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (_player) {
         _player->onKeyPressed(keyCode);
+    }
+
+    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//按esc暂停     hy
+    {
+        Director::getInstance()->pause();
+        auto pauseScene = PauseScene::createScene();
+        Director::getInstance()->pushScene(pauseScene);
+
+        log("Game paused");
+        event->stopPropagation();
+        return;
+    }
+
+    int currentMax = 0;
+    //测试HudManager可删除  hy
+    switch (keyCode) {
+        case cocos2d::EventKeyboard::KeyCode::KEY_1:
+            HudManager::updateHealth(30.0f);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_2:
+            HudManager::updateHealth(90.0f);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_3:
+            HudManager::updateSheld(3);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_4:
+            HudManager::updateHealth(0.0f);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_5:
+            // 增加连击数
+            HudManager::addCombo();
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_6:
+            // 重置连击数
+            HudManager::resetCombo();
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_7:
+            // 设置特定连击数
+            HudManager::setCombo(10);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_8:
+            HudManager::setMaxSheld(5);
+            break;
+        case cocos2d::EventKeyboard::KeyCode::KEY_9:
+            HudManager::setMaxHealth(150.0f);
+            break;
+
+        case cocos2d::EventKeyboard::KeyCode::KEY_Z:
+            // B键：使用冲刺
+            if (HudManager::useDash()) {
+                log("使用冲刺成功");
+            }
+            else {
+                log("冲刺不足，无法使用");
+            }
+            break;
+
+        case cocos2d::EventKeyboard::KeyCode::KEY_X:
+            // G键：恢复所有冲刺
+            HudManager::rechargeAllDashes();
+            log("恢复所有冲刺");
+            break;
+
+        case cocos2d::EventKeyboard::KeyCode::KEY_C:
+            // M键：增加最大冲刺次数
+
+            if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
+                if (auto dashBar = hudLayer->getDashBar()) {
+                    currentMax = dashBar->getMaxDashes();
+                    dashBar->setMaxDashes(currentMax + 1);
+                    log("最大冲刺次数: %d -> %d", currentMax, currentMax + 1);
+                }
+            }
+            break;
+
+        case cocos2d::EventKeyboard::KeyCode::KEY_V:
+            // N键：减少最大冲刺次数
+
+            if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
+                if (auto dashBar = hudLayer->getDashBar()) {
+                    currentMax = dashBar->getMaxDashes();
+                    int newMax = currentMax - 1;
+                    if (newMax < 1) newMax = 1;
+                    dashBar->setMaxDashes(newMax);
+                    log("最大冲刺次数: %d -> %d", currentMax, newMax);
+                }
+            }
+            break;
+
+        case cocos2d::EventKeyboard::KeyCode::KEY_B:
+            // T键：减少充能时间（更快充能）
+            if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
+                if (auto dashBar = hudLayer->getDashBar()) {
+                    float currentTime = dashBar->getRechargeTime();
+                    float newTime = currentTime - 0.5f;
+                    if (newTime < 0.5f) newTime = 0.5f; // 最小0.5秒
+                    dashBar->setRechargeTime(newTime);
+                    log("充能时间: %.1f秒 -> %.1f秒", currentTime, newTime);
+                }
+            }
+            break;
+
+        case cocos2d::EventKeyboard::KeyCode::KEY_N:
+            // Y键：增加充能时间（更慢充能）
+            if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
+                if (auto dashBar = hudLayer->getDashBar()) {
+                    float currentTime = dashBar->getRechargeTime();
+                    float newTime = currentTime + 0.5f;
+                    dashBar->setRechargeTime(newTime);
+                    log("充能时间: %.1f秒 -> %.1f秒", currentTime, newTime);
+                }
+            }
+            break;
+
+        case cocos2d::EventKeyboard::KeyCode::KEY_0://隐藏hud界面
+            static bool hudVisible = true;
+            hudVisible = !hudVisible;
+            HudManager::showHud(hudVisible);
+            break;
+
+
+
     }
 }
 

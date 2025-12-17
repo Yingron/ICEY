@@ -9,6 +9,7 @@
 #include "LevelManager.h"
 #include "ItemManager.h"
 #include "Item.h"
+#include"HudLayer.h"
 
 class MainGameScene : public cocos2d::Layer
 {
@@ -22,8 +23,14 @@ private:
     Player* _player;
     SceneBackground* _currentBackground;
 
+    HudLayer* _hudLayer;  // 添加 HUD 层指针hy*****
+
     // 关卡管理
     LevelManager* _levelManager;
+
+    bool _isGameOver;//hy*****
+    void checkPlayerHealth();
+    void showGameOver();
 
     // 摄像机相关
     float _cameraOffsetX;
@@ -48,6 +55,7 @@ private:
     void initDebugUI();
     void initCamera();
     void initItems();
+    void initHud();//hy*****
     void showCollectionUI();
 
     // 更新方法
