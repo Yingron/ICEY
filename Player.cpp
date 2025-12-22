@@ -2,6 +2,7 @@
 // Player.cpp
 #include "Player.h"
 #include "GameConfig.h"
+#include"AudioManager.h"
 
 USING_NS_CC;
 
@@ -880,6 +881,7 @@ void Player::setCurrentState(PlayerState state) {
 
                 auto animate = Animate::create(it->second);
                 this->runAction(RepeatForever::create(animate));
+                AudioManager::getInstance()->playEffect("sfx_jump");//新增
                 log("Playing jump animation with %d frames", (int)it->second->getFrames().size());
             }
             else {
@@ -1106,6 +1108,7 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
         if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING && _isGrounded) {
             _currentState = PlayerState::ATTACKING;
             setCurrentState(PlayerState::ATTACKING);
+            AudioManager::getInstance()->playEffect("sfx_attack");//新增音效
 
             // 攻击时停止移动
             _isMovingLeft = false;
@@ -1123,6 +1126,7 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
     else if (keyCode == EventKeyboard::KeyCode::KEY_SPACE) {
         // 空格键：冲刺
         if (canDash()) {
+            AudioManager::getInstance()->playEffect("sfx_dash");//新增
             // 使用按键状态表来判断方向
             bool aPressed = (_keyStates.find(EventKeyboard::KeyCode::KEY_A) != _keyStates.end() &&
                 _keyStates[EventKeyboard::KeyCode::KEY_A]);
@@ -1227,4 +1231,5 @@ Player::~Player() {
         CC_SAFE_RELEASE(pair.second);
     }
     _animations.clear();
+
 }
