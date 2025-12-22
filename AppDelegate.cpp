@@ -25,7 +25,8 @@
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
 
-// #define USE_AUDIO_ENGINE 1
+//ä½¿ç”¨ä¸Šé¢çš„éŸ³é¢‘å¼•æ“ï¼ï¼
+ #define USE_AUDIO_ENGINE 1   
 // #define USE_SIMPLE_AUDIO_ENGINE 1
 
 #if USE_AUDIO_ENGINE && USE_SIMPLE_AUDIO_ENGINE
@@ -43,7 +44,7 @@ using namespace CocosDenshion;
 
 USING_NS_CC;
 
-static cocos2d::Size designResolutionSize = cocos2d::Size(1280, 720);  // ¸ÄÎª1280x720
+static cocos2d::Size designResolutionSize = cocos2d::Size(1280, 720);  // æ”¹ä¸º1280x720
 static cocos2d::Size smallResolutionSize = cocos2d::Size(480, 320);
 static cocos2d::Size mediumResolutionSize = cocos2d::Size(1024, 768);
 static cocos2d::Size largeResolutionSize = cocos2d::Size(2048, 1536);
@@ -84,7 +85,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if (!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        // ´´½¨È«ÆÁ´°¿Ú
+        // åˆ›å»ºå…¨å±çª—å£
         glview = GLViewImpl::createWithFullScreen("ICEY Game");
 #else
         glview = GLViewImpl::create("ICEY Game");
@@ -92,39 +93,48 @@ bool AppDelegate::applicationDidFinishLaunching() {
         director->setOpenGLView(glview);
     }
 
+    //åˆå§‹åŒ–éŸ³é¢‘ç®¡ç†å™¨***hy
+    auto audioManager = AudioManager::getInstance();
+    audioManager->init();
+
+    // è®¾ç½®éŸ³é‡
+    audioManager->setBGMVolume(0.8f);
+    audioManager->setEffectVolume(0.7f);
+    audioManager->setUIVolume(0.5f);
+
     // turn on display FPS
     director->setDisplayStats(true);
 
     // set FPS. the default value is 1.0/60 if you don't call this
     director->setAnimationInterval(1.0f / 60);
 
-    // »ñÈ¡Êµ¼ÊÆÁÄ»´óĞ¡
+    // è·å–å®é™…å±å¹•å¤§å°
     auto frameSize = glview->getFrameSize();
     log("Screen resolution: %.0f x %.0f", frameSize.width, frameSize.height);
 
-    // ÉèÖÃÉè¼Æ·Ö±æÂÊ
-    // Ê¹ÓÃ NO_BORDER ²ßÂÔ£¬±£³ÖÉè¼Æ·Ö±æÂÊ¿í¸ß±È£¬ÌîÂúÆÁÄ»
+    // è®¾ç½®è®¾è®¡åˆ†è¾¨ç‡
+    // ä½¿ç”¨ NO_BORDER ç­–ç•¥ï¼Œä¿æŒè®¾è®¡åˆ†è¾¨ç‡å®½é«˜æ¯”ï¼Œå¡«æ»¡å±å¹•
     glview->setDesignResolutionSize(1280, 720, ResolutionPolicy::NO_BORDER);
 
-    // ¼ÆËãÄÚÈİËõ·ÅÒò×Ó
+    // è®¡ç®—å†…å®¹ç¼©æ”¾å› å­
     float scaleFactor = 1.0f;
     float designAspect = 1280.0f / 720.0f;
     float screenAspect = frameSize.width / frameSize.height;
 
     if (screenAspect > designAspect) {
-        // ÆÁÄ»¸ü¿í£¬»ùÓÚ¸ß¶ÈËõ·Å
+        // å±å¹•æ›´å®½ï¼ŒåŸºäºé«˜åº¦ç¼©æ”¾
         scaleFactor = frameSize.height / 720.0f;
     }
     else {
-        // ÆÁÄ»¸ü¸ß£¬»ùÓÚ¿í¶ÈËõ·Å
+        // å±å¹•æ›´é«˜ï¼ŒåŸºäºå®½åº¦ç¼©æ”¾
         scaleFactor = frameSize.width / 1280.0f;
     }
 
-    // ÉèÖÃÄÚÈİËõ·ÅÒò×Ó
+    // è®¾ç½®å†…å®¹ç¼©æ”¾å› å­
     director->setContentScaleFactor(scaleFactor);
     log("Content scale factor: %.2f", scaleFactor);
 
-    // Ìí¼Ó×ÊÔ´ËÑË÷Â·¾¶
+    // æ·»åŠ èµ„æºæœç´¢è·¯å¾„
     auto fileUtils = FileUtils::getInstance();
 
     std::vector<std::string> searchPaths;
@@ -137,15 +147,15 @@ bool AppDelegate::applicationDidFinishLaunching() {
     searchPaths.push_back("Resources/images/character");
     searchPaths.push_back("images/characters/player");
     searchPaths.push_back("images/character/player");
-    searchPaths.push_back("images/environment/background");  // Ìí¼ÓLevel2±³¾°Â·¾¶
-    searchPaths.push_back("C:/aishi/test2/Resources/images/environment/background");  // Level2¾ø¶ÔÂ·¾¶
+    searchPaths.push_back("images/environment/background");  // æ·»åŠ Level2èƒŒæ™¯è·¯å¾„
+    searchPaths.push_back("C:/aishi/test2/Resources/images/environment/background");  // Level2ç»å¯¹è·¯å¾„
     searchPaths.push_back(".");
     fileUtils->setSearchPaths(searchPaths);
 
-    // ´´½¨Ö÷ÓÎÏ·³¡¾°
+    // åˆ›å»ºä¸»æ¸¸æˆåœºæ™¯
     auto scene = MainGameScene::createScene();
 
-    // ÔËĞĞ³¡¾°
+    // è¿è¡Œåœºæ™¯
     director->runWithScene(scene);
 
     return true;
