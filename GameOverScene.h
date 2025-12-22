@@ -17,6 +17,7 @@ public:
     CREATE_FUNC(GameOverScene);
 
 private:
+    static int s_currentSessionDeathCount;  // 本次会话的死亡次数
     // UI元素
     cocos2d::Label* m_gameOverLabel;
     cocos2d::ui::Button* m_restartButton;
@@ -28,6 +29,8 @@ private:
 
     // 创建UI
     void createUI();
+
+    std::string GameOverScene::getDeathDescription(int count);
 
     // 按钮回调
     void onRestartClicked(cocos2d::Ref* sender);

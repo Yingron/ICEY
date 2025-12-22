@@ -3,9 +3,12 @@
 #include "StartScene.h"
 #include "cocos2d.h"
 #include <iostream>
+#include"AudioManager.h"
 
 USING_NS_CC;
 using namespace cocos2d::ui;
+
+int GameOverScene::s_currentSessionDeathCount = 0;
 
 Scene* GameOverScene::createScene()
 {
@@ -30,6 +33,55 @@ bool GameOverScene::init()
     return true;
 }
 
+
+std::string GameOverScene::getDeathDescription(int count)
+{
+    s_currentSessionDeathCount++;  // 增加本次会话的计数
+    if (s_currentSessionDeathCount == 1) {
+        return u8"你死亡了";
+    }
+    else if (s_currentSessionDeathCount == 2) {
+        return u8"你又死亡了";
+    }
+    else if (s_currentSessionDeathCount == 3) {
+        return u8"你双死亡了";
+    }
+    else if (s_currentSessionDeathCount == 4) {
+        return u8"你叒死亡了";
+    }
+    else if (s_currentSessionDeathCount == 5) {
+        return u8"你叕死亡了";
+    }
+    else if (s_currentSessionDeathCount == 6) {
+        return u8"你叕又死亡了";
+    }
+    else if (s_currentSessionDeathCount == 7) {
+        return u8"你叕双死亡了";
+    }
+    else if (s_currentSessionDeathCount == 8) {
+        return u8"你叕叒死亡了";
+    }
+    else if (s_currentSessionDeathCount == 9) {
+        return u8"你叕叕死亡了";
+    }
+    else if (s_currentSessionDeathCount == 10) {
+        return u8"你叕叕又死亡了";
+    }
+    else if (s_currentSessionDeathCount == 11) {
+        return u8"你叕叕双死亡了";
+    }
+    else if (s_currentSessionDeathCount == 12) {
+        return u8"你叕叕叒死亡了";
+    }
+    else if (s_currentSessionDeathCount == 13) {
+        return u8"你叕叕叕死亡了";
+    }
+    else {
+        
+        return u8"已经记不清你的死亡次数了";
+    }
+}
+
 void GameOverScene::createUI()
 {
     auto visibleSize = Director::getInstance()->getVisibleSize();
@@ -40,8 +92,19 @@ void GameOverScene::createUI()
     m_background->setPosition(origin);
     this->addChild(m_background, 0);
 
+
+    // 获取并增加死亡次数
+    auto userDefault = UserDefault::getInstance();
+    int deathCount = userDefault->getIntegerForKey("death_count", 0);
+    deathCount++;  // 增加本次死亡
+    userDefault->setIntegerForKey("death_count", deathCount);
+    userDefault->flush();
+
+    // 获取死亡描述
+    std::string deathDescription = getDeathDescription(deathCount);
+
     // 创建Game Over标题
-    m_gameOverLabel = Label::createWithTTF(u8"游戏结束", "fonts/forui2.ttf", 72);
+    m_gameOverLabel = Label::createWithTTF(deathDescription, "fonts/forui3.ttf", 72);
     if (!m_gameOverLabel)
     {
         m_gameOverLabel = Label::createWithSystemFont("GAME OVER", "Arial", 72);
@@ -97,7 +160,7 @@ void GameOverScene::createUI()
 void GameOverScene::onRestartClicked(Ref* sender)
 {
     log("重新开始游戏");
-
+    AudioManager::getInstance()->playUISound("ui_button_click");
     // 创建新的游戏场景并切换
     auto gameScene = MainGameScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, gameScene));
@@ -106,7 +169,7 @@ void GameOverScene::onRestartClicked(Ref* sender)
 void GameOverScene::onMenuClicked(Ref* sender)
 {
     log("返回主菜单");
-
+    AudioManager::getInstance()->playUISound("ui_button_click");
     // 创建开始场景并切换
     auto startScene = StartScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, startScene));
