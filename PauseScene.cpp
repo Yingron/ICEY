@@ -3,6 +3,7 @@
 #include "StartScene.h"
 #include "cocos2d.h"
 #include<iostream>
+#include"AudioManager.h"
 
 USING_NS_CC;
 using namespace cocos2d::ui;
@@ -14,13 +15,13 @@ Scene* PauseScene::createScene()
         auto scene = PauseScene::create();
         if (!scene)
         {
-            throw std::runtime_error("PauseScene ´´½¨Ê§°Ü");
+            throw std::runtime_error("PauseScene åˆ›å»ºå¤±è´¥");
         }
         return scene;
     }
     catch (const std::exception& e)
     {
-        std::cerr << "PauseScene::createScene ´íÎó: " << e.what() << std::endl;
+        std::cerr << "PauseScene::createScene é”™è¯¯: " << e.what() << std::endl;
         return Scene::create();
     }
 }
@@ -43,17 +44,17 @@ void PauseScene::createUI()
     {
         auto visibleSize = Director::getInstance()->getVisibleSize();
         Vec2 origin = Director::getInstance()->getVisibleOrigin();
-        // ´´½¨°ëÍ¸Ã÷±³¾° 
+        // åˆ›å»ºåŠé€æ˜ŽèƒŒæ™¯ 
         m_background = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
         m_background->setPosition(origin);
         this->addChild(m_background, 0);
         
 
-        // ´´½¨±êÌâ - Ê¹ÓÃTTF×ÖÌåÏÔÊ¾ÖÐÎÄ
-        auto titleLabel = Label::createWithTTF(u8"ÓÎÏ·ÔÝÍ£", "fonts/forui2.ttf", 64);
-        // Èç¹ûTTF´´½¨Ê§°Ü£¬Ê¹ÓÃ±¸Ñ¡·½°¸
+        // åˆ›å»ºæ ‡é¢˜ - ä½¿ç”¨TTFå­—ä½“æ˜¾ç¤ºä¸­æ–‡
+        auto titleLabel = Label::createWithTTF(u8"æ¸¸æˆæš‚åœ", "fonts/forui2.ttf", 64);
+        // å¦‚æžœTTFåˆ›å»ºå¤±è´¥ï¼Œä½¿ç”¨å¤‡é€‰æ–¹æ¡ˆ
         if (!titleLabel || titleLabel->getContentSize().width <= 0) {
-            titleLabel = Label::createWithSystemFont("GAME PAUSED", "", 64); // Ó¢ÎÄ±¸Ñ¡
+            titleLabel = Label::createWithSystemFont("GAME PAUSED", "", 64); // è‹±æ–‡å¤‡é€‰
         }
 
         titleLabel->setPosition(origin.x + visibleSize.width / 2, origin.y + visibleSize.height * 0.7f);
@@ -64,15 +65,15 @@ void PauseScene::createUI()
         std::string btnNormal = "images/ui/start&exit_btn_normal.png";
         std::string btnPressed = "images/ui/start&exit_btn_pressed.png";
 
-        // ¼ÌÐø°´Å¥
+        // ç»§ç»­æŒ‰é’®
         m_resumeButton = Button::create(btnNormal, btnPressed);
         if (m_resumeButton)
         {
             m_resumeButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.55f));
             m_resumeButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onResumeClicked, this));
 
-            // °´Å¥ÎÄ×ÖÊ¹ÓÃTTF×ÖÌå
-            auto resumeLabel = Label::createWithTTF(u8"¼ÌÐøÓÎÏ·", "fonts/forui2.ttf", 32);
+            // æŒ‰é’®æ–‡å­—ä½¿ç”¨TTFå­—ä½“
+            auto resumeLabel = Label::createWithTTF(u8"ç»§ç»­æ¸¸æˆ", "fonts/forui2.ttf", 32);
             if (!resumeLabel || resumeLabel->getContentSize().width <= 0) {
                 resumeLabel = Label::createWithSystemFont("RESUME", "", 32);
             }
@@ -85,14 +86,14 @@ void PauseScene::createUI()
             throw std::runtime_error("Continue button creation failed: " + btnNormal);
         }
 
-        // ÖØÐÂ¿ªÊ¼°´Å¥
+        // é‡æ–°å¼€å§‹æŒ‰é’®
         m_restartButton = Button::create(btnNormal, btnPressed);
         if (m_restartButton)
         {
             m_restartButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.45f));
             m_restartButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onRestartClicked, this));
 
-            auto restartLabel = Label::createWithTTF(u8"ÖØÐÂ¿ªÊ¼", "fonts/forui2.ttf", 32);
+            auto restartLabel = Label::createWithTTF(u8"é‡æ–°å¼€å§‹", "fonts/forui2.ttf", 32);
             if (!restartLabel || restartLabel->getContentSize().width <= 0)
             {
                 restartLabel = Label::createWithSystemFont("RESTART", "", 32);
@@ -106,14 +107,14 @@ void PauseScene::createUI()
             throw std::runtime_error("Restart button creation failed: " + btnNormal);
         }
 
-        // ÍË³ö°´Å¥
+        // é€€å‡ºæŒ‰é’®
         m_exitButton = Button::create(btnNormal, btnPressed);
         if (m_exitButton)
         {
             m_exitButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.35f));
             m_exitButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onExitClicked, this));
 
-            auto exitLabel = Label::createWithTTF(u8"·µ»Ø²Ëµ¥", "fonts/forui2.ttf", 32);
+            auto exitLabel = Label::createWithTTF(u8"è¿”å›žèœå•", "fonts/forui2.ttf", 32);
             if (!exitLabel || exitLabel->getContentSize().width <= 0) {
                 exitLabel = Label::createWithSystemFont("MAIN MENU", "", 32);
             }
@@ -139,14 +140,15 @@ void PauseScene::onResumeClicked(Ref* sender)//***
     log("Resume button clicked");
 
     try {
-        // ÏÈ»Ö¸´Director
+        AudioManager::getInstance()->playUISound("ui_button_click");
+        // å…ˆæ¢å¤Director
         auto director = Director::getInstance();
         if (director->isPaused())
         {
             director->resume();
         }
 
-        // µ¯³öµ±Ç°³¡¾°
+        // å¼¹å‡ºå½“å‰åœºæ™¯
         director->popScene();
 
         log("Game resumed successfully");
@@ -154,7 +156,7 @@ void PauseScene::onResumeClicked(Ref* sender)//***
     catch (const std::exception& e) 
     {
         std::cerr << "Error in onResumeClicked: " << e.what() << std::endl;
-        // ½ô¼±»Ö¸´£ºÇ¿ÖÆ»Ö¸´Director
+        // ç´§æ€¥æ¢å¤ï¼šå¼ºåˆ¶æ¢å¤Director
         Director::getInstance()->resume();
     }
 }
@@ -164,19 +166,20 @@ void PauseScene::onRestartClicked(Ref* sender)
     log("Restart button clicked");
 
     try {
-        // ÖØÒª£ºÏÈ»Ö¸´Director
+        AudioManager::getInstance()->playUISound("ui_button_click");
+        // é‡è¦ï¼šå…ˆæ¢å¤Director
         auto director = Director::getInstance();
         if (director->isPaused())
         {
             director->resume();
         }
 
-         //µÈ´ýÒ»Ö¡È·±£×´Ì¬»Ö¸´
+         //ç­‰å¾…ä¸€å¸§ç¡®ä¿çŠ¶æ€æ¢å¤
         director->getScheduler()->performFunctionInCocosThread([director]() {
-            // ´´½¨ÐÂµÄÓÎÏ·³¡¾°
+            // åˆ›å»ºæ–°çš„æ¸¸æˆåœºæ™¯
             auto gameScene = MainGameScene::createScene();
 
-            // Ìæ»»³¡¾°
+            // æ›¿æ¢åœºæ™¯
             director->replaceScene(TransitionFade::create(0.5f, gameScene));
             });
 
@@ -185,7 +188,7 @@ void PauseScene::onRestartClicked(Ref* sender)
     catch (const std::exception& e) 
     {
         std::cerr << "Error in onRestartClicked: " << e.what() << std::endl;
-        // ½ô¼±»Ö¸´£ºÇ¿ÖÆ»Ö¸´²¢ÇÐ»»µ½ÓÎÏ·³¡¾°
+        // ç´§æ€¥æ¢å¤ï¼šå¼ºåˆ¶æ¢å¤å¹¶åˆ‡æ¢åˆ°æ¸¸æˆåœºæ™¯
         Director::getInstance()->resume();
         auto gameScene = MainGameScene::createScene();
         Director::getInstance()->replaceScene(gameScene);
@@ -197,19 +200,20 @@ void PauseScene::onExitClicked(Ref* sender)
     log("Exit to menu clicked");
 
     try {
-        // ÖØÒª£ºÏÈ»Ö¸´Director
+        AudioManager::getInstance()->playUISound("ui_button_click");
+        // é‡è¦ï¼šå…ˆæ¢å¤Director
         auto director = Director::getInstance();
         if (director->isPaused()) 
         {
             director->resume();
         }
 
-        // µÈ´ýÒ»Ö¡È·±£×´Ì¬»Ö¸´
+        // ç­‰å¾…ä¸€å¸§ç¡®ä¿çŠ¶æ€æ¢å¤
         director->getScheduler()->performFunctionInCocosThread([director]() {
-            // ´´½¨¿ªÊ¼³¡¾°
+            // åˆ›å»ºå¼€å§‹åœºæ™¯
             auto startScene = StartScene::createScene();
 
-            // Ìæ»»³¡¾°£¨Ê¹ÓÃ¹ý¶ÉÐ§¹û£©
+            // æ›¿æ¢åœºæ™¯ï¼ˆä½¿ç”¨è¿‡æ¸¡æ•ˆæžœï¼‰
             director->replaceScene(TransitionFade::create(0.5f, startScene));
             });
 
@@ -217,7 +221,7 @@ void PauseScene::onExitClicked(Ref* sender)
     }
     catch (const std::exception& e) {
         std::cerr << "Error in onExitClicked: " << e.what() << std::endl;
-        // ½ô¼±»Ö¸´£ºÇ¿ÖÆ»Ö¸´²¢ÇÐ»»µ½¿ªÊ¼³¡¾°
+        // ç´§æ€¥æ¢å¤ï¼šå¼ºåˆ¶æ¢å¤å¹¶åˆ‡æ¢åˆ°å¼€å§‹åœºæ™¯
         Director::getInstance()->resume();
         auto startScene = StartScene::createScene();
         Director::getInstance()->replaceScene(startScene);
@@ -226,7 +230,7 @@ void PauseScene::onExitClicked(Ref* sender)
 
 PauseScene::~PauseScene()
 {
-    // ÇåÀí¼üÅÌ¼àÌýÆ÷
+    // æ¸…ç†é”®ç›˜ç›‘å¬å™¨
     if (m_keyboardListener) 
     {
         _eventDispatcher->removeEventListener(m_keyboardListener);
@@ -236,31 +240,32 @@ PauseScene::~PauseScene()
 
 void PauseScene::initKeyboardListener()
 {
-    log("=== ³õÊ¼»¯ÔÝÍ£³¡¾°¼üÅÌ¼àÌý ===");
+    log("=== åˆå§‹åŒ–æš‚åœåœºæ™¯é”®ç›˜ç›‘å¬ ===");
 
-    // Èç¹ûÒÑÓÐ¼àÌýÆ÷£¬ÏÈÒÆ³ý
+    // å¦‚æžœå·²æœ‰ç›‘å¬å™¨ï¼Œå…ˆç§»é™¤
     if (m_keyboardListener) {
         _eventDispatcher->removeEventListener(m_keyboardListener);
         m_keyboardListener = nullptr;
     }
 
-    // ´´½¨ÐÂµÄ¼üÅÌ¼àÌýÆ÷
+    // åˆ›å»ºæ–°çš„é”®ç›˜ç›‘å¬å™¨
     m_keyboardListener = EventListenerKeyboard::create();
 
-    // ÉèÖÃ°´¼ü°´ÏÂ»Øµ÷
+    // è®¾ç½®æŒ‰é”®æŒ‰ä¸‹å›žè°ƒ
     m_keyboardListener->onKeyPressed = CC_CALLBACK_2(PauseScene::onKeyPressed, this);
 
-    // Ìí¼Ó¼àÌýÆ÷µ½ÊÂ¼þ·Ö·¢Æ÷
+    // æ·»åŠ ç›‘å¬å™¨åˆ°äº‹ä»¶åˆ†å‘å™¨
     _eventDispatcher->addEventListenerWithSceneGraphPriority(m_keyboardListener, this);
 
-    log("¼üÅÌ¼àÌýÆ÷ÒÑ×¢²á£¬ÏÖÔÚ¿ÉÒÔ°´ESC¼üÁË");
+    log("é”®ç›˜ç›‘å¬å™¨å·²æ³¨å†Œï¼ŒçŽ°åœ¨å¯ä»¥æŒ‰ESCé”®äº†");
 }
 
 void PauseScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
-    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//°´esc½áÊøÔÝÍ£
+    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//æŒ‰escç»“æŸæš‚åœ
     {
-        onResumeClicked(nullptr);  // Ö±½Óµ÷ÓÃ»Ö¸´º¯Êý
+        onResumeClicked(nullptr);  // ç›´æŽ¥è°ƒç”¨æ¢å¤å‡½æ•°
         event->stopPropagation();
         return;
     }
+
 }
