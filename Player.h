@@ -1,4 +1,4 @@
-﻿// Player.h
+// Player.h
 #pragma once
 #ifndef PLAYER_H
 #define PLAYER_H
@@ -6,6 +6,9 @@
 #include "cocos2d.h"
 #include "PlayerState.h"
 #include "DashBar.h"
+
+// 前向声明MainGameScene类
+class MainGameScene;
 
 class Player : public cocos2d::Sprite {
 public:
@@ -58,6 +61,30 @@ public:
     void dashRight();
     void dash();  // 默认向右冲刺
     bool isDashing() const { return _currentState == PlayerState::DASHING; }
+    
+    // 生命值相关方法和属性
+    float getMaxHealth() const { return _maxHealth; }
+    float getCurrentHealth() const { return _currentHealth; }
+    
+    // 护盾相关方法和属性
+    int getMaxShield() const { return _maxShield; }
+    int getCurrentShield() const { return _currentShield; }
+    
+    void takeDamage(float damage);
+    bool isDead() const { return _currentHealth <= 0; }
+    
+    // 攻击相关方法
+    void detectAndDamageEnemies();
+    
+    // 技能相关方法
+    void skill1();
+    void skill2();
+    bool canUseSkill1() const;
+    bool canUseSkill2() const;
+    
+    // 游戏结束相关方法
+    void setMainGameScene(MainGameScene* scene) { _mainGameScene = scene; }
+    MainGameScene* getMainGameScene() const { return _mainGameScene; }
 
 private:
     PlayerState _currentState;
@@ -85,6 +112,14 @@ private:
     int _comboCount;
     float _comboTimer;
     const float COMBO_WINDOW = 0.3f; // 连击时间窗口
+    
+    // 生命值相关变量
+    float _maxHealth;
+    float _currentHealth;
+    
+    // 护盾相关变量
+    int _maxShield;
+    int _currentShield;
 
     // 动画管理
     void setupAnimations();
@@ -111,5 +146,23 @@ private:
 
     // 冲刺更新方法
     void updateDash(float delta);
+    
+    // 技能相关变量
+    float _skill1Damage;         // 技能1伤害
+    float _skill1Range;          // 技能1范围
+    float _skill1Cooldown;       // 技能1冷却时间
+    float _skill1CooldownTimer;  // 技能1冷却计时器
+    
+    float _skill2Damage;         // 技能2伤害
+    float _skill2Range;          // 技能2范围
+    float _skill2Cooldown;       // 技能2冷却时间
+    float _skill2CooldownTimer;  // 技能2冷却计时器
+    
+    // 技能动画键
+    std::string _skill1AnimKey;
+    std::string _skill2AnimKey;
+    
+    // 指向MainGameScene的指针，用于触发游戏结束
+    MainGameScene* _mainGameScene;
 };
 #endif // PLAYER_H

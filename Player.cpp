@@ -1,8 +1,11 @@
-﻿
+
 // Player.cpp
 #include "Player.h"
 #include "GameConfig.h"
 #include"AudioManager.h"
+#include "MainGameScene.h"
+#include "Enemy.h"
+#include "EnemyManager.h"
 
 USING_NS_CC;
 
@@ -325,6 +328,84 @@ void Player::loadAnimations() {
             log("ERROR: Failed to create jump animation");
         }
     }
+
+    // 7. 加载技能1动画
+    std::vector<std::string> skill1Frames;
+    for (int i = 1; i <= 40; i++) { // 技能1动画有40帧
+        std::vector<std::string> possiblePaths = {
+            StringUtils::format("images/characters/player/icey-skill1-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-skill1-%d.png", i),
+            StringUtils::format("icey-skill1-%d.png", i),
+            StringUtils::format("characters/player/icey-skill1-%d.png", i),
+            StringUtils::format("C:/aishi/test3/Resources/images/characters/player/icey-skill1-%d.png", i)
+        };
+
+        bool found = false;
+        for (const auto& path : possiblePaths) {
+            if (fileUtils->isFileExist(path)) {
+                skill1Frames.push_back(path);
+                log("Found skill1 frame %d at: %s", i, path.c_str());
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            log("WARNING: Could not find skill1 frame %d", i);
+        }
+    }
+
+    // 创建技能1动画（不区分左右方向）
+    if (!skill1Frames.empty()) {
+        cocos2d::Animation* skill1Anim = createAnimationFromFiles(skill1Frames, 0.05f); // 使用较快的帧延迟
+        if (skill1Anim) {
+            _animations["skill1"] = skill1Anim;
+            skill1Anim->retain();
+            log("Created skill1 animation with %d frames", (int)skill1Frames.size());
+        }
+        else {
+            log("ERROR: Failed to create skill1 animation");
+        }
+    }
+
+    // 8. 加载技能2动画
+    std::vector<std::string> skill2Frames;
+    for (int i = 1; i <= 25; i++) { // 技能2动画有25帧
+        std::vector<std::string> possiblePaths = {
+            StringUtils::format("images/characters/player/icey-skill2-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-skill2-%d.png", i),
+            StringUtils::format("icey-skill2-%d.png", i),
+            StringUtils::format("characters/player/icey-skill2-%d.png", i),
+            StringUtils::format("C:/aishi/test3/Resources/images/characters/player/icey-skill2-%d.png", i)
+        };
+
+        bool found = false;
+        for (const auto& path : possiblePaths) {
+            if (fileUtils->isFileExist(path)) {
+                skill2Frames.push_back(path);
+                log("Found skill2 frame %d at: %s", i, path.c_str());
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            log("WARNING: Could not find skill2 frame %d", i);
+        }
+    }
+
+    // 创建技能2动画（不区分左右方向）
+    if (!skill2Frames.empty()) {
+        cocos2d::Animation* skill2Anim = createAnimationFromFiles(skill2Frames, 0.05f); // 使用较快的帧延迟
+        if (skill2Anim) {
+            _animations["skill2"] = skill2Anim;
+            skill2Anim->retain();
+            log("Created skill2 animation with %d frames", (int)skill2Frames.size());
+        }
+        else {
+            log("ERROR: Failed to create skill2 animation");
+        }
+    }
 }
 
 void Player::jump() {
@@ -441,6 +522,17 @@ bool Player::init(const std::string& spriteFile) {
     _canCombo = false;
     _comboCount = 0;
     _comboTimer = 0.0f;
+    
+    // 初始化生命值相关变量
+    _maxHealth = 100.0f;
+    _currentHealth = _maxHealth;
+    
+    // 初始化护盾相关变量
+    _maxShield = 3;
+    _currentShield = _maxShield;
+    
+    // 初始化MainGameScene指针
+    _mainGameScene = nullptr;
 
     // 初始化冲刺相关变量
     _dashSpeed = 1500.0f;
@@ -456,14 +548,30 @@ bool Player::init(const std::string& spriteFile) {
 
     // 初始化DashBar引用为nullptr
     _dashBar = nullptr;
+    
+    // 初始化技能1相关变量
+    _skill1Damage = 50.0f;         // 技能1伤害
+    _skill1Range = 100.0f;         // 技能1范围
+    _skill1Cooldown = 2.0f;        // 技能1冷却时间（秒）
+    _skill1CooldownTimer = 0.0f;   // 技能1冷却计时器
+    
+    // 初始化技能2相关变量
+    _skill2Damage = 80.0f;         // 技能2伤害
+    _skill2Range = 150.0f;         // 技能2范围
+    _skill2Cooldown = 3.0f;        // 技能2冷却时间（秒）
+    _skill2CooldownTimer = 0.0f;   // 技能2冷却计时器
+    
+    // 技能动画键
+    _skill1AnimKey = "skill1";
+    _skill2AnimKey = "skill2";
 
     // 添加物理体
     auto physicsBody = PhysicsBody::createBox(this->getContentSize());
     physicsBody->setDynamic(true);
     physicsBody->setGravityEnable(false); // 禁用物理引擎重力
     physicsBody->setCategoryBitmask(0x01); // 玩家类别
-    physicsBody->setCollisionBitmask(0x02); // 与物品碰撞
-    physicsBody->setContactTestBitmask(0x02);
+    physicsBody->setCollisionBitmask(0x00); // 不与任何物体发生物理碰撞
+    physicsBody->setContactTestBitmask(0x02 | 0x04); // 检测与物品和敌人的碰撞
     this->setPhysicsBody(physicsBody);
 
     auto fileUtils = FileUtils::getInstance();
@@ -536,6 +644,240 @@ bool Player::init(const std::string& spriteFile) {
     return true;
 }
 
+// 技能1实现
+void Player::skill1() {
+    // 基础安全检查
+    if (!this) {
+        log("Skill1: Invalid Player pointer!");
+        return;
+    }
+    
+    if (!canUseSkill1()) {
+        log("Skill1 not available");
+        return;
+    }
+    
+    log("Player uses Skill1");
+    
+    // 设置技能状态
+    _currentState = PlayerState::SKILL1;
+    setCurrentState(PlayerState::SKILL1);
+    
+    // 攻击时停止移动
+    _isMovingLeft = false;
+    _isMovingRight = false;
+    _velocity.x = 0;
+    
+    // 播放技能音效
+    auto audioManager = AudioManager::getInstance();
+    if (audioManager) {
+        audioManager->playEffect("sfx_skill1");
+    } else {
+        log("Skill1: AudioManager is null!");
+    }
+    
+    // 应用技能效果（伤害）
+    // 技能1：对前方一定范围内的敌人造成伤害
+    float damage = _skill1Damage;
+    float range = _skill1Range;
+    
+    // 检测并伤害敌人
+    auto enemyManager = EnemyManager::getInstance();
+    if (enemyManager) {
+        const auto& enemies = enemyManager->getAllEnemies();
+        log("Skill1: Checking %zu enemies", enemies.size());
+        for (Enemy* enemy : enemies) {
+            if (enemy && !enemy->isDead()) {
+                // 计算敌人与玩家之间的距离
+                float distance = std::abs(enemy->getWorldPositionX() - this->getWorldPositionX());
+                
+                // 如果敌人在技能范围内（不区分左右方向）
+                if (distance <= range) {
+                    // 对敌人造成伤害
+                    enemy->takeDamage(damage);
+                    log("Skill1 hits enemy! Damage: %.0f, Enemy health: %.0f", damage, enemy->getCurrentHealth());
+                }
+            } else if (!enemy) {
+                log("Skill1: Found null enemy pointer!");
+            }
+        }
+    } else {
+        log("Skill1: EnemyManager is null!");
+    }
+    
+    // 设置技能冷却时间
+    _skill1CooldownTimer = _skill1Cooldown;
+    
+    // 技能动画结束后恢复到适当状态
+    auto skill1Complete = CallFunc::create([this]() {
+        if (!this) {
+            log("Skill1 complete: Invalid Player pointer!");
+            return;
+        }
+        
+        if (_isGrounded) {
+            _currentState = PlayerState::IDLE;
+            setCurrentState(PlayerState::IDLE);
+        } else {
+            _currentState = PlayerState::JUMPING;
+            setCurrentState(PlayerState::JUMPING);
+        }
+    });
+    
+    if (!skill1Complete) {
+        log("Skill1: Failed to create CallFunc!");
+        // 确保状态恢复
+        _currentState = PlayerState::IDLE;
+        setCurrentState(PlayerState::IDLE);
+        return;
+    }
+    
+    // 设置技能持续时间（根据动画长度调整）
+    float skillDuration = 1.0f;
+    if (skillDuration <= 0.0f) {
+        log("Skill1: Invalid skill duration!");
+        skillDuration = 0.5f; // 默认值
+    }
+    
+    // 创建延迟时间动作
+    auto delayTime = DelayTime::create(skillDuration);
+    if (!delayTime) {
+        log("Skill1: Failed to create DelayTime!");
+        // 确保状态恢复
+        _currentState = PlayerState::IDLE;
+        setCurrentState(PlayerState::IDLE);
+        return;
+    }
+    
+    // 运行技能完成动作
+    auto sequence = Sequence::create(delayTime, skill1Complete, nullptr);
+    if (sequence) {
+        this->runAction(sequence);
+    } else {
+        log("Skill1: Failed to create Sequence!");
+        // 确保状态恢复
+        _currentState = PlayerState::IDLE;
+        setCurrentState(PlayerState::IDLE);
+    }
+}
+
+// 技能2实现
+void Player::skill2() {
+    // 基础安全检查
+    if (!this) {
+        log("Skill2: Invalid Player pointer!");
+        return;
+    }
+    
+    if (!canUseSkill2()) {
+        log("Skill2 not available");
+        return;
+    }
+    
+    log("Player uses Skill2");
+    
+    // 设置技能状态
+    _currentState = PlayerState::SKILL2;
+    setCurrentState(PlayerState::SKILL2);
+    
+    // 攻击时停止移动
+    _isMovingLeft = false;
+    _isMovingRight = false;
+    _velocity.x = 0;
+    
+    // 播放技能音效
+    auto audioManager = AudioManager::getInstance();
+    if (audioManager) {
+        audioManager->playEffect("sfx_skill2");
+    } else {
+        log("Skill2: AudioManager is null!");
+    }
+    
+    // 应用技能效果（伤害）
+    // 技能2：对更大范围内的敌人造成伤害（可以攻击前后）
+    float damage = _skill2Damage;
+    float range = _skill2Range;
+    
+    // 检测并伤害敌人
+    auto enemyManager = EnemyManager::getInstance();
+    if (enemyManager) {
+        const auto& enemies = enemyManager->getAllEnemies();
+        log("Skill2: Checking %zu enemies", enemies.size());
+        for (Enemy* enemy : enemies) {
+            if (enemy && !enemy->isDead()) {
+                // 计算敌人与玩家之间的距离
+                float distance = std::abs(enemy->getWorldPositionX() - this->getWorldPositionX());
+                
+                // 如果敌人在技能范围内
+                if (distance <= range) {
+                    // 对敌人造成伤害（技能2可以攻击前后）
+                    enemy->takeDamage(damage);
+                    log("Skill2 hits enemy! Damage: %.0f, Enemy health: %.0f", damage, enemy->getCurrentHealth());
+                }
+            } else if (!enemy) {
+                log("Skill2: Found null enemy pointer!");
+            }
+        }
+    } else {
+        log("Skill2: EnemyManager is null!");
+    }
+    
+    // 设置技能冷却时间
+    _skill2CooldownTimer = _skill2Cooldown;
+    
+    // 技能动画结束后恢复到适当状态
+    auto skill2Complete = CallFunc::create([this]() {
+        if (!this) {
+            log("Skill2 complete: Invalid Player pointer!");
+            return;
+        }
+        
+        if (_isGrounded) {
+            _currentState = PlayerState::IDLE;
+            setCurrentState(PlayerState::IDLE);
+        } else {
+            _currentState = PlayerState::JUMPING;
+            setCurrentState(PlayerState::JUMPING);
+        }
+    });
+    
+    if (!skill2Complete) {
+        log("Skill2: Failed to create CallFunc!");
+        // 确保状态恢复
+        _currentState = PlayerState::IDLE;
+        setCurrentState(PlayerState::IDLE);
+        return;
+    }
+    
+    // 设置技能持续时间（根据动画长度调整）
+    float skillDuration = 1.5f;
+    if (skillDuration <= 0.0f) {
+        log("Skill2: Invalid skill duration!");
+        skillDuration = 0.8f; // 默认值
+    }
+    
+    // 创建延迟时间动作
+    auto delayTime = DelayTime::create(skillDuration);
+    if (!delayTime) {
+        log("Skill2: Failed to create DelayTime!");
+        // 确保状态恢复
+        _currentState = PlayerState::IDLE;
+        setCurrentState(PlayerState::IDLE);
+        return;
+    }
+    
+    // 运行技能完成动作
+    auto sequence = Sequence::create(delayTime, skill2Complete, nullptr);
+    if (sequence) {
+        this->runAction(sequence);
+    } else {
+        log("Skill2: Failed to create Sequence!");
+        // 确保状态恢复
+        _currentState = PlayerState::IDLE;
+        setCurrentState(PlayerState::IDLE);
+    }
+}
+
 // Player.cpp - 修改 update 函数
 void Player::update(float delta) {
     // 更新连击计时器
@@ -546,6 +888,21 @@ void Player::update(float delta) {
             _canCombo = false;
         }
     }
+    
+    // 更新技能冷却时间
+    if (_skill1CooldownTimer > 0) {
+        _skill1CooldownTimer -= delta;
+        if (_skill1CooldownTimer < 0) {
+            _skill1CooldownTimer = 0;
+        }
+    }
+    if (_skill2CooldownTimer > 0) {
+        _skill2CooldownTimer -= delta;
+        if (_skill2CooldownTimer < 0) {
+            _skill2CooldownTimer = 0;
+        }
+    }
+    
     // 防止无限下落 - 添加最大下落限制
     if (_worldPositionY < -1000.0f) {
         _worldPositionY = 0;
@@ -831,37 +1188,100 @@ void Player::setCurrentState(PlayerState state) {
 
                 // 创建攻击动画 - 设置不恢复原始帧，立即开始
                 auto animate = Animate::create(it->second);
-
-                auto callback = CallFunc::create([this]() {
+                float frameDelay = it->second->getDelayPerUnit();
+                int totalFrames = (int)it->second->getFrames().size();
+                float animationDuration = frameDelay * totalFrames;
+                
+                // 在攻击动画的中间帧（约第3/4处）进行伤害检测
+                int damageFrame = std::max(1, std::min(totalFrames - 2, totalFrames * 3 / 4));
+                float damageDelay = frameDelay * damageFrame;
+                
+                // 创建伤害检测回调
+                auto damageCallback = CallFunc::create([this]() {
                     if (_currentState == PlayerState::ATTACKING) {
-                        // 允许连击
-                        _canCombo = true;
+                        // 检测攻击范围内的敌人并造成伤害
+                        detectAndDamageEnemies();
+                    }
+                });
 
-                        // 如果还有连击时间窗口，等待下一击
-                        if (_comboTimer > 0 && _comboCount < 3) {
-                            // 保持攻击姿态一小段时间
-                            auto delay = DelayTime::create(0.1f);
-                            auto reset = CallFunc::create([this]() {
-                                if (_currentState == PlayerState::ATTACKING) {
-                                    setCurrentState(PlayerState::IDLE);
-                                }
-                                });
-                            auto sequence = Sequence::create(delay, reset, nullptr);
-                            this->runAction(sequence);
-                        }
-                        else {
-                            setCurrentState(PlayerState::IDLE);
+                // 攻击动画完成后确保状态重置的回调
+                auto attackCompleteCallback = CallFunc::create([this]() {
+                    // 确保攻击状态被重置，防止玩家卡住
+                    if (_currentState == PlayerState::ATTACKING) {
+                        // 立即重置为IDLE状态
+                        _currentState = PlayerState::IDLE;
+                        
+                        // 播放待机动画
+                        if (_animations.count("idle") > 0) {
+                            this->stopAllActions();
+                            auto idleAnim = _animations["idle"];
+                            auto idleAction = RepeatForever::create(Animate::create(idleAnim));
+                            this->runAction(idleAction);
+                            _currentAnimationKey = "idle";
                         }
                     }
-                    });
+                });
 
-                // 创建序列：攻击动画 -> 回调
-                auto sequence = Sequence::create(animate, callback, nullptr);
-                this->runAction(sequence);
+                // 攻击完成后的连击处理回调
+                auto comboCallback = CallFunc::create([this]() {
+                    // 允许连击
+                    _canCombo = true;
 
-                log("Playing attack animation with %d frames, duration: %.2f seconds",
-                    (int)it->second->getFrames().size(),
-                    it->second->getDuration());
+                    // 如果还有连击时间窗口，等待下一击
+                    if (_comboTimer > 0 && _comboCount < 3) {
+                        // 保持攻击姿态一小段时间
+                        auto delay = DelayTime::create(0.1f);
+                        auto checkReset = CallFunc::create([this]() {
+                            if (_currentState == PlayerState::ATTACKING) {
+                                _currentState = PlayerState::IDLE;
+                                
+                                // 播放待机动画
+                                if (_animations.count("idle") > 0) {
+                                    this->stopAllActions();
+                                    auto idleAnim = _animations["idle"];
+                                    auto idleAction = RepeatForever::create(Animate::create(idleAnim));
+                                    this->runAction(idleAction);
+                                    _currentAnimationKey = "idle";
+                                }
+                            }
+                        });
+                        auto sequence = Sequence::create(delay, checkReset, nullptr);
+                        this->runAction(sequence);
+                    }
+                    else {
+                        // 直接重置为IDLE状态
+                        _currentState = PlayerState::IDLE;
+                        
+                        // 播放待机动画
+                        if (_animations.count("idle") > 0) {
+                            this->stopAllActions();
+                            auto idleAnim = _animations["idle"];
+                            auto idleAction = RepeatForever::create(Animate::create(idleAnim));
+                            this->runAction(idleAction);
+                            _currentAnimationKey = "idle";
+                        }
+                    }
+                });
+
+                // 创建主序列：攻击动画 -> 攻击完成回调 -> 连击处理
+                auto mainSequence = Sequence::create(
+                    animate,
+                    attackCompleteCallback,
+                    comboCallback,
+                    nullptr);
+                this->runAction(mainSequence);
+                
+                // 单独运行伤害检测序列
+                auto damageSequence = Sequence::create(
+                    DelayTime::create(damageDelay),
+                    damageCallback,
+                    nullptr);
+                this->runAction(damageSequence);
+
+                log("Playing attack animation with %d frames, duration: %.2f seconds, damage at frame %d",
+                    totalFrames,
+                    it->second->getDuration(),
+                    damageFrame);
             }
         }
         break;
@@ -889,6 +1309,44 @@ void Player::setCurrentState(PlayerState state) {
             }
         }
         break;
+        
+        case PlayerState::SKILL1:
+        {
+            // 播放技能1动画（不区分左右方向）
+            std::string animationKey = "skill1";
+
+            _currentAnimationKey = animationKey;
+
+            auto it = _animations.find(animationKey);
+            if (it != _animations.end() && it->second->getFrames().size() > 0) {
+                auto animate = Animate::create(it->second);
+                this->runAction(animate);
+                log("Playing skill1 animation with %d frames", (int)it->second->getFrames().size());
+            }
+            else {
+                log("ERROR: Skill1 animation not found or empty");
+            }
+        }
+        break;
+        
+        case PlayerState::SKILL2:
+        {
+            // 播放技能2动画（不区分左右方向）
+            std::string animationKey = "skill2";
+
+            _currentAnimationKey = animationKey;
+
+            auto it = _animations.find(animationKey);
+            if (it != _animations.end() && it->second->getFrames().size() > 0) {
+                auto animate = Animate::create(it->second);
+                this->runAction(animate);
+                log("Playing skill2 animation with %d frames", (int)it->second->getFrames().size());
+            }
+            else {
+                log("ERROR: Skill2 animation not found or empty");
+            }
+        }
+        break;
 
         default:
             break;
@@ -905,6 +1363,33 @@ bool Player::canDash() const {
     // 如果没有DashBar，使用原来的逻辑（向后兼容）
     return (_dashCooldown <= 0.0f && _currentState != PlayerState::ATTACKING);
 }
+
+// 技能1可用性检查
+bool Player::canUseSkill1() const {
+    // 技能1可用条件：不在冷却中，不在攻击、冲刺、受伤、死亡或其他技能状态
+    log("canUseSkill1: cooldown=%.2f, state=%d, grounded=%d", _skill1CooldownTimer, (int)_currentState, _isGrounded);
+    return _skill1CooldownTimer <= 0.0f && 
+           _currentState != PlayerState::ATTACKING && 
+           _currentState != PlayerState::DASHING &&
+           _currentState != PlayerState::HURT &&
+           _currentState != PlayerState::DEAD &&
+           _currentState != PlayerState::SKILL1 &&
+           _currentState != PlayerState::SKILL2;
+}
+
+// 技能2可用性检查
+bool Player::canUseSkill2() const {
+    // 技能2可用条件：不在冷却中，不在攻击、冲刺、受伤、死亡或其他技能状态
+    log("canUseSkill2: cooldown=%.2f, state=%d, grounded=%d", _skill2CooldownTimer, (int)_currentState, _isGrounded);
+    return _skill2CooldownTimer <= 0.0f && 
+           _currentState != PlayerState::ATTACKING && 
+           _currentState != PlayerState::DASHING &&
+           _currentState != PlayerState::HURT &&
+           _currentState != PlayerState::DEAD &&
+           _currentState != PlayerState::SKILL1 &&
+           _currentState != PlayerState::SKILL2;
+}
+
 // Player.cpp - 添加冲刺方法实现
 void Player::dash() {
     // 默认向右冲刺
@@ -1109,7 +1594,6 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
             _currentState = PlayerState::ATTACKING;
             setCurrentState(PlayerState::ATTACKING);
             AudioManager::getInstance()->playEffect("sfx_attack");//新增音效
-
             // 攻击时停止移动
             _isMovingLeft = false;
             _isMovingRight = false;
@@ -1123,6 +1607,14 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
         jump();
     }
     // Player.cpp - 修改 onKeyPressed 函数中的冲刺部分
+    else if (keyCode == EventKeyboard::KeyCode::KEY_Q) {
+        // Q键：技能1
+        skill1();
+    }
+    else if (keyCode == EventKeyboard::KeyCode::KEY_E) {
+        // E键：技能2
+        skill2();
+    }
     else if (keyCode == EventKeyboard::KeyCode::KEY_SPACE) {
         // 空格键：冲刺
         if (canDash()) {
@@ -1225,11 +1717,83 @@ void Player::setupAnimations() {
     // 此函数暂时留空，动画在loadAnimations中加载
 }
 
+void Player::takeDamage(float damage) {
+    if (isDead()) {
+        return;
+    }
+    
+    // 首先消耗护盾
+    if (_currentShield > 0) {
+        _currentShield -= 1;
+        log("Player shield reduced by 1. Shield: %d", _currentShield);
+        
+        // 更新HUD显示
+        if (_mainGameScene && _mainGameScene->getHudLayer()) {
+            _mainGameScene->getHudLayer()->updateSheld(_currentShield);
+        }
+    } else {
+        // 护盾耗尽后消耗生命值
+        _currentHealth -= damage;
+        
+        // 确保生命值不会小于0
+        if (_currentHealth < 0) {
+            _currentHealth = 0;
+        }
+        
+        // 更新HUD显示
+        if (_mainGameScene && _mainGameScene->getHudLayer()) {
+            _mainGameScene->getHudLayer()->updateHealth(_currentHealth);
+        }
+        
+        // 如果生命值为0，设置死亡状态
+        if (_currentHealth == 0) {
+            setCurrentState(PlayerState::DEAD);
+            log("Player died! Health: %.0f", _currentHealth);
+            // 触发游戏结束
+            if (_mainGameScene) {
+                _mainGameScene->showGameOver();
+            }
+        } else {
+            // 否则设置受伤状态
+            setCurrentState(PlayerState::HURT);
+            log("Player took %.0f damage. Health: %.0f", damage, _currentHealth);
+        }
+    }
+}
+
+void Player::detectAndDamageEnemies() {
+    // 攻击范围
+    float attackRange = 50.0f;
+    
+    // 获取EnemyManager实例
+    auto enemyManager = EnemyManager::getInstance();
+    if (!enemyManager) {
+        return;
+    }
+    
+    // 对所有敌人进行攻击检测
+    const auto& enemies = enemyManager->getAllEnemies();
+    for (Enemy* enemy : enemies) {
+        if (enemy && !enemy->isDead()) {
+            // 计算敌人与玩家之间的距离
+            float distance = std::abs(enemy->getWorldPositionX() - this->getWorldPositionX());
+            
+            // 如果敌人在攻击范围内
+            if (distance <= attackRange) {
+                // 对敌人造成伤害
+                float damage = 30.0f; // 攻击伤害值
+                enemy->takeDamage(damage);
+                
+                log("Player attacks enemy! Damage: %.0f, Enemy health: %.0f", damage, enemy->getCurrentHealth());
+            }
+        }
+    }
+}
+
 Player::~Player() {
     // 释放所有缓存的动画
     for (auto& pair : _animations) {
         CC_SAFE_RELEASE(pair.second);
     }
     _animations.clear();
-
 }

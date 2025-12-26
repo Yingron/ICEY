@@ -7,7 +7,7 @@ USING_NS_CC;
 bool SceneBackground::init() {
     if (!Node::init()) return false;
 
-    // ÉèÖÃµ±Ç°¹Ø¿¨µÄ±³¾°
+    // ï¿½ï¿½ï¿½Ãµï¿½Ç°ï¿½Ø¿ï¿½ï¿½Ä±ï¿½ï¿½ï¿½
     setupLevel1Background();
 
     scheduleUpdate();
@@ -18,10 +18,10 @@ bool SceneBackground::init() {
 void SceneBackground::setupLevel1Background() {
     log("=== Setting up Scene Background ===");
 
-    // »ñÈ¡µ±Ç°¹Ø¿¨µÄ±³¾°Í¼Æ¬ÁÐ±í
+    // ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½Ø¿ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Í¼Æ¬ï¿½Ð±ï¿½
     std::vector<std::string> bgImages = getCurrentLevelBackgroundImages();
 
-    // ´´½¨Á¬Ðø±³¾°
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     _continuousBackground = ContinuousBackground::createWithImageSequence(bgImages);
     if (_continuousBackground) {
         this->addChild(_continuousBackground);
@@ -32,15 +32,15 @@ void SceneBackground::setupLevel1Background() {
     }
 }
 
-// Level1SceneBackground.cpp - ÐÞ¸Ä getCurrentLevelBackgroundImages º¯Êý
+// Level1SceneBackground.cpp - ï¿½Þ¸ï¿½ getCurrentLevelBackgroundImages ï¿½ï¿½ï¿½ï¿½
 std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
     std::vector<std::string> images;
 
-    // »ñÈ¡µ±Ç°¹Ø¿¨
+    // ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½Ø¿ï¿½
     auto levelManager = LevelManager::getInstance();
     auto currentLevel = levelManager->getCurrentLevel();
 
-    // ¸ù¾Ý¹Ø¿¨Ã¶¾Ù·µ»Ø¶ÔÓ¦µÄ±³¾°Í¼Æ¬
+    // ï¿½ï¿½ï¿½Ý¹Ø¿ï¿½Ã¶ï¿½Ù·ï¿½ï¿½Ø¶ï¿½Ó¦ï¿½Ä±ï¿½ï¿½ï¿½Í¼Æ¬
     if (currentLevel == LevelManager::LevelState::LEVEL1) {
         images = {
             "background-level1-1.png",
@@ -69,7 +69,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         images = { "background-level2-6.png" };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_1) {
-        // À©Õ¹Îª³¤¾íÖá£º5ÕÅÍ¼Æ¬
+        // ï¿½ï¿½Õ¹Îªï¿½ï¿½ï¿½ï¿½ï¿½á£º5ï¿½ï¿½Í¼Æ¬
         images = {
             "background-level3-1-1.png",
             "background-level3-1-2.png",
@@ -79,7 +79,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_2) {
-        // À©Õ¹Îª³¤¾íÖá£º3ÕÅÍ¼Æ¬
+        // ï¿½ï¿½Õ¹Îªï¿½ï¿½ï¿½ï¿½ï¿½á£º3ï¿½ï¿½Í¼Æ¬
         images = {
             "background-level3-2-1.png",
             "background-level3-2-2.png",
@@ -105,7 +105,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         images = { "background-level4-2.png" };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL4_3) {
-        // À©Õ¹Îª³¤¾íÖá£º3ÕÅÍ¼Æ¬
+        // ï¿½ï¿½Õ¹Îªï¿½ï¿½ï¿½ï¿½ï¿½á£º3ï¿½ï¿½Í¼Æ¬
         images = {
             "background-level4-3-1.png",
             "background-level4-3-2.png",
@@ -116,7 +116,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         images = { "background-level4-4.png" };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL4_5) {
-        // À©Õ¹Îª³¤¾íÖá£º3ÕÅÍ¼Æ¬
+        // ï¿½ï¿½Õ¹Îªï¿½ï¿½ï¿½ï¿½ï¿½á£º3ï¿½ï¿½Í¼Æ¬
         images = {
             "background-level4-5-1.png",
             "background-level4-5-2.png",
@@ -124,18 +124,27 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL4_6) {
-        // À©Õ¹Îª³¤¾íÖá£º3ÕÅÍ¼Æ¬
+        // ï¿½ï¿½Õ¹Îªï¿½ï¿½ï¿½ï¿½ï¿½á£º3ï¿½ï¿½Í¼Æ¬
         images = {
             "background-level4-6-1.png",
             "background-level4-6-2.png",
             "background-level4-6-3.png"
         };
     }
+    else if (currentLevel == LevelManager::LevelState::FINAL_LEVEL) {
+        // ï¿½ï¿½ï¿½Ï°Ø¿Î£ï¿½ï¿½ï¿½4ï¿½ï¿½Í¼Æ¬
+        images = {
+            "final-level-4.png",
+            "final-level-4.png",
+            "final-level-4.png",
+            "final-level-4.png"
+        };
+    }
 
     auto fileUtils = FileUtils::getInstance();
     std::vector<std::string> verifiedImages;
 
-    // ¼ì²éÎÄ¼þÊÇ·ñ´æÔÚ£¬Ìí¼ÓÍêÕûÂ·¾¶
+    // ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½
     for (const auto& filename : images) {
         std::vector<std::string> basePaths = {
             "",
@@ -144,7 +153,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
             "images/",
             "../Resources/images/environment/background/",
             "../../Resources/images/environment/background/",
-            "C:/aishi/test2/Resources/images/environment/background/"  // ¾ø¶ÔÂ·¾¶
+            "C:/aishi/test2/Resources/images/environment/background/"  // ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½
         };
 
         bool found = false;
@@ -168,18 +177,18 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
 }
 
 void SceneBackground::reloadCurrentLevelBackground() {
-    // ´Ó¸¸½ÚµãÒÆ³ý¾ÉµÄ±³¾°
+    // ï¿½Ó¸ï¿½ï¿½Úµï¿½ï¿½Æ³ï¿½ï¿½ÉµÄ±ï¿½ï¿½ï¿½
     if (_continuousBackground) {
         _continuousBackground->removeFromParent();
         _continuousBackground = nullptr;
     }
 
-    // ÖØÐÂ¼ÓÔØ±³¾°
+    // ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ø±ï¿½ï¿½ï¿½
     setupLevel1Background();
 }
 
 void SceneBackground::updateWithPlayerSpeed(float delta, float playerSpeed) {
-    // Èç¹ûÐèÒª¸ù¾ÝÍæ¼ÒËÙ¶È¸üÐÂ±³¾°£¬¿ÉÒÔÔÚÕâÀïÊµÏÖ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È¸ï¿½ï¿½Â±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
     if (_continuousBackground) {
         // _continuousBackground->setScrollSpeed(playerSpeed * 0.5f);
     }
@@ -195,7 +204,7 @@ float SceneBackground::getScrollSpeed() const {
 void SceneBackground::update(float delta) {
     Node::update(delta);
 
-    // ¿ÉÒÔÔÚÕâÀïÌí¼Óµ÷ÊÔÐÅÏ¢
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     static float debugTimer = 0.0f;
     debugTimer += delta;
     if (debugTimer > 2.0f) {

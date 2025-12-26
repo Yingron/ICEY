@@ -1,162 +1,164 @@
+// MeleeEnemy.cpp
 #include "MeleeEnemy.h"
-#include "GameUtils.h"
-#include "Hitbox.h"
-#include "ResourceManager.h"
-#include <stdexcept>
+#include "Player.h"
 
-// ÉùÃ÷Íâ²¿¸¨Öúº¯Êý
-extern cocos2d::Animation* getOrCreateAnimation(const std::string& folder, const std::string& prefix, int frameCount, float delay);
+USING_NS_CC;
 
-bool MeleeEnemy::init()
-{
-    if (!Enemy::init()) return false;
-
-    float baseHealth = 80.0f;
-    std::string name = this->getName();
-    std::string folder = "jz1"; // Ä¬ÈÏ×ÊÔ´
-
-    // [ÖÐÎÄ×¢ÊÍ]: ×ÊÔ´Ó³ÉäÓëÊôÐÔÅäÖÃ
-    if (name == "NormalEnemyA" || name.empty()) {
-        folder = "jz1";
-        m_speed = 150.0f;
-        m_attackWidth = 60.0f;
-        m_attackHeight = 40.0f;
+MeleeEnemy* MeleeEnemy::create(const std::string& enemyType) {
+    MeleeEnemy* enemy = new (std::nothrow) MeleeEnemy();
+    if (enemy && enemy->init(enemyType)) {
+        enemy->autorelease();
+        return enemy;
     }
-    else if (name == "NormalEnemyB") {
-        // ÕâÀïµÄ NormalEnemyB Èç¹û×÷Îª½üÕ½³öÏÖ (¹¤³§ÀïµÄÌØÊâÇé¿ö)£¬Ê¹ÓÃ jz2
-        folder = "jz2";
-        m_speed = 160.0f;
-        m_attackWidth = 65.0f;
-        m_attackHeight = 40.0f;
-    }
-    else if (name == "EliteMonsterA") {
-        folder = "jingying";
-        baseHealth = 150.0f;
-        m_speed = 100.0f;
-        m_attackWidth = 120.0f;
-        m_attackHeight = 80.0f;
-        this->setScale(1.3f);
+    CC_SAFE_DELETE(enemy);
+    return nullptr;
+}
+
+bool MeleeEnemy::init(const std::string& enemyType) {
+    if (!Enemy::init(enemyType)) {
+        return false;
     }
 
-    // [Òì³£´¦Àí]: ¼ÓÔØ³õÊ¼Õ¾Á¢Í¼ (walk_1)
-    try {
-        std::string path = "images/characters/enemies/" + folder + "/walk_1.png";
-        auto tex = ResourceManager::getInstance()->getTexture(path);
-        if (!tex) tex = cocos2d::Director::getInstance()->getTextureCache()->addImage(path);
-
-        if (!tex) throw std::runtime_error("Melee Texture Missing: " + path);
-
-        this->setTexture(tex);
-        this->setTextureRect(cocos2d::Rect(0, 0, tex->getContentSize().width, tex->getContentSize().height));
-    }
-    catch (...) {
-        this->setTextureRect(cocos2d::Rect(0, 0, 50, 80));
-        this->setColor(cocos2d::Color3B::RED);
-    }
-
-    m_maxHealth = baseHealth;
-    m_health = m_maxHealth;
     return true;
 }
 
-void MeleeEnemy::updateAI(float delta)
-{
-    try {
-        if (m_aiState == EnemyState::ATTACK || m_aiState == EnemyState::DEAD) return;
+void MeleeEnemy::attack() {
+    if (!canAttack() || !_target) {
+        log("Enemy cannot attack: canAttack=%d, has target=%d", canAttack(), _target != nullptr);
+        return;
+    }
 
-        // [ÖÐÎÄ×¢ÊÍ]: ÐÐ×ß¶¯»­ (8Ö¡)
-        if (m_aiState == EnemyState::CHASE) {
-            if (!this->getActionByTag(99)) {
-                std::string folder = "jz1";
-                if (getName() == "NormalEnemyB") folder = "jz2";
-                if (getName() == "EliteMonsterA") folder = "jingying";
+    // è®°å½•æ”»å‡»ä¿¡æ¯
+    log("Enemy starting attack! Distance to player: %.0f, Attack range: %.0f", 
+        std::abs(_target->getWorldPositionX() - _worldPositionX), _attackRange);
 
-                auto anim = getOrCreateAnimation(folder, "walk", 8, 0.1f);
-                if (anim) {
-                    auto repeat = cocos2d::RepeatForever::create(cocos2d::Animate::create(anim));
-                    repeat->setTag(99);
-                    this->runAction(repeat);
-                }
+    // è®¾ç½®æ”»å‡»çŠ¶æ€
+    setCurrentState(EnemyState::ATTACKING);
+    
+    // æ’­æ”¾æ”»å‡»åŠ¨ç”»
+    playAnimation("attack", false);
+    
+    // è®¾ç½®æ”»å‡»å†·å´
+    _currentAttackCooldown = _attackCooldown;
+    log("Enemy attack cooldown set to: %.2f seconds", _attackCooldown);
+    
+    // è®¡ç®—æ”»å‡»æ–¹å‘
+    bool facingRight = (_target->getWorldPositionX() > _worldPositionX);
+    this->setFlippedX(!facingRight);
+    
+    // èŽ·å–æ”»å‡»åŠ¨ç”»æ—¶é•¿
+    float animationDuration = 0.3f; // é»˜è®¤æ—¶é•¿
+    if (_animations.count("attack") > 0 && !_animations["attack"]->getFrames().empty()) {
+        animationDuration = _animations["attack"]->getDelayPerUnit() * _animations["attack"]->getFrames().size();
+        log("Enemy attack animation duration: %.2f seconds", animationDuration);
+    }
+    
+    // åº”ç”¨ä¼¤å®³åˆ°çŽ©å®¶çš„å›žè°ƒï¼ˆç«‹å³æ‰§è¡Œï¼Œç¡®ä¿ä¼¤å®³ä¸ä¼šä¸¢å¤±ï¼‰
+    auto damagePlayer = CallFunc::create([this]() {
+        // æ£€æŸ¥æ”»å‡»èŒƒå›´å†…æ˜¯å¦æœ‰çŽ©å®¶
+        if (_target) {
+            float distance = std::abs(_target->getWorldPositionX() - _worldPositionX);
+            log("Enemy damage check: Distance to player: %.0f, Attack range: %.0f", distance, _attackRange);
+            
+            if (distance <= _attackRange) {
+                // å¯¹çŽ©å®¶é€ æˆä¼¤å®³
+                _target->takeDamage(_attackDamage);
+                log("Enemy attacks player! Damage: %.0f, Player health: %.0f, Shield: %d", 
+                    _attackDamage, _target->getCurrentHealth(), _target->getCurrentShield());
             }
+        } else {
+            log("Enemy damage check failed: No target");
         }
-        else {
-            this->stopActionByTag(99);
-        }
-
-        Enemy::updateAI(delta);
-    }
-    catch (...) {}
-}
-
-void MeleeEnemy::attack()
-{
-    if (m_aiState == EnemyState::DEAD) return;
-    m_attackTimer = m_attackCooldown;
-    this->stopActionByTag(99);
-
-    std::string folder = "jz1";
-    if (getName() == "NormalEnemyB") folder = "jz2";
-    if (getName() == "EliteMonsterA") folder = "jingying";
-
-    // [ÖÐÎÄ×¢ÊÍ]: ¼ÓÔØ¹¥»÷¶¯»­ (gjÏµÁÐ 6Ö¡)
-    auto anim = getOrCreateAnimation(folder, "gj", 6, 0.1f);
-
-    auto seq = cocos2d::Sequence::create(
-        cocos2d::CallFunc::create([this, anim]() {
-            if (anim) this->runAction(cocos2d::Animate::create(anim));
-            else this->setColor(cocos2d::Color3B(255, 100, 100)); // Fallback
-            }),
-        cocos2d::DelayTime::create(0.3f), // µÈ´ýÅÐ¶¨Ö¡
-
-        cocos2d::CallFunc::create([this]() {
-            // [ÅÐ¶¨]: ËÄ·½Î»Ë÷µÐ
-            if (m_targetPlayer) {
-                cocos2d::Vec2 myPos = this->getPosition();
-                cocos2d::Vec2 targetPos = m_targetPlayer->getPosition();
-                float distX = std::abs(myPos.x - targetPos.x);
-                float distY = std::abs(myPos.y - targetPos.y);
-                bool facing = (targetPos.x > myPos.x) == !this->isFlippedX();
-
-                if (facing && distX < m_attackWidth && distY < m_attackHeight) {
-                    // m_targetPlayer->takeDamage(m_damage);
-                    GameUtils::log(getName() + " ÃüÖÐ!");
-                }
+    });
+    
+    // åˆ›å»ºæ”»å‡»å®Œæˆçš„å›žè°ƒ
+    auto attackComplete = CallFunc::create([this]() {
+        // æ”»å‡»å®ŒæˆåŽå›žåˆ°è¿½å‡»æˆ–å·¡é€»çŠ¶æ€
+        log("Enemy attack complete, returning to chase/patrol");
+        
+        if (_target) {
+            float distance = std::abs(_target->getWorldPositionX() - _worldPositionX);
+            if (distance <= _detectionRange) {
+                setCurrentState(EnemyState::CHASING);
+            } else {
+                setCurrentState(EnemyState::PATROLLING);
             }
-            }),
-        cocos2d::DelayTime::create(0.3f), // ºóÒ¡
-
-        cocos2d::CallFunc::create([this]() {
-            this->setColor(cocos2d::Color3B::WHITE);
-            if (m_aiState != EnemyState::DEAD) setState(EnemyState::CHASE);
-            }),
-        nullptr
-    );
-    this->runAction(seq);
+        } else {
+            setCurrentState(EnemyState::PATROLLING);
+        }
+    });
+    
+    // åˆ›å»ºå®Œæ•´çš„æ”»å‡»åºåˆ—ï¼šä¼¤å®³æ£€æµ‹ -> æ”»å‡»å®Œæˆ
+    auto attackSequence = Sequence::create(
+        DelayTime::create(0.1f), // çŸ­æš‚å»¶è¿ŸåŽç«‹å³é€ æˆä¼¤å®³
+        damagePlayer,
+        DelayTime::create(0.4f), // å‰©ä½™åŠ¨ç”»æ—¶é—´
+        attackComplete,
+        nullptr);
+    
+    // è¿è¡Œæ”»å‡»åºåˆ—
+    this->runAction(attackSequence);
+    log("Enemy attack sequence started");
 }
 
-void MeleeEnemy::die()
-{
-    this->stopAllActions();
-    m_aiState = EnemyState::DEAD;
-
-    std::string folder = "jz1";
-    if (getName() == "NormalEnemyB") folder = "jz2";
-    if (getName() == "EliteMonsterA") folder = "jingying";
-
-    // [ÖÐÎÄ×¢ÊÍ]: ËÀÍö¶¯»­ (hitÏµÁÐ 5Ö¡)
-    auto anim = getOrCreateAnimation(folder, "hit", 5, 0.15f);
-
-    if (anim) {
-        this->runAction(cocos2d::Sequence::create(
-            cocos2d::Animate::create(anim),
-            cocos2d::FadeOut::create(0.5f),
-            cocos2d::RemoveSelf::create(),
-            nullptr
-        ));
-    }
-    else {
-        Enemy::die();
-    }
+void MeleeEnemy::initEnemyData() {
+    // è¿‘æˆ˜å…µçš„åŸºæœ¬å±žæ€§
+    _maxHealth = 100.0f;
+    _currentHealth = _maxHealth;
+    _attackDamage = 20.0f;
+    _moveSpeed = 80.0f; // å¢žåŠ ç§»åŠ¨é€Ÿåº¦ï¼Œä½¿æ•Œäººæ›´å®¹æ˜“è¿½ä¸ŠçŽ©å®¶
+    _attackRange = 50.0f; // å¢žåŠ æ”»å‡»èŒƒå›´ï¼Œä½¿æ•Œäººæ›´å®¹æ˜“è¿›å…¥æ”»å‡»èŒƒå›´
+    _detectionRange = 150.0f;
+    _attackCooldown = 1.0f;
+    
+    // å·¡é€»ç›¸å…³
+    _patrolLeftBound = _worldPositionX - 100.0f;
+    _patrolRightBound = _worldPositionX + 100.0f;
+    _patrolDuration = 2.0f;
+    _patrolTimer = 0.0f;
+    
+    // æ”»å‡»ç›¸å…³
+    _attackDuration = 0.5f;
+    _attackTimer = 0.0f;
 }
 
-std::shared_ptr<Hitbox> MeleeEnemy::createMeleeHitbox() { return std::make_shared<Hitbox>(); }
+void MeleeEnemy::setupAnimations() {
+    // Melee enemy animations - using BOSS1-CAIXUNKUN resources as placeholder
+    std::string enemyDir = "images/characters/enemies/BOSS1-CAIXUNKUN/";
+    std::string prefix = enemyDir + "cxk-";
+    std::string suffix = "_resized.png";
+    
+    // Idle animation
+    std::vector<std::string> idleFrames;
+    for (int i = 1; i <= 10; i++) {
+        idleFrames.push_back(prefix + "idle" + std::to_string(i) + suffix);
+    }
+    loadAnimation("idle", idleFrames, 0.3f);
+    
+    // Walking animation
+    std::vector<std::string> walkFrames;
+    for (int i = 1; i <= 10; i++) {
+        walkFrames.push_back(prefix + "walk" + std::to_string(i) + suffix);
+    }
+    loadAnimation("walk", walkFrames, 0.15f);
+    
+    // Running animation (using walk frames with faster speed)
+    loadAnimation("run", walkFrames, 0.1f);
+    
+    // Attack animation
+    std::vector<std::string> attackFrames;
+    for (int i = 1; i <= 10; i++) {
+        attackFrames.push_back(prefix + "attack" + std::to_string(i) + suffix);
+    }
+    loadAnimation("attack", attackFrames, 0.1f);
+    
+    // Hurt animation
+    std::vector<std::string> hurtFrames;
+    for (int i = 1; i <= 10; i++) {
+        hurtFrames.push_back(prefix + "hit" + std::to_string(i) + suffix);
+    }
+    loadAnimation("hurt", hurtFrames, 0.1f);
+    
+    // Dead animation (using hit frames as dead for now)
+    loadAnimation("dead", hurtFrames, 0.15f);
+}

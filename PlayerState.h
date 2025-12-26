@@ -10,6 +10,8 @@ enum class PlayerState {
     JUMPING,
     ATTACKING,
     DASHING,
+    SKILL1,
+    SKILL2,
     HURT,
     DEAD
 };

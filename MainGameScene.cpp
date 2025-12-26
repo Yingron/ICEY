@@ -1,22 +1,25 @@
 #include "MainGameScene.h"
 #include "GameConfig.h"
-#include "Level1SceneBackground.h"  // È·±£°üº¬ÕıÈ·µÄÍ·ÎÄ¼ş
+#include "Level1SceneBackground.h"  // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½Í·ï¿½Ä¼ï¿½
 #include "LevelManager.h"
 #include"PauseScene.h"
 #include"HudManager.h"
 #include"HudLayer.h"
 #include"GameOverScene.h"
+#include"AudioManager.h"
+#include "EnemyManager.h"
+#include "Player.h"
 
 USING_NS_CC;
 
-// MainGameScene.cpp - ĞŞ¸ÄcreateSceneº¯Êı
+// MainGameScene.cpp - ï¿½Ş¸ï¿½createSceneï¿½ï¿½ï¿½ï¿½
 Scene* MainGameScene::createScene() {
-    // Ê¹ÓÃcreateWithPhysics´´½¨´øÓĞÎïÀíÊÀ½çµÄ³¡¾°
+    // Ê¹ï¿½ï¿½createWithPhysicsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½
     auto scene = Scene::createWithPhysics();
     auto layer = MainGameScene::create();
     scene->addChild(layer);
 
-    // ÉèÖÃÎïÀíÊÀ½ç²ÎÊı
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     auto physicsWorld = scene->getPhysicsWorld();
     if (physicsWorld) {
         physicsWorld->setGravity(Vec2(0, -500.0f));
@@ -32,59 +35,64 @@ bool MainGameScene::init() {
         return false;
     }
 
+   
+
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     log("=== MainGameScene init ===");
     log("Visible size: %f x %f", visibleSize.width, visibleSize.height);
 
-    // ±£´æÆÁÄ»¿í¶È
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
     _screenWidth = visibleSize.width;
 
-    // ³õÊ¼»¯¹Ø¿¨¹ÜÀíÆ÷
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     _levelManager = LevelManager::getInstance();
 
-    // ³õÊ¼»¯ÉãÏñ»ú
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     initCamera();
 
-    // ³õÊ¼»¯±³¾°
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     initBackground();
 
-    // ³õÊ¼»¯Íæ¼Ò
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½
     initPlayer();
 
-    // ³õÊ¼»¯ÊäÈë
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     initInput();
 
     initHud();//hy
 
-    // ³õÊ¼»¯µ÷ÊÔUI
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UI
     initDebugUI();
 
-    // ³õÊ¼»¯¹Ø¿¨ÇĞ»»×´Ì¬
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½Ğ»ï¿½×´Ì¬
     _isTransitioning = false;
     _transitionTimer = 0.0f;
 
-    // µ÷¶È¸üĞÂ
+    // ï¿½ï¿½ï¿½È¸ï¿½ï¿½ï¿½
     this->scheduleUpdate();
 
-    // ³õÊ¼»¯ÎïÆ·
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Æ·
     initItems();
 
-    // ³õÊ¼»¯ÊÕ¼¯UI
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Õ¼ï¿½UI
     showCollectionUI();
+
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½
+    initEnemies();
 
     return true;
 }
 
-// MainGameScene.cpp - ÔÚinitHudº¯ÊıÖĞÌí¼ÓÁ¬½Ó´úÂë
+// MainGameScene.cpp - ï¿½ï¿½initHudï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½
 void MainGameScene::initHud() {
     log("=== initHUD ===");
 
-    // ´´½¨ HUD ²ã
+    // ï¿½ï¿½ï¿½ï¿½ HUD ï¿½ï¿½
     _hudLayer = HudLayer::create();
     if (_hudLayer) {
-        // ÉèÖÃÔİÍ£°´Å¥»Øµ÷
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½Å¥ï¿½Øµï¿½
         _hudLayer->setPauseCallback([this](Ref* sender) {
             Director::getInstance()->pause();
             auto pauseScene = PauseScene::createScene();
@@ -93,17 +101,17 @@ void MainGameScene::initHud() {
             log("Game paused");
             });
 
-        // ½« HUD Ìí¼Óµ½³¡¾°ÖĞ£¬È·±£ÔÚ×î¶¥²ãÏÔÊ¾
-        this->addChild(_hudLayer, 1000); // Ê¹ÓÃ½Ï¸ßµÄ z-order
+        // ï¿½ï¿½ HUD ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ£ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½î¶¥ï¿½ï¿½ï¿½ï¿½Ê¾
+        this->addChild(_hudLayer, 1000); // Ê¹ï¿½Ã½Ï¸ßµï¿½ z-order
 
-        // ×¢²áµ½HUD¹ÜÀíÆ÷
+        // ×¢ï¿½áµ½HUDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         HudManager::getInstance()->setHudLayer(_hudLayer);
 
-        // ÉèÖÃ³õÊ¼Öµ
+        // ï¿½ï¿½ï¿½Ã³ï¿½Ê¼Öµ
         _hudLayer->updateHealth(100.0f);
         _hudLayer->updateSheld(10);
 
-        // !!! ÖØÒª£º½«DashBarÁ¬½Óµ½Player !!!
+        // !!! ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½DashBarï¿½ï¿½ï¿½Óµï¿½Player !!!
         if (_player && _hudLayer->getDashBar()) {
             _player->setDashBar(_hudLayer->getDashBar());
             log("DashBar connected to Player successfully");
@@ -119,7 +127,7 @@ void MainGameScene::initHud() {
 void MainGameScene::onEnter() {
     Layer::onEnter();
 
-    // Ö±½ÓÍ¨¹ı¸¸³¡¾°»ñÈ¡ÎïÀíÊÀ½ç
+    // Ö±ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     auto scene = dynamic_cast<cocos2d::Scene*>(this->getParent());
     if (scene) {
         auto physicsWorld = scene->getPhysicsWorld();
@@ -128,7 +136,7 @@ void MainGameScene::onEnter() {
             physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
             log("Physics world configured successfully");
 
-            // ÉèÖÃÅö×²¼àÌıÆ÷
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             auto contactListener = EventListenerPhysicsContact::create();
             contactListener->onContactBegin = CC_CALLBACK_1(MainGameScene::onContactBegin, this);
             _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
@@ -142,12 +150,12 @@ void MainGameScene::onEnter() {
 
 void MainGameScene::onExit() {
     Layer::onExit();
-    // ÇåÀí´úÂë...
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...
 }
 
-// MainGameScene.cpp - ĞŞ¸´initItemsº¯Êı
+// MainGameScene.cpp - ï¿½Ş¸ï¿½initItemsï¿½ï¿½ï¿½ï¿½
 void MainGameScene::initItems() {
-    // Çå¿ÕÏÖÓĞÎïÆ·
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·
     for (auto item : _levelItems) {
         item->removeFromParent();
     }
@@ -158,16 +166,16 @@ void MainGameScene::initItems() {
 
     log("Initializing items for level: %d", (int)currentLevel);
 
-    // ¸ù¾İµ±Ç°¹Ø¿¨·ÅÖÃÎïÆ·
+    // ï¿½ï¿½ï¿½İµï¿½Ç°ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·
     if (currentLevel == LevelManager::LevelState::LEVEL1) {
-        // ÔÚÓ£»¨´óµÀ·ÅÖÃÎïÆ·
+        // ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·
         placeItemAt("study_block", 500, 100);
         placeItemAt("oolong_tea", 1200, 150);
         placeItemAt("campus_card", 1800, 100);
         placeItemAt("know_not", 2200, 120);
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL2_1) {
-        // ÔÚÌåÓı¹İ·ÅÖÃÎïÆ·
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ·ï¿½ï¿½ï¿½ï¿½ï¿½Æ·
         placeItemAt("safety_helmet", 600, 100);
         placeItemAt("poster", 900, 120);
     }
@@ -188,25 +196,25 @@ void MainGameScene::initItems() {
     else if (currentLevel == LevelManager::LevelState::LEVEL3_2) {
         placeItemAt("trash_bin_1", 600, 100);
     }
-    // ¿ÉÒÔ¸ù¾İĞèÒªÎªÆäËû¹Ø¿¨Ìí¼ÓÎïÆ·
+    // ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÎªï¿½ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·
 
     log("Total items in level: %d", _levelItems.size());
 }
 
-// MainGameScene.cpp - ¸üĞÂplaceItemAtº¯Êı
+// MainGameScene.cpp - ï¿½ï¿½ï¿½ï¿½placeItemAtï¿½ï¿½ï¿½ï¿½
 void MainGameScene::placeItemAt(const std::string& itemId, float worldX, float worldY) {
     Item* item = ItemManager::getInstance()->createItem(itemId);
     if (item) {
-        // ÉèÖÃÊÀ½çÎ»ÖÃ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         item->setWorldPosition(worldX, worldY);
 
-        // ÉèÖÃ±êÇ©ÒÔ±ãÊ¶±ğ
+        // ï¿½ï¿½ï¿½Ã±ï¿½Ç©ï¿½Ô±ï¿½Ê¶ï¿½ï¿½
         item->setTag(1000);
 
-        // Ìí¼Óµ½³¡¾°
+        // ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½
         this->addChild(item, 5);
 
-        // Ìí¼Óµ½ÎïÆ·ÁĞ±í
+        // ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½Æ·ï¿½Ğ±ï¿½
         _levelItems.push_back(item);
 
         log("Placed item %s at (%.0f, %.0f)", itemId.c_str(), worldX, worldY);
@@ -229,7 +237,7 @@ void MainGameScene::checkItemCollisions(float delta) {
             item->collect();
             it = _levelItems.erase(it);
 
-            // ¸üĞÂUI
+            // ï¿½ï¿½ï¿½ï¿½UI
             updateCollectionUI();
         }
         else {
@@ -238,21 +246,21 @@ void MainGameScene::checkItemCollisions(float delta) {
     }
 }
 
-// MainGameScene.cpp - ĞŞ¸´showCollectionUIº¯Êı
+// MainGameScene.cpp - ï¿½Ş¸ï¿½showCollectionUIï¿½ï¿½ï¿½ï¿½
 void MainGameScene::showCollectionUI() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    _collectionLabel = Label::createWithSystemFont("ÎïÆ·ÊÕ¼¯: 0/13", "Arial", 20);
+    _collectionLabel = Label::createWithSystemFont("ï¿½ï¿½Æ·ï¿½Õ¼ï¿½: 0/13", "Arial", 20);
     _collectionLabel->setPosition(Vec2(visibleSize.width - 120, visibleSize.height - 30));
     _collectionLabel->setColor(Color3B::GREEN);
     _collectionLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
     this->addChild(_collectionLabel, 100);
 
-    // ³õÊ¼¸üĞÂÒ»´ÎUI
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½UI
     updateCollectionUI();
 }
 
-// MainGameScene.cpp - ¸üĞÂupdateCollectionUIº¯Êı
+// MainGameScene.cpp - ï¿½ï¿½ï¿½ï¿½updateCollectionUIï¿½ï¿½ï¿½ï¿½
 void MainGameScene::updateCollectionUI() {
     if (!_collectionLabel) return;
 
@@ -260,9 +268,9 @@ void MainGameScene::updateCollectionUI() {
     int collected = itemManager->getCollectedCount();
     int total = itemManager->getTotalItemCount();
 
-    _collectionLabel->setString(StringUtils::format("ÎïÆ·ÊÕ¼¯: %d/%d", collected, total));
+    _collectionLabel->setString(StringUtils::format("ï¿½ï¿½Æ·ï¿½Õ¼ï¿½: %d/%d", collected, total));
 
-    // ÊÕ¼¯µ½ËùÓĞÎïÆ·Ê±ÏÔÊ¾ÌØÊâĞ§¹û
+    // ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·Ê±ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½
     if (collected == total) {
         _collectionLabel->setColor(Color3B::RED);
         _collectionLabel->stopAllActions();
@@ -280,7 +288,7 @@ bool MainGameScene::onContactBegin(PhysicsContact& contact) {
     auto nodeA = contact.getShapeA()->getBody()->getNode();
     auto nodeB = contact.getShapeB()->getBody()->getNode();
 
-    // ¼ì²éÊÇ·ñÊÇÍæ¼ÒºÍÎïÆ·µÄÅö×²
+    // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Òºï¿½ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½×²
     if ((nodeA == _player && dynamic_cast<Item*>(nodeB)) ||
         (nodeB == _player && dynamic_cast<Item*>(nodeA))) {
 
@@ -288,7 +296,7 @@ bool MainGameScene::onContactBegin(PhysicsContact& contact) {
         if (item) {
             item->collect();
 
-            // ´Ó_levelItemsÖĞÒÆ³ı
+            // ï¿½ï¿½_levelItemsï¿½ï¿½ï¿½Æ³ï¿½
             auto it = std::find(_levelItems.begin(), _levelItems.end(), item);
             if (it != _levelItems.end()) {
                 _levelItems.erase(it);
@@ -296,6 +304,30 @@ bool MainGameScene::onContactBegin(PhysicsContact& contact) {
 
             updateCollectionUI();
         }
+    }
+    // ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Òºï¿½ï¿½ï¿½Ë²ï¿½×²
+    else if ((nodeA == _player && dynamic_cast<Enemy*>(nodeB)) ||
+             (nodeB == _player && dynamic_cast<Enemy*>(nodeA))) {
+
+        Enemy* enemy = dynamic_cast<Enemy*>(nodeA != _player ? nodeA : nodeB);
+        if (enemy && !enemy->isDead()) {
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ò½ï¿½ï¿½ï¿½
+            // TODO: ï¿½ï¿½ï¿½Ã¸Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½×²ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Êµï¿½ï¿½
+            log("Player collided with enemy!");
+        }
+    }
+    // ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Òºï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½×²
+    else if ((nodeA == _player && contact.getShapeB()->getBody()->getCategoryBitmask() == 0x04) ||
+             (nodeB == _player && contact.getShapeA()->getBody()->getCategoryBitmask() == 0x04)) {
+
+        // ï¿½ï¿½×¼Êµï¿½ï¿½ï¿½Íµï¿½ï¿½Í¶ï¿½ï¿½Ñ¹ï¿½ï¿½
+        _player->takeDamage(15.0f); // ï¿½ï¿½Í¨Ô¶ï¿½Ì±ï¿½Öµï¿½ï¿½ï¿½ëµ½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½
+        
+        // ï¿½ï¿½ï¿½Íµï¿½ï¿½
+        auto projectile = (nodeA != _player) ? nodeA : nodeB;
+        projectile->removeFromParentAndCleanup(true);
+        
+        log("Player hit by projectile!");
     }
 
     return true;
@@ -314,35 +346,35 @@ void MainGameScene::initCamera() {
 void MainGameScene::initBackground() {
     log("=== initBackground ===");
 
-    // »ñÈ¡ÆÁÄ»³ß´ç
+    // ï¿½ï¿½È¡ï¿½ï¿½Ä»ï¿½ß´ï¿½
     auto visibleSize = Director::getInstance()->getVisibleSize();
     _screenWidth = visibleSize.width;
     float screenHeight = visibleSize.height;
 
     log("Screen width: %.0f, height: %.0f", _screenWidth, screenHeight);
 
-    // ´´½¨µ±Ç°¹Ø¿¨µÄ±³¾°
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Ø¿ï¿½ï¿½Ä±ï¿½ï¿½ï¿½
     _currentBackground = SceneBackground::create();
     if (_currentBackground) {
         this->addChild(_currentBackground, -10);
 
-        // »ñÈ¡ÊÀ½ç¿í¶È
+        // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         _worldWidth = _currentBackground->getWorldWidth();
 
         log("Background created successfully");
         log("World width: %.0f, Screen width: %.0f", _worldWidth, _screenWidth);
 
-        // ³õÊ¼ÉãÏñ»úÆ«ÒÆÉèÎª0
+        // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½Îª0
         _cameraOffsetX = 0.0f;
 
-        // ¹Ø¼üĞŞ¸´£ºÁ¢¼´¸üĞÂ±³¾°Î»ÖÃ
+        // ï¿½Ø¼ï¿½ï¿½Ş¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         _currentBackground->updateWithCameraOffset(_cameraOffsetX);
 
-        // ¼ì²é±³¾°ÊÇ·ñÍêÈ«¸²¸ÇÆÁÄ»
+        // ï¿½ï¿½é±³ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»
         if (_worldWidth < _screenWidth) {
             log("WARNING: Background width (%.0f) < screen width (%.0f)", _worldWidth, _screenWidth);
 
-            // Ç¿ÖÆ±³¾°¸²¸ÇÕû¸öÆÁÄ»
+            // Ç¿ï¿½Æ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»
             _currentBackground->setScaleX(_screenWidth / _worldWidth);
             _worldWidth = _screenWidth;
             log("Forced background to cover screen by scaling");
@@ -352,10 +384,10 @@ void MainGameScene::initBackground() {
     else {
         log("ERROR: Failed to create background");
 
-        // ´´½¨½ô¼±ºó±¸±³¾°
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó±¸±ï¿½ï¿½ï¿½
         auto emergencyBackground = Sprite::create();
         emergencyBackground->setTextureRect(Rect(0, 0, _screenWidth, visibleSize.height));
-        emergencyBackground->setColor(Color3B(30, 30, 60)); // ÉîÀ¶É«±³¾°
+        emergencyBackground->setColor(Color3B(30, 30, 60)); // ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½
         emergencyBackground->setPosition(Vec2(_screenWidth * 0.5f, visibleSize.height * 0.5f));
         this->addChild(emergencyBackground, -10);
 
@@ -364,7 +396,7 @@ void MainGameScene::initBackground() {
     }
 }
 
-// MainGameScene.cpp - ĞŞ¸Ä initPlayer º¯Êı
+// MainGameScene.cpp - ï¿½Ş¸ï¿½ initPlayer ï¿½ï¿½ï¿½ï¿½
 void MainGameScene::initPlayer() {
     log("=== initPlayer ===");
 
@@ -375,17 +407,17 @@ void MainGameScene::initPlayer() {
         float initialWorldX = _screenWidth * 0.1f; 
         float initialWorldY = 0.0f;              
 
-        // ÉèÖÃÍæ¼ÒµÄÎïÀíÊôĞÔ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         auto physicsBody = _player->getPhysicsBody();
         if (physicsBody) {
             physicsBody->setDynamic(true);
-            physicsBody->setGravityEnable(false); // ½ûÓÃÎïÀíÒıÇæµÄÖØÁ¦£¬Ê¹ÓÃ×Ô¶¨ÒåÖØÁ¦
+            physicsBody->setGravityEnable(false); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             physicsBody->setRotationEnable(false);
 
-            // ÉèÖÃÅö×²ÑÚÂë
-            physicsBody->setCategoryBitmask(0x01); // Íæ¼ÒÀà±ğ
-            physicsBody->setCollisionBitmask(0x02); // ÓëÎïÆ·Åö×²
-            physicsBody->setContactTestBitmask(0x02); // ¼àÌıÓëÎïÆ·µÄ½Ó´¥
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½
+            physicsBody->setCategoryBitmask(0x01); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            physicsBody->setCollisionBitmask(0x00); // ä¸ä¸ä»»ä½•ç‰©ä½“å‘ç”Ÿç‰©ç†ç¢°æ’
+            physicsBody->setContactTestBitmask(0x02 | 0x04); // æ£€æµ‹ä¸ç‰©å“å’Œæ•Œäººçš„ç¢°æ’
         }
 
         _player->setWorldPositionX(initialWorldX);
@@ -397,6 +429,9 @@ void MainGameScene::initPlayer() {
         _player->setScale(2.0f);
 
         this->addChild(_player, 10);
+        
+        // è®¾ç½®MainGameSceneæŒ‡é’ˆ
+        _player->setMainGameScene(this);
 
         log("Player created at world position: (%.0f, %.0f), screen position: (%.0f, %.0f)",
             initialWorldX, initialWorldY, _player->getPositionX(), _player->getPositionY());
@@ -409,26 +444,26 @@ void MainGameScene::initPlayer() {
 void MainGameScene::initInput() {
     log("=== initInput ===");
 
-    // ´´½¨¼üÅÌ¼àÌıÆ÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½
     _keyboardListener = EventListenerKeyboard::create();
 
-    // °´¼ü°´ÏÂÊÂ¼ş
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
     _keyboardListener->onKeyPressed = CC_CALLBACK_2(MainGameScene::onKeyPressed, this);
 
-    // °´¼üÊÍ·ÅÊÂ¼ş
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Â¼ï¿½
     _keyboardListener->onKeyReleased = CC_CALLBACK_2(MainGameScene::onKeyReleased, this);
 
-    // Ìí¼Ó¼àÌıÆ÷
+    // ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½ï¿½ï¿½
     _eventDispatcher->addEventListenerWithSceneGraphPriority(_keyboardListener, this);
 
     log("Input initialized");
 }
 
-// MainGameScene.cpp - ĞŞ¸´ initDebugUI º¯ÊıÖĞµÄÖØ¸´¶¨Òå
+// MainGameScene.cpp - ï¿½Ş¸ï¿½ initDebugUI ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
 void MainGameScene::initDebugUI() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // ´´½¨µ÷ÊÔ±êÇ©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½Ç©
     _debugLabel = Label::createWithSystemFont(
         "Level 1 - Camera Follow Mode",
         "Arial", 18
@@ -437,7 +472,7 @@ void MainGameScene::initDebugUI() {
     _debugLabel->setColor(Color3B::YELLOW);
     this->addChild(_debugLabel, 100);
 
-    // ´´½¨¹Ø¿¨±êÇ©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½Ç©
     _levelLabel = Label::createWithSystemFont(
         "Level 1",
         "Arial", 24
@@ -446,7 +481,7 @@ void MainGameScene::initDebugUI() {
     _levelLabel->setColor(Color3B::GREEN);
     this->addChild(_levelLabel, 100);
 
-    // ´´½¨²Ù×÷ÌáÊ¾±êÇ© - ºÏ²¢³å´ÌÌáÊ¾
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ç© - ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
     auto instructionLabel = Label::createWithSystemFont(
         "A: Move Left | D: Move Right | W: Jump | K: Attack | SPACE: Dash | Reach right end to next level",
         "Arial", 16
@@ -455,17 +490,17 @@ void MainGameScene::initDebugUI() {
     instructionLabel->setColor(Color3B::WHITE);
     this->addChild(instructionLabel, 100);
 
-    // ´´½¨±ß½ç±ê¼Ç£¨µ÷ÊÔÓÃ£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ç£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
     auto boundaryMarker = DrawNode::create();
 
-    // ÔÚÆÁÄ»ÓÒ²à»­Ò»ÌõºìÏß±íÊ¾±ß½ç
+    // ï¿½ï¿½ï¿½ï¿½Ä»ï¿½Ò²à»­Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ß±ï¿½Ê¾ï¿½ß½ï¿½
     boundaryMarker->drawLine(
         Vec2(visibleSize.width - 50, 0),
         Vec2(visibleSize.width - 50, visibleSize.height),
         Color4F::RED
     );
 
-    // Ìí¼ÓÎÄ×ÖËµÃ÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½
     auto boundaryLabel = Label::createWithSystemFont(
         "Boundary",
         "Arial", 12
@@ -478,7 +513,7 @@ void MainGameScene::initDebugUI() {
     this->addChild(boundaryLabel, 99);
 }
 
-// MainGameScene.cpp - ĞŞ¸Ä updateCamera º¯Êı
+// MainGameScene.cpp - ï¿½Ş¸ï¿½ updateCamera ï¿½ï¿½ï¿½ï¿½
 void MainGameScene::updateCamera(float delta) {
     if (!_player || !_currentBackground) return;
 
@@ -526,18 +561,18 @@ void MainGameScene::updateCamera(float delta) {
 
     float actualPlayerScreenX = playerWorldX + _cameraOffsetX;
 
-    // ĞŞ¸ÄÕâÀï£ºÍæ¼ÒÆÁÄ»YÎ»ÖÃÓ¦¸Ã¹Ì¶¨£¬²»ÊÜÊÀ½çYÎ»ÖÃÓ°Ïì£¨³ı·ÇÓĞÌØÊâĞèÇó£©
-    // ÒòÎªÌøÔ¾µÈ¶¯×÷ÒÑ¾­ÔÚÍæ¼ÒµÄÊÀ½ç×ø±êÖĞ´¦Àí£¬ÕâÀïÖ»ĞèÒªÕıÈ·Ó³Éäµ½ÆÁÄ»
+    // ï¿½Ş¸ï¿½ï¿½ï¿½ï¿½ï£ºï¿½ï¿½ï¿½ï¿½ï¿½Ä»YÎ»ï¿½ï¿½Ó¦ï¿½Ã¹Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½ï¿½Ó°ï¿½ì£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ï¿½ï¿½Îªï¿½ï¿½Ô¾ï¿½È¶ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½Òªï¿½ï¿½È·Ó³ï¿½äµ½ï¿½ï¿½Ä»
     float groundScreenY = visibleSize.height * GameConfig::PLAYER_GROUND_Y_PERCENT;
 
-    // Èç¹ûÍæ¼ÒÔÚµØÃæÉÏ£¬Ê¹ÓÃ¹Ì¶¨µÄµØÃæYÎ»ÖÃ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½Ï£ï¿½Ê¹ï¿½Ã¹Ì¶ï¿½ï¿½Äµï¿½ï¿½ï¿½YÎ»ï¿½ï¿½
     if (_player->isGrounded()) {
         _player->setPosition(Vec2(actualPlayerScreenX, groundScreenY));
     }
     else {
-        // Èç¹ûÍæ¼ÒÔÚÌøÔ¾ÖĞ£¬½«ÊÀ½çY×ø±êÓ³Éäµ½ÆÁÄ»£¨ÊÊµ±Ëõ·Å£©
-        // ĞèÒªµ÷ÕûËõ·ÅÒò×Ó£¬Ê¹ÌøÔ¾¿´ÆğÀ´×ÔÈ»
-        float jumpScaleFactor = 0.5f; // µ÷ÕûÕâ¸öÖµÊ¹ÌøÔ¾¿´ÆğÀ´¸ü×ÔÈ»
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¾ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½Ó³ï¿½äµ½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½Å£ï¿½
+        // ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½Ê¹ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»
+        float jumpScaleFactor = 0.5f; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÖµÊ¹ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»
         float actualPlayerScreenY = groundScreenY + (playerWorldY * jumpScaleFactor);
         _player->setPosition(Vec2(actualPlayerScreenX, actualPlayerScreenY));
     }
@@ -553,17 +588,17 @@ void MainGameScene::updateCamera(float delta) {
 void MainGameScene::checkLevelTransition(float delta) {
     if (!_player || _isTransitioning) return;
 
-    // »ñÈ¡Íæ¼ÒÊÀ½çÎ»ÖÃ
+    // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     float playerWorldX = _player->getWorldPositionX();
 
-    // ¼ì²éÊÇ·ñµ½´ïµ±Ç°¹Ø¿¨±ß½ç
+    // ï¿½ï¿½ï¿½ï¿½Ç·ñµ½´ïµ±Ç°ï¿½Ø¿ï¿½ï¿½ß½ï¿½
     if (isPlayerAtRightBoundary()) {
-        // ¼ÇÂ¼µ±Ç°¹Ø¿¨×´Ì¬
+        // ï¿½ï¿½Â¼ï¿½ï¿½Ç°ï¿½Ø¿ï¿½×´Ì¬
         auto currentLevel = _levelManager->getCurrentLevel();
 
-        // ¼ì²éÊÇ·ñ¿ÉÒÔÇĞ»»µ½ÏÂÒ»¹Ø¿¨
+        // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ø¿ï¿½
         if (_levelManager->canSwitchToNextLevel(playerWorldX)) {
-            // ¿ªÊ¼¹Ø¿¨ÇĞ»»
+            // ï¿½ï¿½Ê¼ï¿½Ø¿ï¿½ï¿½Ğ»ï¿½
             _isTransitioning = true;
             _transitionTimer = 0.0f;
 
@@ -577,11 +612,11 @@ void MainGameScene::checkLevelTransition(float delta) {
 }
 
 void MainGameScene::update(float delta) {
-    // ¸üĞÂÍæ¼Ò£¨Õâ»á¸üĞÂÍæ¼ÒµÄÊÀ½çÎ»ÖÃ£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½
     if (_player) {
         _player->update(delta);
 
-        // ¶¨ÆÚ´òÓ¡Íæ¼ÒÎ»ÖÃ£¨ÓÃÓÚµ÷ÊÔ£©
+        // ï¿½ï¿½ï¿½Ú´ï¿½Ó¡ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½Ô£ï¿½
         static float debugTimer = 0.0f;
         debugTimer += delta;
         if (debugTimer > 1.0f) {
@@ -597,44 +632,53 @@ void MainGameScene::update(float delta) {
     }
 
 
-    // ¼ì²é¹Ø¿¨ÇĞ»»
+    // ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½Ğ»ï¿½
     checkLevelTransition(delta);
 
     checkPlayerHealth();//******************hy
 
-    // ´¦Àí¹Ø¿¨ÇĞ»»¹ı¶ÉĞ§¹û
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½
     if (_isTransitioning) {
         _transitionTimer += delta;
 
-        // ¼òµ¥µÄµ­³öĞ§¹û
+        // ï¿½òµ¥µÄµï¿½ï¿½ï¿½Ğ§ï¿½ï¿½
         float fadeProgress = _transitionTimer / TRANSITION_DURATION;
         if (fadeProgress >= 1.0f) {
-            // ÇĞ»»¹Ø¿¨
+            // ï¿½Ğ»ï¿½ï¿½Ø¿ï¿½
             switchToNextLevel();
         }
     }
     else {
-        // Ö»ÓĞÔÚ·ÇÇĞ»»×´Ì¬ÏÂ²Å¸üĞÂÉãÏñ»ú
+        // Ö»ï¿½ï¿½ï¿½Ú·ï¿½ï¿½Ğ»ï¿½×´Ì¬ï¿½Â²Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         updateCamera(delta);
     }
 
-    // ¼ì²éÎïÆ·Åö×²
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Æ·ï¿½ï¿½×²
     checkItemCollisions(delta);
 
-    // ¸üĞÂµ÷ÊÔĞÅÏ¢
+    // ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½
+    updateEnemies(delta);
+
+    // ï¿½ï¿½ï¿½Ë²ï¿½×²
+    checkEnemyCollisions(delta);
+    
+    // ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½
+    cleanupDeadEnemies();
+
+    // ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     if (_player && _debugLabel) {
         float playerWorldX = _player->getWorldPositionX();
         float playerWorldY = _player->getWorldPositionY();
         float currentLevel = (int)_levelManager->getCurrentLevel();
 
-        // ÏÔÊ¾¸üÏêÏ¸µÄµ÷ÊÔĞÅÏ¢
+        // ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
         _debugLabel->setString(StringUtils::format(
             "Level: %d | Player: (%.0f, %.0f)/%.0f | Cam: %.0f | Vel: (%.0f, %.0f)",
             currentLevel, playerWorldX, playerWorldY, _worldWidth, _cameraOffsetX,
             _player->getCurrentVelocity().x, _player->getCurrentVelocity().y
         ));
 
-        // Èç¹ûÕıÔÚÇĞ»»¹Ø¿¨£¬ÏÔÊ¾ÇĞ»»ÌáÊ¾
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ğ»ï¿½ï¿½ï¿½Ê¾
         if (_isTransitioning) {
             _debugLabel->setString(StringUtils::format(
                 "Switching to next level... %.0f%%",
@@ -648,36 +692,36 @@ void MainGameScene::update(float delta) {
     }
 }
 
-// ¼ì²éÍæ¼ÒÑªÁ¿//****************hy
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½//****************hy
 void MainGameScene::checkPlayerHealth() {
-    // »ñÈ¡µ±Ç°ÑªÁ¿
+    // ï¿½ï¿½È¡ï¿½ï¿½Ç°Ñªï¿½ï¿½
     float currentHealth = HudManager::getCurrentHealth();
 
-    // Èç¹ûÑªÁ¿Îª0ÇÒÓÎÏ·Î´½áÊø£¬´¥·¢ÓÎÏ·½áÊø
+    // If health is 0 and game is not over, show game over
     if (currentHealth <= 0.0f && !_isGameOver) {
-        log("Íæ¼ÒÑªÁ¿Îª0£¬´¥·¢ÓÎÏ·½áÊø");
+        log("Health is 0, showing game over");
         showGameOver();
     }
 }
 
-// ÏÔÊ¾ÓÎÏ·½áÊø½çÃæ//********hy
+// Show game over interface//********hy
 void MainGameScene::showGameOver() {
-    log("Íæ¼ÒËÀÍö£¬ÏÔÊ¾ÓÎÏ·½áÊø½çÃæ");
+    log("Showing game over interface");
 
-    // ÉèÖÃÓÎÏ·½áÊø±êÖ¾
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
     _isGameOver = true;
 
-    // Í£Ö¹Íæ¼ÒÒÆ¶¯
+    // Í£Ö¹ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     if (_player) {
         _player->stopMoving();
         _player->setCurrentState(PlayerState::IDLE);
     }
 
-    // ÏÔÊ¾ÓÎÏ·½áÊø³¡¾°
+    // ï¿½ï¿½Ê¾ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     auto gameOverScene = GameOverScene::createScene();
     Director::getInstance()->pushScene(gameOverScene);
 
-    log("ÓÎÏ·½áÊø½çÃæÒÑÏÔÊ¾");
+    log("ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾");
 }
 
 void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
@@ -685,7 +729,7 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
         _player->onKeyPressed(keyCode);
     }
 
-    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//°´escÔİÍ£     hy
+    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//ï¿½ï¿½escï¿½ï¿½Í£     hy
     {
         Director::getInstance()->pause();
         auto pauseScene = PauseScene::createScene();
@@ -697,7 +741,7 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
     }
 
     int currentMax = 0;
-    //²âÊÔHudManager¿ÉÉ¾³ı  hy
+    //ï¿½ï¿½ï¿½ï¿½HudManagerï¿½ï¿½É¾ï¿½ï¿½  hy
     switch (keyCode) {
         case cocos2d::EventKeyboard::KeyCode::KEY_1:
             HudManager::updateHealth(30.0f);
@@ -712,15 +756,15 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             HudManager::updateHealth(0.0f);
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_5:
-            // Ôö¼ÓÁ¬»÷Êı
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             HudManager::addCombo();
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_6:
-            // ÖØÖÃÁ¬»÷Êı
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             HudManager::resetCombo();
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_7:
-            // ÉèÖÃÌØ¶¨Á¬»÷Êı
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             HudManager::setCombo(10);
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_8:
@@ -731,35 +775,35 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_Z:
-            // B¼ü£ºÊ¹ÓÃ³å´Ì
+            // B key: use dash
             if (HudManager::useDash()) {
-                log("Ê¹ÓÃ³å´Ì³É¹¦");
+                log("Dash used successfully");
             }
             else {
-                log("³å´Ì²»×ã£¬ÎŞ·¨Ê¹ÓÃ");
+                log("Dash on cooldown, cannot use");
             }
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_X:
-            // G¼ü£º»Ö¸´ËùÓĞ³å´Ì
+            // G key: recharge all dashes
             HudManager::rechargeAllDashes();
-            log("»Ö¸´ËùÓĞ³å´Ì");
+            log("All dashes recharged");
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_C:
-            // M¼ü£ºÔö¼Ó×î´ó³å´Ì´ÎÊı
+            // M key: increase max dash count
 
             if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
                 if (auto dashBar = hudLayer->getDashBar()) {
                     currentMax = dashBar->getMaxDashes();
                     dashBar->setMaxDashes(currentMax + 1);
-                    log("×î´ó³å´Ì´ÎÊı: %d -> %d", currentMax, currentMax + 1);
+                    log("Max dashes: %d -> %d", currentMax, currentMax + 1);
                 }
             }
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_V:
-            // N¼ü£º¼õÉÙ×î´ó³å´Ì´ÎÊı
+            // N key: decrease max dash count
 
             if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
                 if (auto dashBar = hudLayer->getDashBar()) {
@@ -767,37 +811,37 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
                     int newMax = currentMax - 1;
                     if (newMax < 1) newMax = 1;
                     dashBar->setMaxDashes(newMax);
-                    log("×î´ó³å´Ì´ÎÊı: %d -> %d", currentMax, newMax);
+                    log("ï¿½ï¿½ï¿½ï¿½Ì´ï¿½ï¿½ï¿½: %d -> %d", currentMax, newMax);
                 }
             }
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_B:
-            // T¼ü£º¼õÉÙ³äÄÜÊ±¼ä£¨¸ü¿ì³äÄÜ£©
+            // Tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù³ï¿½ï¿½ï¿½Ê±ï¿½ä£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½
             if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
                 if (auto dashBar = hudLayer->getDashBar()) {
                     float currentTime = dashBar->getRechargeTime();
                     float newTime = currentTime - 0.5f;
-                    if (newTime < 0.5f) newTime = 0.5f; // ×îĞ¡0.5Ãë
+                    if (newTime < 0.5f) newTime = 0.5f; // ï¿½ï¿½Ğ¡0.5ï¿½ï¿½
                     dashBar->setRechargeTime(newTime);
-                    log("³äÄÜÊ±¼ä: %.1fÃë -> %.1fÃë", currentTime, newTime);
+                    log("ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½: %.1fï¿½ï¿½ -> %.1fï¿½ï¿½", currentTime, newTime);
                 }
             }
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_N:
-            // Y¼ü£ºÔö¼Ó³äÄÜÊ±¼ä£¨¸üÂı³äÄÜ£©
+            // Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½Ê±ï¿½ä£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½
             if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
                 if (auto dashBar = hudLayer->getDashBar()) {
                     float currentTime = dashBar->getRechargeTime();
                     float newTime = currentTime + 0.5f;
                     dashBar->setRechargeTime(newTime);
-                    log("³äÄÜÊ±¼ä: %.1fÃë -> %.1fÃë", currentTime, newTime);
+                    log("ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½: %.1fï¿½ï¿½ -> %.1fï¿½ï¿½", currentTime, newTime);
                 }
             }
             break;
 
-        case cocos2d::EventKeyboard::KeyCode::KEY_0://Òş²Øhud½çÃæ
+        case cocos2d::EventKeyboard::KeyCode::KEY_0://ï¿½ï¿½ï¿½ï¿½hudï¿½ï¿½ï¿½ï¿½
             static bool hudVisible = true;
             hudVisible = !hudVisible;
             HudManager::showHud(hudVisible);
@@ -817,17 +861,28 @@ void MainGameScene::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos
 void MainGameScene::switchToNextLevel() {
     if (!_player) return;
 
-    // Í£Ö¹Íæ¼ÒÒÆ¶¯
+    // åœæ­¢ç©å®¶ç§»åŠ¨
     _player->stopMoving();
 
-    // »ñÈ¡µ±Ç°¹Ø¿¨ºÍÏÂÒ»¹Ø¿¨
+    // æ¸…ç†å½“å‰åœ°å›¾çš„æ•Œäºº
+    if (!_enemiesList.empty()) {
+        for (auto enemy : _enemiesList) {
+            if (enemy && enemy->getParent()) {
+                enemy->removeFromParentAndCleanup(true);
+            }
+        }
+        _enemiesList.clear();
+        log("Cleared enemies for level transition");
+    }
+
+    // ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ø¿ï¿½
     auto oldLevel = _levelManager->getCurrentLevel();
     LevelManager::LevelState nextLevel = _levelManager->switchToNextLevel();
 
     log("=== LEVEL TRANSITION ===");
     log("From level: %d, To level: %d", (int)oldLevel, (int)nextLevel);
 
-    // ¸ù¾İĞÂ¹Ø¿¨¸üĞÂUI
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Â¹Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½UI
     std::string levelName;
 
     switch (nextLevel) {
@@ -883,29 +938,33 @@ void MainGameScene::switchToNextLevel() {
         levelName = "Level 3-6";
         _levelLabel->setColor(Color3B(128, 0, 128));
         break;
-    case LevelManager::LevelState::LEVEL4_1:  // ĞÂÔö
+    case LevelManager::LevelState::LEVEL4_1:  // ï¿½ï¿½ï¿½ï¿½
         levelName = "Level 4-1";
         _levelLabel->setColor(Color3B::BLUE);
         break;
-    case LevelManager::LevelState::LEVEL4_2:  // ĞÂÔö
+    case LevelManager::LevelState::LEVEL4_2:  // ï¿½ï¿½ï¿½ï¿½
         levelName = "Level 4-2";
         _levelLabel->setColor(Color3B::BLUE);
         break;
-    case LevelManager::LevelState::LEVEL4_3:  // ĞÂÔö
+    case LevelManager::LevelState::LEVEL4_3:  // ï¿½ï¿½ï¿½ï¿½
         levelName = "Level 4-3";
         _levelLabel->setColor(Color3B::BLUE);
         break;
-    case LevelManager::LevelState::LEVEL4_4:  // ĞÂÔö
+    case LevelManager::LevelState::LEVEL4_4:  // ï¿½ï¿½ï¿½ï¿½
         levelName = "Level 4-4";
         _levelLabel->setColor(Color3B::BLUE);
         break;
-    case LevelManager::LevelState::LEVEL4_5:  // ĞÂÔö
+    case LevelManager::LevelState::LEVEL4_5:  // ï¿½ï¿½ï¿½ï¿½
         levelName = "Level 4-5";
         _levelLabel->setColor(Color3B::BLUE);
         break;
-    case LevelManager::LevelState::LEVEL4_6:  // ĞÂÔö
+    case LevelManager::LevelState::LEVEL4_6:  // ï¿½ï¿½ï¿½ï¿½
         levelName = "Level 4-6";
         _levelLabel->setColor(Color3B::BLUE);
+        break;
+    case LevelManager::LevelState::FINAL_LEVEL:
+        levelName = "Final Level";
+        _levelLabel->setColor(Color3B::RED);
         break;
     case LevelManager::LevelState::COMPLETED:
         levelName = "Game Completed!";
@@ -920,14 +979,14 @@ void MainGameScene::switchToNextLevel() {
     _levelLabel->setString(levelName);
     log("New level name: %s", levelName.c_str());
 
-    // ÖØĞÂ¼ÓÔØ±³¾°
+    // ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ø±ï¿½ï¿½ï¿½
     if (_currentBackground) {
         _currentBackground->removeFromParent();
         _currentBackground = nullptr;
         log("Removed old background");
     }
 
-    // ´´½¨ĞÂ±³¾°
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½
     _currentBackground = SceneBackground::create();
     if (_currentBackground) {
         this->addChild(_currentBackground, -10);
@@ -935,41 +994,259 @@ void MainGameScene::switchToNextLevel() {
         log("Created new background for %s, world width: %.0f", levelName.c_str(), _worldWidth);
     }
 
-    // ÖØÖÃÍæ¼ÒÎ»ÖÃµ½ĞÂ¹Ø¿¨µÄÆğµã
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½Â¹Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (_player) {
-        _player->setWorldPositionX(100.0f); // ´Ó100ÏñËØÎ»ÖÃ¿ªÊ¼
+        _player->setWorldPositionX(100.0f); // ï¿½ï¿½100ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¿ï¿½Ê¼
         log("Reset player position to x=100");
     }
 
-    // ÖØÖÃÉãÏñ»ú
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     _cameraOffsetX = 0.0f;
 
-    // Á¢¼´¸üĞÂÉãÏñ»úÎ»ÖÃ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     updateCamera(0);
 
-    // ÇåÀí¾ÉÎïÆ·
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·
     for (auto item : _levelItems) {
         item->removeFromParent();
     }
     _levelItems.clear();
 
-    // ³õÊ¼»¯ĞÂ¹Ø¿¨µÄÎïÆ·
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Â¹Ø¿ï¿½ï¿½ï¿½ï¿½ï¿½Æ·
     initItems();
+    
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Â¹Ø¿ï¿½ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½
+    initEnemies();
 
-    // ½áÊøÇĞ»»×´Ì¬
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½×´Ì¬
     _isTransitioning = false;
 
     log("Level transition completed");
 
 }
 
+// MainGameScene.cpp - æ·»åŠ æ•Œäººç®¡ç†å‡½æ•°
+void MainGameScene::removeEnemy(Enemy* enemy) {
+    if (!enemy) return;
+
+    auto it = std::find(_enemiesList.begin(), _enemiesList.end(), enemy);
+    if (it != _enemiesList.end()) {
+        _enemiesList.erase(it);
+        log("Enemy removed from list");
+    }
+}
+
+int MainGameScene::getEnemyCount() const {
+    return _enemiesList.size();
+}
+
+void MainGameScene::cleanupDeadEnemies() {
+    for (auto it = _enemiesList.begin(); it != _enemiesList.end();) {
+        Enemy* enemy = *it;
+        if (!enemy || enemy->isDead() || !enemy->getParent()) {
+            if (enemy && enemy->getParent()) {
+                enemy->removeFromParentAndCleanup(true);
+            }
+            it = _enemiesList.erase(it);
+            log("Cleaned up dead enemy");
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½
+// åˆå§‹åŒ–æ•Œäººç³»ç»Ÿ
+void MainGameScene::initEnemies() {
+    log("=== initEnemies ===");
+
+    // æ¸…ç†ä¸Šä¸€ä¸ªåœ°å›¾çš„æ•Œäºº
+    if (!_enemiesList.empty()) {
+        for (auto enemy : _enemiesList) {
+            if (enemy && enemy->getParent()) {
+                enemy->removeFromParentAndCleanup(true);
+            }
+        }
+        _enemiesList.clear();
+        log("Cleared previous level enemies");
+    }
+
+    // åˆå§‹åŒ–æ•Œäººç®¡ç†å™¨å®ä¾‹
+    _enemyManager = EnemyManager::getInstance();
+
+    // è®¾ç½®æ•Œäººçš„ç›®æ ‡ä¸ºç©å®¶
+    _enemyManager->setPlayer(_player);
+
+    // æ ¹æ®å½“å‰å…³å¡ç”Ÿæˆæ•Œäºº
+    auto currentLevel = _levelManager->getCurrentLevel();
+    log("Initializing enemies for level: %d", (int)currentLevel);
+
+    // å®šä¹‰å¯èƒ½çš„æ•Œäººç±»å‹
+    const std::vector<std::string> enemyTypes = { "melee", "ranged", "shield" };
+
+    // è®¾ç½®éšæœºç§å­
+    srand(time(nullptr));
+
+    // æ ¹æ®å…³å¡ç±»å‹ç”Ÿæˆä¸åŒé…ç½®çš„æ•Œäºº
+    if (currentLevel == LevelManager::LevelState::LEVEL1) {
+        // Level1ï¼šç”Ÿæˆ2-5ä¸ªæ™®é€šæ•Œäººï¼ˆæ²¡æœ‰BOSSï¼‰
+        int enemyCount = MIN_ENEMY_COUNT + rand() % (MAX_ENEMY_COUNT - MIN_ENEMY_COUNT + 1);
+        log("Generating %d enemies for Level 1", enemyCount);
+
+        for (int i = 0; i < enemyCount; i++) {
+            // éšæœºé€‰æ‹©æ•Œäººç±»å‹
+            int typeIndex = rand() % enemyTypes.size();
+            std::string enemyType = enemyTypes[typeIndex];
+
+            // è®¡ç®—æ•Œäººä½ç½®ï¼ˆåœ¨ç©å®¶å‰æ–¹ä¸€å®šè·ç¦»ï¼‰
+            float playerX = _player->getWorldPositionX();
+            float worldX = playerX + 100 + rand() % 700; // ç©å®¶å‰æ–¹100-800å•ä½
+            float worldY = _player->getWorldPositionY() + (rand() % 100) - 50; // å°èŒƒå›´å‚ç›´éšæœº
+
+            createEnemyAt(enemyType, worldX, worldY);
+        }
+    }
+    else if (currentLevel >= LevelManager::LevelState::LEVEL2_1 &&
+        currentLevel <= LevelManager::LevelState::LEVEL4_6) {
+
+        // æ£€æŸ¥å½“å‰å…³å¡æ˜¯å¦æœ‰BOSS
+        bool hasBoss = false;
+        if ((currentLevel >= LevelManager::LevelState::LEVEL2_1 && currentLevel <= LevelManager::LevelState::LEVEL2_6) ||
+            (currentLevel >= LevelManager::LevelState::LEVEL3_1 && currentLevel <= LevelManager::LevelState::LEVEL3_5) ||
+            (currentLevel == LevelManager::LevelState::LEVEL4_4)) {
+            hasBoss = true;
+        }
+
+        // æ€»æ•Œäººæ•°ï¼š2-5ä¸ª
+        int totalEnemyCount = MIN_ENEMY_COUNT + rand() % (MAX_ENEMY_COUNT - MIN_ENEMY_COUNT + 1);
+
+        // æ™®é€šæ•Œäººæ•° = æ€»æ•Œäººæ•° - BOSSæ•°ï¼ˆå¦‚æœæœ‰ï¼‰
+        int regularEnemyCount = hasBoss ? (totalEnemyCount - 1) : totalEnemyCount;
+
+        log("Generating %d enemies total (including boss: %s)",
+            totalEnemyCount, hasBoss ? "YES" : "NO");
+        log("Generating %d regular enemies", regularEnemyCount);
+
+        // ç”Ÿæˆæ™®é€šæ•Œäºº
+        for (int i = 0; i < regularEnemyCount; i++) {
+            // éšæœºé€‰æ‹©æ•Œäººç±»å‹
+            int typeIndex = rand() % enemyTypes.size();
+            std::string enemyType = enemyTypes[typeIndex];
+
+            // è·å–ç©å®¶å½“å‰ä½ç½®
+            float playerX = _player->getWorldPositionX();
+
+            // åœ¨ç©å®¶å‰æ–¹éšæœºä½ç½®ç”Ÿæˆæ•Œäºº
+            // Xåæ ‡åœ¨ç©å®¶å‰æ–¹200-1000å•ä½ä¹‹é—´ï¼ŒYåæ ‡ä¸ç©å®¶ç›¸è¿‘
+            float worldX = playerX + 200 + rand() % 800;
+            float worldY = _player->getWorldPositionY() + (rand() % 100) - 50;
+
+            // åˆ›å»ºæ•Œäºº
+            createEnemyAt(enemyType, worldX, worldY);
+        }
+
+        // ç”ŸæˆBOSSï¼ˆå¦‚æœæœ‰ï¼‰
+        if (hasBoss) {
+            // è·å–ç©å®¶å½“å‰ä½ç½®
+            float playerX = _player->getWorldPositionX();
+            float worldX = playerX + 800; // BOSSåœ¨æ›´è¿œçš„ä½ç½®
+            float worldY = _player->getWorldPositionY();
+
+            // æ ¹æ®å…³å¡ç¡®å®šBOSSç±»å‹
+            std::string bossType = "melee"; // é»˜è®¤
+            std::string bossName = "";
+
+            // level2-6ç”ŸæˆBOSS1-CAIXUNKUN
+            if (currentLevel >= LevelManager::LevelState::LEVEL2_1 &&
+                currentLevel <= LevelManager::LevelState::LEVEL2_6) {
+                bossType = "melee";
+                bossName = "BOSS1-CAIXUNKUN";
+            }
+            // level3-5ç”ŸæˆBOSS2-MAODIE
+            else if (currentLevel >= LevelManager::LevelState::LEVEL3_1 &&
+                currentLevel <= LevelManager::LevelState::LEVEL3_5) {
+                bossType = "ranged";
+                bossName = "BOSS2-MAODIE";
+            }
+            // level4-4ç”ŸæˆBOSS3-NAILONG
+            else if (currentLevel == LevelManager::LevelState::LEVEL4_4) {
+                bossType = "shield";
+                bossName = "BOSS3-NAILONG";
+            }
+
+            log("Generating %s", bossName.c_str());
+            createEnemyAt(bossType, worldX, worldY);
+        }
+    }
+    else if (currentLevel == LevelManager::LevelState::FINAL_LEVEL) {
+        // æœ€ç»ˆå…³å¡ï¼šç”Ÿæˆ3ä¸ªå¼ºåŠ›æ•Œäºº
+        int enemyCount = 3;
+        log("Generating %d enemies for Final Level", enemyCount);
+
+        for (int i = 0; i < enemyCount; i++) {
+            // æœ€ç»ˆå…³å¡ä½¿ç”¨æ‰€æœ‰æ•Œäººç±»å‹
+            std::string enemyType = enemyTypes[i % enemyTypes.size()];
+
+            // è®¡ç®—æ•Œäººä½ç½®
+            float playerX = _player->getWorldPositionX();
+            float worldX = playerX + 300 + (i * 300);
+            float worldY = _player->getWorldPositionY() + 50;
+
+            createEnemyAt(enemyType, worldX, worldY);
+        }
+    }
+
+    log("Enemy initialization completed. Total enemies: %d", _enemiesList.size());
+}
+
+// ï¿½ï¿½ï¿½ËµÄ¼ï¿½ï¿½ï¿½
+void MainGameScene::updateEnemies(float delta) {
+    if (_enemyManager) {
+        _enemyManager->update(delta);
+    }
+}
+
+// ï¿½ï¿½ï¿½Ë²ï¿½×²
+void MainGameScene::checkEnemyCollisions(float delta) {
+    if (!_player || !_enemyManager) return;
+
+    // TODO: ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½×²ï¿½ï¿½Êµï¿½ï¿½
+    // ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ë²ï¿½×²ï¿½ï¿½EnemyManagerï¿½ï¿½Í¨ï¿½ï¿½PhysicsContact::beginÊµï¿½ï¿½
+}
+
+// MainGameScene.cpp - ä¿®æ”¹ createEnemyAt å‡½æ•°
+void MainGameScene::createEnemyAt(const std::string& enemyTypeStr, float worldX, float worldY) {
+    if (!_enemyManager) return;
+
+    Enemy* enemy = _enemyManager->createEnemy(enemyTypeStr, worldX, worldY);
+    if (enemy) {
+        // è®¾ç½®æ•Œäººä½ç½®
+        enemy->setWorldPosition(worldX, worldY);
+
+        // è®¾ç½®æ ‡ç­¾ç”¨äºè¯†åˆ«
+        enemy->setTag(2000);
+
+        // æ·»åŠ åˆ°åœºæ™¯
+        this->addChild(enemy, 5);
+
+        // æ·»åŠ åˆ°æ•Œäººåˆ—è¡¨
+        _enemiesList.push_back(enemy);
+
+        log("Placed enemy type %s at (%.0f, %.0f)", enemyTypeStr.c_str(), worldX, worldY);
+    }
+    else {
+        log("ERROR: Failed to create enemy type: %s", enemyTypeStr.c_str());
+    }
+}
+
 bool MainGameScene::isPlayerAtRightBoundary() {
     if (!_player) return false;
 
     float playerWorldX = _player->getWorldPositionX();
-    float boundaryThreshold = 150.0f; // ´Ó50Ôö¼Óµ½150£¬Ìá¸ßÁéÃô¶È
+    float boundaryThreshold = 150.0f; // ï¿½ï¿½50ï¿½ï¿½ï¿½Óµï¿½150ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // Ôö¼Óµ÷ÊÔĞÅÏ¢
+    // ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     static float debugTimer = 0.0f;
     debugTimer += 1.0f / 60.0f;
     if (debugTimer > 1.0f) {
@@ -979,11 +1256,11 @@ bool MainGameScene::isPlayerAtRightBoundary() {
             (playerWorldX >= _worldWidth - boundaryThreshold) ? "YES" : "NO");
     }
 
-    // Èç¹û±³¾°ÍêÈ«¸²¸ÇÆÁÄ»£¬Ê¹ÓÃÈ«¿í¼ì²é
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½Ê¹ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½
     if (_worldWidth >= _screenWidth) {
         return (playerWorldX >= _worldWidth - boundaryThreshold);
     }
 
-    // ·ñÔòÊ¹ÓÃ±³¾°µÄÊµ¼Ê¿í¶È
+    // ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê¿ï¿½ï¿½ï¿½
     return (playerWorldX >= _worldWidth - boundaryThreshold);
 }

@@ -1,82 +1,108 @@
-#pragma once  
-#ifndef __ENEMY_STATE_H__  
-#define __ENEMY_STATE_H__  
-#include "EnemyState.h" 
+// Enemy.h
+#pragma once
+#ifndef ENEMY_H
+#define ENEMY_H
+
 #include "cocos2d.h"
-#include "Hurtbox.h"
-#include "Player.h"
-  // 定义 EnemyState 枚举类型  
-enum class EnemyState  
-{  
-   IDLE,  
-   PATROL,  
-   CHASE,  
-   ATTACK,  
-   HURT,
-   DEAD  
-};  
+#include "EnemyState.h"
 
+// Forward declaration
+class Player;
 
+class Enemy : public cocos2d::Sprite {
+protected:
+    // Enemy data
+    EnemyState _currentState;
+    std::string _enemyType;
 
-class Enemy : public cocos2d::Sprite  
-{  
-protected:  
-   float m_health;  
-   float m_maxHealth;  
-   float m_damage;  
-   float m_speed;  
+public:
+    static Enemy* create(const std::string& enemyType);
+    virtual bool init(const std::string& enemyType);
+    virtual ~Enemy();
+
+    virtual void update(float delta) override;
+
+    // State management
+    EnemyState getCurrentState() const { return _currentState; }
+    virtual void setCurrentState(EnemyState state);
+
+    // Attack related
+    virtual void attack() = 0; // Pure virtual function, must be implemented by subclasses
+    virtual bool canAttack() const;
+    virtual void takeDamage(float damage);
     
-   float m_attackRange;  
-   float m_detectionRange;  
+    // Health management
+    float getMaxHealth() const { return _maxHealth; }
+    float getCurrentHealth() const { return _currentHealth; }
+    
+    // Get enemy type
+    std::string getEnemyType() const { return _enemyType; }
+    bool isDead() const { return _currentState == EnemyState::DEAD; }
 
-   EnemyState m_aiState;  
-   EnemyType m_type;  
+    // Target tracking
+    void setTarget(Player* target) { _target = target; }
+    Player* getTarget() const { return _target; }
 
-   Player* m_targetPlayer;  
-   Hurtbox m_hurtbox;  
+    // World coordinates
+    float getWorldPositionX() const { return _worldPositionX; }
+    float getWorldPositionY() const { return _worldPositionY; }
+    void setWorldPosition(float x, float y);
 
-   float m_attackCooldown;  
-   float m_attackTimer;  
+    // AI related
+    virtual void updateAI(float delta);
+    virtual void onPlayerDetected();
+    virtual void onPlayerLost();
 
-public:  
-   virtual bool init() override;  
-   virtual void update(float delta) override;  
+    // Physics related
+    virtual bool onContactBegin(cocos2d::PhysicsContact& contact);
 
-   // AI 行为  
-   virtual void updateAI(float delta);  
-   virtual void patrol(float delta);  
-   virtual void chasePlayer(float delta);  
-   virtual void attack();  
+protected:
+    // State related
+    Player* _target; // Attack target (usually the player)
 
-   // 战斗  
-   virtual void takeDamage(float damage);  
-   virtual void die();  
+    // Properties
+    float _maxHealth;
+    float _currentHealth;
+    float _attackDamage;
+    float _moveSpeed;
+    float _attackRange;
+    float _detectionRange;
+    float _attackCooldown;
+    float _currentAttackCooldown;
 
-   // 状态控制  
-   void setState(EnemyState newState);  
-   EnemyState getState() const { return m_aiState; }  
-   EnemyType getType() const { return m_type; }  
+    // Movement related
+    cocos2d::Vec2 _velocity;
+    bool _facingRight;
+    float _worldPositionX;
+    float _worldPositionY;
 
-   // 目标设置  
-   void setTargetPlayer(Player* player) { m_targetPlayer = player; }  
-   Player* getTargetPlayer() const { return m_targetPlayer; }  
+    // Animation related
+    std::string _currentAnimationKey;
+    std::unordered_map<std::string, cocos2d::Animation*> _animations;
 
-   // 属性获取器  
-   float getHealth() const { return m_health; }  
-   float getMaxHealth() const { return m_maxHealth; }  
-   float getDamage() const { return m_damage; }  
+    // Patrol related
+    float _patrolLeftBound;
+    float _patrolRightBound;
+    float _patrolTimer;
+    float _patrolDuration;
 
-   // 碰撞检测  
-   virtual Hurtbox& getHurtbox() { return m_hurtbox; }  
-   virtual void updateHurtbox();  
+    // Initialization methods
+    virtual void initEnemyData() = 0; // Initialize enemy data
+    virtual void setupAnimations() = 0; // Setup animations
+    void loadAnimation(const std::string& animationName, const std::vector<std::string>& frames, float delay);
+    void playAnimation(const std::string& animationName, bool loop = true);
 
-   virtual bool isPlayerInRange() const;  
-   virtual bool isPlayerInAttackRange() const;  
+    // AI behaviors
+    virtual void patrol(float delta);
+    virtual void chase(float delta);
+    virtual void checkTargetInRange();
 
-protected:  
-   virtual std::shared_ptr<Hitbox> createAttackHitbox();  
+    // Physics updates
+    void updatePhysics(float delta);
+    void updateWorldPosition(float delta);
 
-
-    CREATE_FUNC(Enemy); // 将 CREATE_FUNC 宏移动到 public 区域以确保可访问  
+    // Collision detection
+    void setupPhysics();
 };
-#endif // __ENEMY_STATE_H__
+
+#endif // ENEMY_H

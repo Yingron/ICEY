@@ -1,29 +1,29 @@
-#pragma once  
-#ifndef __RANGED_ENEMY_H__  
-#define __RANGED_ENEMY_H__  
+// RangedEnemy.h
+#pragma once
+#ifndef RANGED_ENEMY_H
+#define RANGED_ENEMY_H
 
-#include "Enemy.h"  
-#include "Projectile.h"  
+#include "Enemy.h"
 
-class RangedEnemy : public Enemy  
-{  
-private:  
-   float m_projectileSpeed;  
-   float m_projectileRange;  
-   std::string m_projectileType;  
-   void shootProjectile();  
-   std::shared_ptr<Projectile> createProjectile();  
-   void fireProjectile(); // Add declaration for fireProjectile  
-   void die();
+class RangedEnemy : public Enemy {
+public:
+    static RangedEnemy* create(const std::string& enemyType = "ranged");
+    virtual bool init(const std::string& enemyType) override;
 
-public:  
-   virtual bool init() override;  
-   virtual void updateAI(float delta) override;  
-   virtual void attack() override;  
+    // Implement attack method
+    virtual void attack() override;
 
-public:  
-   CREATE_FUNC(RangedEnemy);  
-};  
+protected:
+    // Initialize enemy data
+    virtual void initEnemyData() override;
+    
+    // Setup animations
+    virtual void setupAnimations() override;
 
- 
-#endif // __RANGED_ENEMY_H__   
+private:
+    // Ranged enemy specific properties
+    float _projectileSpeed;
+    float _projectileDamage;
+};
+
+#endif // RANGED_ENEMY_H

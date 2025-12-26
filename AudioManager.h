@@ -10,23 +10,23 @@
 USING_NS_CC;
 using namespace cocos2d::experimental;
 
-// ÒôÆµÀàĞÍÃ¶¾Ù
+// éŸ³é¢‘ç±»å‹æšä¸¾
 enum class AudioType
 {
-    BGM,    // ±³¾°ÒôÀÖ
-    EFFECT, // ÓÎÏ·ÒôĞ§
-    UI      // UIÒôĞ§
+    BGM,    // èƒŒæ™¯éŸ³ä¹
+    EFFECT, // æ¸¸æˆéŸ³æ•ˆ
+    UI      // UIéŸ³æ•ˆ
 };
 
-// ÒôÆµÅäÖÃ½á¹¹Ìå
+// éŸ³é¢‘é…ç½®ç»“æ„ä½“
 struct AudioConfig
 {
-    std::string id;         // ÒôÆµID
-    std::string filePath;   // ÎÄ¼şÂ·¾¶
-    AudioType type;         // ÒôÆµÀàĞÍ
-    float volume;           // »ù´¡ÒôÁ¿ (0.0-1.0)
-    bool loop;              // ÊÇ·ñÑ­»·
-    bool preload;           // ÊÇ·ñÔ¤¼ÓÔØ
+    std::string id;         // éŸ³é¢‘ID
+    std::string filePath;   // æ–‡ä»¶è·¯å¾„
+    AudioType type;         // éŸ³é¢‘ç±»å‹
+    float volume;           // ç›¸å¯¹éŸ³é‡ (0.0-1.0)
+    bool loop;              // æ˜¯å¦å¾ªç¯
+    bool preload;           // æ˜¯å¦é¢„åŠ è½½
 
     AudioConfig()
         : volume(1.0f)
@@ -50,26 +50,26 @@ struct AudioConfig
 class AudioManager
 {
 public:
-    // BUG 15: µ¥ÀıÄ£Ê½ĞèÒªÉùÃ÷ÎªË½ÓĞ¹¹Ôìº¯Êı£¬µ«ÕâÀïÊÇ¹«ÓĞ
     AudioManager();
-    virtual ~AudioManager();  // BUG 16: ĞèÒªĞéÎö¹¹º¯ÊıÒÔÖ§³Ö¼Ì³Ğ
+    virtual ~AudioManager();
 
-    // »ñÈ¡µ¥ÀıÊµÀı
+    // è·å–å•ä¾‹å®ä¾‹
     static AudioManager* getInstance();
 
-    // Ïú»Ùµ¥Àı
+    // é”€æ¯å•ä¾‹
     static void destroyInstance();
 
-    // ³õÊ¼»¯ÒôÆµ¹ÜÀíÆ÷
+    // åˆå§‹åŒ–éŸ³é¢‘ç®¡ç†å™¨
     bool init();
 
-    // ÒôÆµÅäÖÃ¹ÜÀí
+    // éŸ³é¢‘é…ç½®ç®¡ç†
     void addAudioConfig(const AudioConfig& config);
+    void addAudioConfig(const std::string& audioId, AudioType type, const std::string& filePath, bool loop, float volume);
     void removeAudioConfig(const std::string& audioId);
     void loadAudioConfigs(const std::vector<AudioConfig>& configs);
 
-    // ±³¾°ÒôÀÖ¿ØÖÆ
-    void playBGM(const std::string& audioId);
+    // èƒŒæ™¯éŸ³ä¹æ§åˆ¶
+    int playBGM(const std::string& audioId);  // ä¿®æ”¹ï¼šè¿”å›intç±»å‹
     void stopBGM();
     void pauseBGM();
     void resumeBGM();
@@ -77,77 +77,85 @@ public:
     void fadeOutBGM(float duration = 2.0f);
     bool isBGMPlaying() const;
 
-    // ÒôĞ§¿ØÖÆ
+    // éŸ³æ•ˆç®¡ç†
     int playEffect(const std::string& audioId);
     void stopAllEffects();
-    void stopEffect(int effectId);
+    void unloadAllEffects();
+    void stopEffect(int audioID);  // ä¿®æ”¹ï¼šå‚æ•°åç»Ÿä¸€
     void pauseAllEffects();
     void resumeAllEffects();
+    void pauseEffect(int audioID);  // æ·»åŠ ï¼šæš‚åœå•ä¸ªéŸ³æ•ˆ
+    void resumeEffect(int audioID); // æ·»åŠ ï¼šæ¢å¤å•ä¸ªéŸ³æ•ˆ
     void preloadEffect(const std::string& audioId);
     void unloadEffect(const std::string& audioId);
 
-    // UIÒôĞ§¿ØÖÆ
+    // UIéŸ³æ•ˆç®¡ç†
     void playUISound(const std::string& audioId);
 
-    // ÒôÁ¿¿ØÖÆ
+    // è¯­éŸ³ç®¡ç†
+    int playVoice(const std::string& audioId);
+    void stopAllVoices();   // æ·»åŠ ï¼šåœæ­¢æ‰€æœ‰è¯­éŸ³
+    void pauseAllVoices();  // æ·»åŠ ï¼šæš‚åœæ‰€æœ‰è¯­éŸ³
+    void resumeAllVoices(); // æ·»åŠ ï¼šæ¢å¤æ‰€æœ‰è¯­éŸ³
+
+    // éŸ³é‡æ§åˆ¶
     void setBGMVolume(float volume);
     void setEffectVolume(float volume);
     void setUIVolume(float volume);
+    void setVoiceVolume(float volume);  // æ·»åŠ ï¼šè¯­éŸ³éŸ³é‡æ§åˆ¶
     void setMuted(bool muted);
 
-    int playVoice(const std::string& audioId);
+    // è·å–éŸ³é‡
+    float getBGMVolume() const;
+    float getEffectVolume() const;
+    float getUIVolume() const;
+    float getVoiceVolume() const;  // æ·»åŠ ï¼šè·å–è¯­éŸ³éŸ³é‡
+    bool isMuted() const;
+    const std::string& getCurrentBGM() const;  // æ·»åŠ ï¼šè·å–å½“å‰BGM
 
-    // »ñÈ¡ÒôÁ¿
-    float getBGMVolume() const { return m_bgmVolume; }
-    float getEffectVolume() const { return m_effectVolume; }
-    float getUIVolume() const { return m_uiVolume; }
-    bool isMuted() const { return m_isMuted; }
-
-    // Ó¦ÓÃÉúÃüÖÜÆÚ
+    // åº”ç”¨çŠ¶æ€å¤„ç†
     void onEnterBackground();
     void onEnterForeground();
 
-
 private:
-    // BUG 17: ĞèÒª½ûÓÃ¿½±´¹¹ÔìºÍ¸³Öµ²Ù×÷
+    // ç¦æ­¢æ‹·è´å’Œèµ‹å€¼
     AudioManager(const AudioManager&) = delete;
     AudioManager& operator=(const AudioManager&) = delete;
 
-    // ³õÊ¼»¯Ä¬ÈÏÅäÖÃ
+    // åˆå§‹åŒ–é»˜è®¤é…ç½®
     void initDefaultConfigs();
 
-    // BUG 18: Ìí¼ÓÇåÀíµ÷¶ÈÆ÷ÈÎÎñµÄ·½·¨ÉùÃ÷
+    // æ¸…ç†æ·¡å…¥æ·¡å‡ºåŠ¨ä½œ
     void cleanupFadeActions();
 
 private:
     static AudioManager* s_instance;
 
-    // ÒôÆµÅäÖÃ
+    // éŸ³é¢‘é…ç½®
     std::map<std::string, AudioConfig> m_audioConfigs;
 
-    // ÕıÔÚ²¥·ÅµÄBGM
+    // å½“å‰æ’­æ”¾çš„BGM
     int m_currentBGMAudioID;
     std::string m_currentBGM;
 
-    // ÕıÔÚ²¥·ÅµÄÒôĞ§
+    // æ­£åœ¨æ’­æ”¾çš„éŸ³æ•ˆ
     std::map<int, std::string> m_playingEffects;
 
-    // ÒôÁ¿¿ØÖÆ
+    // æ­£åœ¨æ’­æ”¾çš„è¯­éŸ³
+    std::map<int, std::string> m_playingVoices;  // æ·»åŠ ï¼šè¯­éŸ³åˆ—è¡¨
+
+    // éŸ³é‡è®¾ç½®
     float m_bgmVolume;
     float m_effectVolume;
     float m_uiVolume;
+    float m_voiceVolume;  // æ·»åŠ ï¼šè¯­éŸ³éŸ³é‡
 
-    // BUG 19: Ìí¼Ó¾²ÒôÇ°±£´æµÄÒôÁ¿
+    // é™éŸ³å‰éŸ³é‡å­˜å‚¨
     float m_lastBGMVolume;
     float m_lastEffectVolume;
     float m_lastUIVolume;
 
     bool m_isMuted;
-
-    // Ìí¼ÓÅÔ°×ÒôÁ¿³ÉÔ±
-    float m_voiceVolume;
-    // ÕıÔÚ²¥·ÅµÄÅÔ°×ÁĞ±í
-    std::map<int, std::string> m_playingVoices;
 };
 
 #endif // __AUDIO_MANAGER_H__

@@ -1,22 +1,15 @@
+// EnemyState.h
 #pragma once
-#ifndef __ENEMY_STATE_H__
-#define __ENEMY_STATE_H__
+#ifndef ENEMYSTATE_H
+#define ENEMYSTATE_H
 
-enum class EnemyState
-{
-    IDLE,
-    PATROL,
-    CHASE,
-    ATTACK,
-    HURT,
-    DEAD
+enum class EnemyState {
+    IDLE,        // Idle
+    PATROLLING,  // Patrolling
+    CHASING,     // Chasing
+    ATTACKING,   // Attacking
+    HURT,        // Hurt
+    DEAD         // Dead
 };
 
-enum class EnemyType
-{
-    MELEE,
-    RANGED,
-    ELITE
-};
-
-#endif // __ENEMY_STATE_H__
+#endif // ENEMYSTATE_H

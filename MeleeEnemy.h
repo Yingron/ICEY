@@ -1,27 +1,29 @@
-#pragma once  
-#ifndef __MELEE_ENEMY_H__  
-#define __MELEE_ENEMY_H__  
+// MeleeEnemy.h
+#pragma once
+#ifndef MELEE_ENEMY_H
+#define MELEE_ENEMY_H
 
-#include "Enemy.h"  
-#include "Hitbox.h" // 确保包含 Hitbox 的声明  
-class MeleeEnemy : public Enemy  
-{  
-private:  
-   float m_attackWidth;  
-   float m_attackHeight;  
+#include "Enemy.h"
 
-public:  
-   virtual bool init() override;  
-   virtual void updateAI(float delta) override;  
-   virtual void attack() override;
+class MeleeEnemy : public Enemy {
+public:
+    static MeleeEnemy* create(const std::string& enemyType = "melee");
+    virtual bool init(const std::string& enemyType) override;
 
-   void die();
-   std::shared_ptr<Hitbox> createMeleeHitbox();    
-private:  
-   std::shared_ptr<Hitbox> createMeleeHitbox();  
+    // Implement attack method
+    virtual void attack() override;
 
-public: // Ensure CREATE_FUNC is accessible  
-   CREATE_FUNC(MeleeEnemy);  
-};  
+protected:
+    // Initialize enemy data
+    virtual void initEnemyData() override;
+    
+    // Setup animations
+    virtual void setupAnimations() override;
 
-#endif // __MELEE_ENEMY_H__
+private:
+    // Melee enemy specific properties
+    float _attackDuration;
+    float _attackTimer;
+};
+
+#endif // MELEE_ENEMY_H

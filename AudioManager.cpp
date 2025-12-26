@@ -1,4 +1,4 @@
-/*Ìí¼Óbgm£¬ÒôĞ§ºÍui¼°ÅÔ°×ĞèÒªÔÚÏÂ·½µÄAudioManager::initDefaultConfigs()ÖĞÅäÖÃ£¬½Ó×ÅÔÚĞèÒªµÄµØ·½Ìí¼Ó
+/*ç®¡ç†bgmã€éŸ³æ•ˆã€uiéŸ³æ•ˆå’Œè¯­éŸ³ï¼Œéœ€è¦æ’­æ”¾çš„éŸ³é¢‘éœ€è¦åœ¨AudioManager::initDefaultConfigs()ä¸­æ³¨å†Œï¼Œç„¶ååœ¨éœ€è¦çš„åœ°æ–¹è°ƒç”¨ï¼š
 AudioManager::getInstance()->playBGM("audioname");
 AudioManager::getInstance()->playEffect("audioname");
 AudioManager::getInstance()->playUISound("audioname");
@@ -14,542 +14,246 @@ AudioManager::getInstance()->playVoice("audioname");
 USING_NS_CC;
 using namespace cocos2d::experimental;
 
-// ¾²Ì¬³ÉÔ±³õÊ¼»¯
+// é™æ€æˆå‘˜åˆå§‹åŒ–
 AudioManager* AudioManager::s_instance = nullptr;
 
 AudioManager::AudioManager()
-    : m_currentBGMAudioID(-1)
-    , m_bgmVolume(1.0f)
-    , m_effectVolume(1.0f)
-    , m_uiVolume(1.0f)
-    , m_isMuted(false)
-    ,m_voiceVolume(1.0f)
-    , m_lastBGMVolume(1.0f)     
-    , m_lastEffectVolume(1.0f)   
-    , m_lastUIVolume(1.0f)       
 {
+    log("AudioManager::AudioManager()");
+    // åˆå§‹åŒ–é»˜è®¤éŸ³é‡
+    m_bgmVolume = 0.8f;
+    m_effectVolume = 0.8f;
+    m_uiVolume = 0.8f;
+    m_voiceVolume = 1.0f;
+    m_isMuted = false;
+    m_currentBGMAudioID = -1;
+    m_lastBGMVolume = m_bgmVolume;
+    m_lastEffectVolume = m_effectVolume;
+    m_lastUIVolume = m_uiVolume;
+    
+    // åˆå§‹åŒ–éŸ³é¢‘é…ç½®
+    initDefaultConfigs();
+    
+    // æ³¨å†ŒéŸ³é¢‘ç»“æŸå›è°ƒ
+    // AudioEngine::setFinishCallbackä¼šåœ¨éŸ³é¢‘æ’­æ”¾å®Œæ¯•åè°ƒç”¨
 }
 
 AudioManager::~AudioManager()
 {
+    log("AudioManager::~AudioManager()");
+
+    // æ¸…ç†æ·¡å…¥æ·¡å‡ºåŠ¨ä½œ
     cleanupFadeActions();
 
-    // Í£Ö¹ËùÓĞÒôÆµ
-    AudioEngine::stopAll();
+    // é‡Šæ”¾æ‰€æœ‰èµ„æº
+    unloadAllEffects();
+    stopAllEffects();
 
-    // ÇåÀíÔ¤¼ÓÔØµÄÒôÆµ
-    for (const auto& pair : m_audioConfigs) {
-        if (pair.second.preload) {
-            AudioEngine::uncache(pair.second.filePath);
-        }
-    }
-    m_playingVoices.clear();
-}
-
-//Ìí¼ÓÇåÀíµ÷¶ÈÆ÷ÈÎÎñµÄ·½·¨
-void AudioManager::cleanupFadeActions()
-{
-    auto scheduler = Director::getInstance()->getScheduler();
-    scheduler->unschedule("fade_in_bgm", this);
-    scheduler->unschedule("fade_out_bgm", this);
-    scheduler->unschedule("stop_bgm_after_fade", this);
-}
-
-// »ñÈ¡µ¥ÀıÊµÀı
-AudioManager* AudioManager::getInstance()
-{
-    if (!s_instance) {
-        s_instance = new (std::nothrow) AudioManager();
-        CCASSERT(s_instance, "Failed to create AudioManager instance");
-    }
-    return s_instance;
-}
-
-// Ïú»Ùµ¥Àı
-void AudioManager::destroyInstance()
-{
-    if (s_instance) {
-        // ÏÈÇåÀíµ÷¶ÈÆ÷ÈÎÎñ
-        s_instance->cleanupFadeActions();
-        delete s_instance;
-        s_instance = nullptr;
-    }
-}
-
-// ³õÊ¼»¯ÒôÆµ¹ÜÀíÆ÷
-bool AudioManager::init()
-{
-    log("AudioManager: Initializing with AudioEngine...");
-
-    // ³õÊ¼»¯AudioEngine
-    if (!AudioEngine::lazyInit()) {
-        log("AudioManager ERROR: Failed to initialize AudioEngine");
-        return false;
-    }
-
-    // ³õÊ¼»¯Ä¬ÈÏÅäÖÃ
-    initDefaultConfigs();
-
-    // Ô¤¼ÓÔØÅäÖÃÎªÔ¤¼ÓÔØµÄÒôÆµ
-    for (const auto& pair : m_audioConfigs) {
-        if (pair.second.preload) {
-            // Ô¤¼ÓÔØÒôÆµÎÄ¼ş
-            std::string filePath = pair.second.filePath; // ¸´ÖÆµ½¾Ö²¿±äÁ¿
-            AudioEngine::preload(filePath, [filePath](bool isSuccess) {
-                if (isSuccess) {
-                    log("AudioManager: Preloaded: %s", filePath.c_str());
-                }
-                else {
-                    log("AudioManager WARNING: Failed to preload: %s", filePath.c_str());
-                }
-                });
-        }
-    }
-
-    log("AudioManager: Initialized successfully with AudioEngine");
-    return true;
-}
-
-// ³õÊ¼»¯Ä¬ÈÏÒôÆµÅäÖÃ
-void AudioManager::initDefaultConfigs()
-{
-    // ============ ±³¾°ÒôÀÖ ============
-    // ¿ªÊ¼³¡¾°±³¾°ÒôÀÖ
-    addAudioConfig(AudioConfig(
-        "bgm_title",
-        "audio/bgm/title_bgm.mp3",
-        AudioType::BGM,
-        0.1f,    // ÒôÁ¿
-        true,    // Ñ­»·
-        false    // ²»Ô¤¼ÓÔØ
-    ));
-
-    // ¹Ø¿¨1±³¾°ÒôÀÖ
-    addAudioConfig(AudioConfig(
-        "bgm_level1",
-        "audio/bgm/level1_bgm.mp3",
-        AudioType::BGM,
-        0.3f,
-        true,
-        false
-    ));
-
-    // ¹Ø¿¨2±³¾°ÒôÀÖ
-    addAudioConfig(AudioConfig(
-        "bgm_level2",
-        "audio/bgm/level2_bgm.mp3",
-        AudioType::BGM,
-        0.7f,
-        true,
-        false
-    ));
-
-    // ¹Ø¿¨3±³¾°ÒôÀÖ
-    addAudioConfig(AudioConfig(
-        "bgm_level3",
-        "audio/bgm/level3_bgm.mp3",
-        AudioType::BGM,
-        0.7f,
-        true,
-        false
-    ));
-
-    // ¹Ø¿¨4±³¾°ÒôÀÖ
-    addAudioConfig(AudioConfig(
-        "bgm_level4",
-        "audio/bgm/level4_bgm.mp3",
-        AudioType::BGM,
-        0.7f,
-        true,
-        false
-    ));
-
-    //ÔİÍ£ÒôÀÖ
-    addAudioConfig(AudioConfig(
-        "bgm_pause",
-        "audio/bgm/pause_bgm.mp3",
-        AudioType::BGM,
-        0.1f,    // ÒôÁ¿
-        true,    // Ñ­»·
-        false    // ²»Ô¤¼ÓÔØ
-    ));
-
-    //gameoverÒôÀÖ
-    addAudioConfig(AudioConfig(
-        "bgm_gameover",
-        "audio/bgm/gameover_bgm.mp3",
-        AudioType::BGM,
-        0.1f,    // ÒôÁ¿
-        true,    // Ñ­»·
-        false    // ²»Ô¤¼ÓÔØ
-    ));
-    // ============ ÒôĞ§ ============
-    // Íæ¼ÒÒôĞ§
-    addAudioConfig(AudioConfig(
-        "sfx_jump",
-        "audio/sfx/jump.mp3",
-        AudioType::EFFECT,
-        1.0f,
-        false,
-        true    // Ô¤¼ÓÔØ³£ÓÃÒôĞ§
-    ));
-
-    addAudioConfig(AudioConfig(
-        "sfx_attack",
-        "audio/sfx/attack.mp3",
-        AudioType::EFFECT,
-        0.2f,
-        false,
-        true
-    ));
-
-    addAudioConfig(AudioConfig(
-        "sfx_dash",
-        "audio/sfx/dash.mp3",
-        AudioType::EFFECT,
-        0.6f,
-        false,
-        true
-    ));
-
-    addAudioConfig(AudioConfig(
-        "sfx_hurt",
-        "audio/sfx/hurt.mp3",
-        AudioType::EFFECT,
-        0.8f,
-        false,
-        true
-    ));
-
-    // ÎïÆ·ÊÕ¼¯ÒôĞ§
-    addAudioConfig(AudioConfig(
-        "sfx_collect_item",
-        "audio/sfx/collect_item.mp3",
-        AudioType::EFFECT,
-        0.5f,
-        false,
-        true
-    ));
-
-    // ============ UIÒôĞ§ ============
-    addAudioConfig(AudioConfig(
-        "ui_button_click",
-        "audio/ui/button_click.mp3",
-        AudioType::UI,
-        1.0f,
-        false,
-        true
-    ));
-
-    //==============ÅÔ°×ÒôĞ§==============
-    
-    // ¿ª³¡ÅÔ°×
-    addAudioConfig(AudioConfig(
-        "voice_intro",
-        "audio/voice/intro.mp3",
-        AudioType::EFFECT,  // Ê¹ÓÃ EFFECT ÀàĞÍ
-        0.8f,    // ÒôÁ¿½Ï¸ß
-        false,   // ²»Ñ­»·
-        true    // Ô¤¼ÓÔØ
-    ));
-
-    // ½Ì³ÌÅÔ°×1
-    addAudioConfig(AudioConfig(
-        "voice_tutorial1",
-        "audio/voice/tutorial1.mp3",
-        AudioType::EFFECT,
-        0.8f,
-        false,
-        true     
-    ));
-
-
-    // ¾çÇéÅÔ°×
-    addAudioConfig(AudioConfig(
-        "voice_story1",
-        "audio/voice/story1.mp3",
-        AudioType::EFFECT,
-        0.8f,
-        false,
-        false
-    ));
-
-    // Ê¤ÀûÅÔ°×
-    addAudioConfig(AudioConfig(
-        "voice_victory",
-        "audio/voice/victory.mp3",
-        AudioType::EFFECT,
-        0.9f,    
-        false,
-        false
-    ));
-
-    // Ê§°ÜÅÔ°×
-    addAudioConfig(AudioConfig(
-        "voice_defeat",
-        "audio/voice/defeat.mp3",
-        AudioType::EFFECT,
-        0.7f,    
-        false,
-        false
-    ));
-
-    log("AudioManager: Default audio configs initialized");
-}
-
-// Ìí¼ÓÒôÆµÅäÖÃ
-void AudioManager::addAudioConfig(const AudioConfig& config)
-{
-    m_audioConfigs[config.id] = config;
-    log("AudioManager: Added audio config: %s -> %s", config.id.c_str(), config.filePath.c_str());
-}
-
-// ÒÆ³ıÒôÆµÅäÖÃ
-void AudioManager::removeAudioConfig(const std::string& audioId)
-{
-    auto it = m_audioConfigs.find(audioId);
-    if (it != m_audioConfigs.end()) {
-        // Èç¹ûÊÇÔ¤¼ÓÔØµÄÒôĞ§£¬Ğ¶ÔØ»º´æ
-        if (it->second.preload) {
-            AudioEngine::uncache(it->second.filePath);
-        }
-        m_audioConfigs.erase(it);
-        log("AudioManager: Removed audio config: %s", audioId.c_str());
-    }
-}
-
-// ÅúÁ¿¼ÓÔØÒôÆµÅäÖÃ
-void AudioManager::loadAudioConfigs(const std::vector<AudioConfig>& configs)
-{
-    for (const auto& config : configs) {
-        addAudioConfig(config);
-    }
-}
-
-// ²¥·Å±³¾°ÒôÀÖ
-void AudioManager::playBGM(const std::string& audioId)
-{
-    log("AudioManager: playBGM called for %s", audioId.c_str());
-
-    if (m_isMuted) {
-        log("  Audio is muted, skipping");
-        return;
-    }
-
-    auto it = m_audioConfigs.find(audioId);
-    if (it == m_audioConfigs.end()) {
-        log("  ERROR: Audio config not found: %s", audioId.c_str());
-        return;
-    }
-
-    const AudioConfig& config = it->second;
-    if (config.type != AudioType::BGM) {
-        log("  ERROR: Audio %s is not a BGM", audioId.c_str());
-        return;
-    }
-
-    // Èç¹ûÒÑ¾­ÔÚ²¥·ÅÏàÍ¬µÄBGM£¬²»ÖØ¸´²¥·Å
-    if (m_currentBGM == audioId && AudioEngine::getState(m_currentBGMAudioID) == AudioEngine::AudioState::PLAYING) {
-        log("  BGM already playing: %s", audioId.c_str());
-        return;
-    }
-
-    // Í£Ö¹µ±Ç°BGM
     if (m_currentBGMAudioID != -1) {
         AudioEngine::stop(m_currentBGMAudioID);
         m_currentBGMAudioID = -1;
     }
 
-    // ²¥·ÅĞÂµÄBGM
-    m_currentBGMAudioID = AudioEngine::play2d(config.filePath, config.loop, m_bgmVolume * config.volume);
-    m_currentBGM = audioId;
+    // æ¸…ç©ºæ‰€æœ‰é…ç½®
+    m_audioConfigs.clear();
+    m_playingEffects.clear();
+    m_playingVoices.clear();
+}
 
-    if (m_currentBGMAudioID != AudioEngine::INVALID_AUDIO_ID) {
-        log("  Playing BGM: %s, AudioID: %d", audioId.c_str(), m_currentBGMAudioID);
+AudioManager* AudioManager::getInstance()
+{
+    if (s_instance == nullptr) {
+        s_instance = new (std::nothrow) AudioManager();
     }
-    else {
-        log("  ERROR: Failed to play BGM: %s", audioId.c_str());
-        m_currentBGM.clear();
+    return s_instance;
+}
+
+void AudioManager::destroyInstance()
+{
+    if (s_instance != nullptr) {
+        delete s_instance;
+        s_instance = nullptr;
     }
 }
 
-// Í£Ö¹±³¾°ÒôÀÖ
+void AudioManager::initDefaultConfigs()
+{
+    log("AudioManager::initDefaultConfigs()");
+    // ç¤ºä¾‹éŸ³é¢‘é…ç½®
+    // å®é™…é¡¹ç›®ä¸­åº”è¯¥æ ¹æ®èµ„æºç›®å½•ç»“æ„æ·»åŠ çœŸå®çš„éŸ³é¢‘æ–‡ä»¶
+    
+    // èƒŒæ™¯éŸ³ä¹
+    addAudioConfig("bgm_main", AudioType::BGM, "bgm/main.mp3", true, 1.0f);
+    addAudioConfig("bgm_boss", AudioType::BGM, "bgm/boss.mp3", true, 1.0f);
+    addAudioConfig("bgm_gameover", AudioType::BGM, "bgm/gameover.mp3", false, 1.0f);
+    
+    // éŸ³æ•ˆ
+    addAudioConfig("effect_jump", AudioType::EFFECT, "effects/jump.mp3", false, 0.8f);
+    addAudioConfig("effect_attack", AudioType::EFFECT, "effects/attack.mp3", false, 1.0f);
+    addAudioConfig("effect_hit", AudioType::EFFECT, "effects/hit.mp3", false, 0.8f);
+    addAudioConfig("effect_die", AudioType::EFFECT, "effects/die.mp3", false, 1.0f);
+    addAudioConfig("effect_shield", AudioType::EFFECT, "effects/shield.mp3", false, 0.8f);
+    addAudioConfig("effect_pickup", AudioType::EFFECT, "effects/pickup.mp3", false, 0.7f);
+    
+    // UIéŸ³æ•ˆ
+    addAudioConfig("ui_button_click", AudioType::EFFECT, "ui/button_click.mp3", false, 0.5f);
+    addAudioConfig("ui_level_complete", AudioType::EFFECT, "ui/level_complete.mp3", false, 0.8f);
+    addAudioConfig("ui_error", AudioType::EFFECT, "ui/error.mp3", false, 0.6f);
+    
+    // è¯­éŸ³
+    addAudioConfig("voice_start", AudioType::EFFECT, "voices/start.mp3", false, 1.0f);
+    addAudioConfig("voice_gameover", AudioType::EFFECT, "voices/gameover.mp3", false, 1.0f);
+    
+    log("AudioManager: %d audio configs initialized", m_audioConfigs.size());
+}
+
+void AudioManager::addAudioConfig(const std::string& audioId, AudioType type, const std::string& filePath, bool loop, float volume)
+{
+    AudioConfig config;
+    config.type = type;
+    config.filePath = filePath;
+    config.loop = loop;
+    config.volume = volume;
+    
+    m_audioConfigs[audioId] = config;
+    log("AudioManager: Added config for %s (type: %d, path: %s)", audioId.c_str(), (int)type, filePath.c_str());
+}
+
+int AudioManager::playBGM(const std::string& audioId)
+{
+    if (m_isMuted) {
+        log("AudioManager: BGM %s not played (muted)", audioId.c_str());
+        return -1;
+    }
+    
+    // æ£€æŸ¥å½“å‰BGMæ˜¯å¦å·²ç»åœ¨æ’­æ”¾
+    if (!m_currentBGM.empty() && m_currentBGM == audioId && m_currentBGMAudioID != -1) {
+        AudioEngine::AudioState state = AudioEngine::getState(m_currentBGMAudioID);
+        if (state == AudioEngine::AudioState::PLAYING) {
+            log("AudioManager: BGM %s is already playing", audioId.c_str());
+            return m_currentBGMAudioID;
+        }
+    }
+    
+    auto it = m_audioConfigs.find(audioId);
+    if (it == m_audioConfigs.end()) {
+        log("AudioManager: BGM config not found: %s", audioId.c_str());
+        return -1;
+    }
+    
+    const AudioConfig& config = it->second;
+    
+    // æ£€æŸ¥éŸ³é¢‘ç±»å‹æ˜¯å¦ä¸ºBGM
+    if (config.type != AudioType::BGM) {
+        log("AudioManager: Audio %s is not a BGM", audioId.c_str());
+        return -1;
+    }
+    
+    // åœæ­¢å½“å‰æ­£åœ¨æ’­æ”¾çš„BGM
+    if (m_currentBGMAudioID != -1) {
+        AudioEngine::stop(m_currentBGMAudioID);
+        m_currentBGMAudioID = -1;
+    }
+    
+    // æ’­æ”¾æ–°çš„BGM
+    m_currentBGM = audioId;
+    m_currentBGMAudioID = AudioEngine::play2d(config.filePath, config.loop, m_bgmVolume * config.volume);
+    
+    if (m_currentBGMAudioID != AudioEngine::INVALID_AUDIO_ID) {
+        log("AudioManager: Playing BGM: %s, AudioID: %d", audioId.c_str(), m_currentBGMAudioID);
+        
+        // è®¾ç½®BGMæ’­æ”¾ç»“æŸå›è°ƒ
+        AudioEngine::setFinishCallback(m_currentBGMAudioID, [this](int id, const std::string&) {
+            if (id == m_currentBGMAudioID) {
+                m_currentBGMAudioID = -1;
+                m_currentBGM.clear();
+                log("AudioManager: BGM finished playing");
+            }
+        });
+    } else {
+        log("AudioManager: Failed to play BGM: %s", audioId.c_str());
+        m_currentBGM.clear();
+    }
+    
+    return m_currentBGMAudioID;
+}
+
 void AudioManager::stopBGM()
 {
     if (m_currentBGMAudioID != -1) {
         AudioEngine::stop(m_currentBGMAudioID);
-        log("AudioManager: Stopped BGM (AudioID: %d)", m_currentBGMAudioID);
+        log("AudioManager: Stopped BGM, AudioID: %d", m_currentBGMAudioID);
+        m_currentBGMAudioID = -1;
+        m_currentBGM.clear();
+    } else {
+        log("AudioManager: No BGM is currently playing");
     }
-    m_currentBGMAudioID = -1;
-    m_currentBGM.clear();
 }
 
-// ÔİÍ£±³¾°ÒôÀÖ
 void AudioManager::pauseBGM()
 {
     if (m_currentBGMAudioID != -1) {
         AudioEngine::pause(m_currentBGMAudioID);
-        log("AudioManager: Paused BGM (AudioID: %d)", m_currentBGMAudioID);
+        log("AudioManager: Paused BGM, AudioID: %d", m_currentBGMAudioID);
+    } else {
+        log("AudioManager: No BGM is currently playing");
     }
 }
 
-// »Ö¸´±³¾°ÒôÀÖ
 void AudioManager::resumeBGM()
 {
-    if (m_isMuted) return;
-
+    if (m_isMuted) {
+        log("AudioManager: BGM not resumed (muted)");
+        return;
+    }
+    
     if (m_currentBGMAudioID != -1) {
         AudioEngine::resume(m_currentBGMAudioID);
-        log("AudioManager: Resumed BGM (AudioID: %d)", m_currentBGMAudioID);
+        log("AudioManager: Resumed BGM, AudioID: %d", m_currentBGMAudioID);
+    } else {
+        log("AudioManager: No BGM is currently playing");
     }
 }
 
-// µ­Èë²¥·Å±³¾°ÒôÀÖ
-void AudioManager::fadeInBGM(const std::string& audioId, float duration)
+// æ£€æŸ¥BGMæ˜¯å¦æ­£åœ¨æ’­æ”¾
+bool AudioManager::isBGMPlaying() const
 {
-    // BUG 6: ÏÈÇåÀíÖ®Ç°µÄµ­ÈëÈÎÎñ
-    cleanupFadeActions();
-
-    playBGM(audioId);
-
-    if (m_currentBGMAudioID != -1) {
-        // ÉèÖÃ³õÊ¼ÒôÁ¿Îª0
-        AudioEngine::setVolume(m_currentBGMAudioID, 0);
-
-        // ´´½¨µ­Èë¶¯×÷
-        float currentTime = 0;
-        float interval = 0.1f;
-        int steps = static_cast<int>(duration / interval);
-
-        for (int i = 1; i <= steps; i++) {
-            float delay = i * interval;
-            float volume = (m_bgmVolume * (i / static_cast<float>(steps)));
-
-            Director::getInstance()->getScheduler()->schedule([this, volume](float dt) {
-                if (m_currentBGMAudioID != -1) {
-                    AudioEngine::setVolume(m_currentBGMAudioID, volume);
-                }
-                }, this, delay, 0, 0, false, "fade_in_bgm");
-        }
-
-        log("AudioManager: Fade in BGM started, duration: %.1fs", duration);
+    if (m_currentBGMAudioID == -1) {
+        return false;
     }
+    
+    AudioEngine::AudioState state = AudioEngine::getState(m_currentBGMAudioID);
+    bool isPlaying = (state == AudioEngine::AudioState::PLAYING);
+    log("AudioManager: isBGMPlaying() -> %d (currentBGMAudioID: %d, state: %d)", 
+        isPlaying, m_currentBGMAudioID, (int)state);
+    return isPlaying;
 }
 
-// µ­³öÍ£Ö¹±³¾°ÒôÀÖ
-void AudioManager::fadeOutBGM(float duration)
-{
-    if (m_currentBGMAudioID == -1) return;
-
-    // BUG 7: ÏÈÇåÀíÖ®Ç°µÄµ­³öÈÎÎñ
-    cleanupFadeActions();
-
-    // ´´½¨µ­³ö¶¯×÷
-    float currentVolume = AudioEngine::getVolume(m_currentBGMAudioID);
-    float interval = 0.1f;
-    int steps = static_cast<int>(duration / interval);
-
-    for (int i = steps; i >= 0; i--) {
-        float delay = (steps - i) * interval;
-        float volume = currentVolume * (i / static_cast<float>(steps));
-
-        Director::getInstance()->getScheduler()->schedule([this, volume](float dt) {
-            if (m_currentBGMAudioID != -1) {
-                AudioEngine::setVolume(m_currentBGMAudioID, volume);
-            }
-            }, this, delay, 0, 0, false, "fade_out_bgm");
-    }
-
-    // ×îºóÍ£Ö¹
-    Director::getInstance()->getScheduler()->schedule([this](float dt) {
-        stopBGM();
-        }, this, duration, 0, 0, false, "stop_bgm_after_fade");
-
-    log("AudioManager: Fade out BGM started, duration: %.1fs", duration);
-}
-
-// ²¥·ÅÒôĞ§
-int AudioManager::playEffect(const std::string& audioId)
-{
-    if (m_isMuted) {
-        log("AudioManager: Effect %s not played (muted)", audioId.c_str());
-        return -1;
-    }
-
-    auto it = m_audioConfigs.find(audioId);
-    if (it == m_audioConfigs.end()) {
-        log("AudioManager: Effect config not found: %s", audioId.c_str());
-        return -1;
-    }
-
-    const AudioConfig& config = it->second;
-    if (config.type != AudioType::EFFECT) {
-        log("AudioManager: Audio %s is not an effect", audioId.c_str());
-        return -1;
-    }
-
-    int audioID = AudioEngine::play2d(config.filePath, config.loop, m_effectVolume * config.volume);
-
-    if (audioID != AudioEngine::INVALID_AUDIO_ID) {
-        m_playingEffects[audioID] = audioId;
-        log("AudioManager: Playing effect: %s, AudioID: %d", audioId.c_str(), audioID);
-    }
-    else {
-        log("AudioManager: Failed to play effect: %s", audioId.c_str());
-    }
-
-    return audioID;
-}
-
-// Í£Ö¹ËùÓĞÒôĞ§
-void AudioManager::stopAllEffects()
-{
-    // ÏÈ¸´ÖÆÔÙ±éÀú£¬±ÜÃâ±éÀúÊ±ÈİÆ÷±»ĞŞ¸Ä
-    std::map<int, std::string> effectsCopy = m_playingEffects;
-
-    for (const auto& pair : effectsCopy) {
-        AudioEngine::stop(pair.first);
-    }
-    m_playingEffects.clear();
-    log("AudioManager: All effects stopped");
-}
-
-// Í£Ö¹Ö¸¶¨ÒôĞ§
-void AudioManager::stopEffect(int effectId)
-{
-    auto it = m_playingEffects.find(effectId);
-    if (it != m_playingEffects.end()) {
-        AudioEngine::stop(effectId);
-        m_playingEffects.erase(it);
-        log("AudioManager: Stopped effect AudioID: %d", effectId);
-    }
-}
-
-// ÔİÍ£ËùÓĞÒôĞ§
+// æš‚åœæ‰€æœ‰éŸ³æ•ˆ
 void AudioManager::pauseAllEffects()
 {
     std::map<int, std::string> effectsCopy = m_playingEffects;
-
+    
     for (const auto& pair : effectsCopy) {
         AudioEngine::pause(pair.first);
     }
     log("AudioManager: All effects paused");
 }
 
-// »Ö¸´ËùÓĞÒôĞ§
+// æ¢å¤æ‰€æœ‰éŸ³æ•ˆ
 void AudioManager::resumeAllEffects()
 {
     if (m_isMuted) return;
-
+    
     std::map<int, std::string> effectsCopy = m_playingEffects;
-
+    
     for (const auto& pair : effectsCopy) {
         AudioEngine::resume(pair.first);
     }
     log("AudioManager: All effects resumed");
 }
 
-// Ô¤¼ÓÔØÒôĞ§
+// é¢„åŠ è½½éŸ³æ•ˆ
 void AudioManager::preloadEffect(const std::string& audioId)
 {
     auto it = m_audioConfigs.find(audioId);
@@ -565,7 +269,7 @@ void AudioManager::preloadEffect(const std::string& audioId)
     }
 }
 
-// Ğ¶ÔØÒôĞ§
+// å¸è½½éŸ³æ•ˆ
 void AudioManager::unloadEffect(const std::string& audioId)
 {
     auto it = m_audioConfigs.find(audioId);
@@ -575,23 +279,23 @@ void AudioManager::unloadEffect(const std::string& audioId)
     }
 }
 
-// ²¥·ÅUIÒôĞ§
+// æ’­æ”¾UIéŸ³æ•ˆ
 void AudioManager::playUISound(const std::string& audioId)
 {
     if (m_isMuted) {
         log("AudioManager: UI sound %s not played (muted)", audioId.c_str());
         return;
     }
-
+    
     auto it = m_audioConfigs.find(audioId);
     if (it == m_audioConfigs.end()) {
         log("AudioManager: UI sound config not found: %s", audioId.c_str());
         return;
     }
-
+    
     const AudioConfig& config = it->second;
     int audioID = AudioEngine::play2d(config.filePath, false, m_uiVolume * config.volume);
-
+    
     if (audioID != AudioEngine::INVALID_AUDIO_ID) {
         log("AudioManager: Playing UI sound: %s, AudioID: %d", audioId.c_str(), audioID);
     }
@@ -600,35 +304,37 @@ void AudioManager::playUISound(const std::string& audioId)
     }
 }
 
-// ÉèÖÃ±³¾°ÒôÀÖÒôÁ¿
+// è®¾ç½®èƒŒæ™¯éŸ³ä¹éŸ³é‡
 void AudioManager::setBGMVolume(float volume)
 {
     m_bgmVolume = std::max(0.0f, std::min(1.0f, volume));
-
+    
     if (m_currentBGMAudioID != -1 && !m_isMuted) {
         auto it = m_audioConfigs.find(m_currentBGM);
         if (it != m_audioConfigs.end()) {
-            float actualVolume = m_bgmVolume * it->second.volume;
+            const AudioConfig& config = it->second;
+            float actualVolume = m_bgmVolume * config.volume;
             AudioEngine::setVolume(m_currentBGMAudioID, actualVolume);
+            log("AudioManager: BGM volume set to %.2f (actual: %.2f)", volume, actualVolume);
         }
+    } else {
+        log("AudioManager: BGM volume set to %.2f (not applied - BGM not playing or muted)", volume);
     }
-
-    log("AudioManager: BGM volume set to %.2f", m_bgmVolume);
 }
 
-// ÉèÖÃÒôĞ§ÒôÁ¿
+// è®¾ç½®éŸ³æ•ˆéŸ³é‡
 void AudioManager::setEffectVolume(float volume)
 {
     m_effectVolume = std::max(0.0f, std::min(1.0f, volume));
-
+    
     if (!m_isMuted) {
-        // ¸üĞÂËùÓĞÕıÔÚ²¥·ÅµÄÒôĞ§ÒôÁ¿
+        // æ›´æ–°æ‰€æœ‰æ­£åœ¨æ’­æ”¾çš„éŸ³æ•ˆéŸ³é‡
         std::map<int, std::string> effectsCopy = m_playingEffects;
-
+        
         for (const auto& pair : effectsCopy) {
             int audioID = pair.first;
             const std::string& audioId = pair.second;
-
+            
             auto configIt = m_audioConfigs.find(audioId);
             if (configIt != m_audioConfigs.end()) {
                 float actualVolume = m_effectVolume * configIt->second.volume;
@@ -636,153 +342,478 @@ void AudioManager::setEffectVolume(float volume)
             }
         }
     }
-
+    
     log("AudioManager: Effect volume set to %.2f", m_effectVolume);
 }
 
-// ÉèÖÃUIÒôĞ§ÒôÁ¿
+// è®¾ç½®UIéŸ³æ•ˆéŸ³é‡
 void AudioManager::setUIVolume(float volume)
 {
     m_uiVolume = std::max(0.0f, std::min(1.0f, volume));
     log("AudioManager: UI volume set to %.2f", m_uiVolume);
 }
 
-// ¾²Òô/È¡Ïû¾²Òô 
+// é™éŸ³/å–æ¶ˆé™éŸ³ 
 void AudioManager::setMuted(bool muted)
 {
-    if (m_isMuted == muted) return;  // ±ÜÃâÖØ¸´ÉèÖÃ
+    if (m_isMuted == muted) return;  // é¿å…é‡å¤æ“ä½œ
     m_isMuted = muted;
-
+    
     if (muted) {
-        // ±£´æµ±Ç°ÒôÁ¿
+        // ä¿å­˜å½“å‰éŸ³é‡
         m_lastBGMVolume = m_bgmVolume;
         m_lastEffectVolume = m_effectVolume;
         m_lastUIVolume = m_uiVolume;
-
-        // ½«ËùÓĞÒôÁ¿ÉèÖÃÎª0¶ø²»ÊÇÔİÍ£
+        
+        // å°†æ‰€æœ‰éŸ³é‡è®¾ç½®ä¸º0å®ç°é™éŸ³
         setBGMVolume(0);
         setEffectVolume(0);
         setUIVolume(0);
-
+        
         log("AudioManager: Audio muted (volumes saved: BGM=%.2f, Effect=%.2f, UI=%.2f)",
             m_lastBGMVolume, m_lastEffectVolume, m_lastUIVolume);
     }
     else {
-        // »Ö¸´Ö®Ç°±£´æµÄÒôÁ¿
+        // æ¢å¤ä¹‹å‰ä¿å­˜çš„éŸ³é‡
         setBGMVolume(m_lastBGMVolume);
         setEffectVolume(m_lastEffectVolume);
         setUIVolume(m_lastUIVolume);
-
+        
         log("AudioManager: Audio unmuted (volumes restored: BGM=%.2f, Effect=%.2f, UI=%.2f)",
             m_bgmVolume, m_effectVolume, m_uiVolume);
     }
 }
 
-// ±³¾°ÒôÀÖÊÇ·ñÕıÔÚ²¥·Å
-bool AudioManager::isBGMPlaying() const
-{
-    if (m_currentBGMAudioID == -1) return false;
-    return AudioEngine::getState(m_currentBGMAudioID) == AudioEngine::AudioState::PLAYING;
-}
-
-// ´¦ÀíÓ¦ÓÃ½øÈëºóÌ¨
+// å¤„ç†è¿›å…¥åå°
 void AudioManager::onEnterBackground()
 {
-    // ÔİÍ£ËùÓĞÒôÆµ
+    // æš‚åœæ‰€æœ‰éŸ³é¢‘
     if (m_currentBGMAudioID != -1) {
         AudioEngine::pause(m_currentBGMAudioID);
     }
-
+    
     std::map<int, std::string> effectsCopy = m_playingEffects;
-
+    
     for (const auto& pair : effectsCopy) {
         AudioEngine::pause(pair.first);
     }
-
+    
     log("AudioManager: Audio paused for background");
 }
 
-// ´¦ÀíÓ¦ÓÃ½øÈëÇ°Ì¨
+// å¤„ç†è¿›å…¥å‰å°
 void AudioManager::onEnterForeground()
 {
     if (!m_isMuted) {
-        // »Ö¸´ËùÓĞÒôÆµ
+        // æ¢å¤æ‰€æœ‰éŸ³é¢‘
         if (m_currentBGMAudioID != -1) {
             AudioEngine::resume(m_currentBGMAudioID);
         }
-
+        
         std::map<int, std::string> effectsCopy = m_playingEffects;
-
+        
         for (const auto& pair : effectsCopy) {
             AudioEngine::resume(pair.first);
         }
-
+        
         log("AudioManager: Audio resumed for foreground");
     }
 }
 
-int AudioManager::playVoice(const std::string& audioId)//ÅÔ°×ÓÃµÄ²¥·Å·½Ê½
+int AudioManager::playVoice(const std::string& audioId)//è¯­éŸ³æ’­æ”¾æ¥å£
 {
     log("AudioManager::playVoice called for %s", audioId.c_str());
-
+    
     if (m_isMuted) {
         log("  Audio is muted, skipping voice");
         return -1;
     }
-
+    
     auto it = m_audioConfigs.find(audioId);
     if (it == m_audioConfigs.end()) {
         log("  ERROR: Voice config not found: %s", audioId.c_str());
         return -1;
     }
-
+    
     const AudioConfig& config = it->second;
-
+    
     
     if (config.type != AudioType::EFFECT) {
         log("  ERROR: Audio %s is not an effect (voice should be EFFECT type)", audioId.c_str());
         return -1;
     }
-
-    // ===== ÅÔ°×ÌØÊâ´¦Àí¿ªÊ¼ =====
-    // 1. ±£´æµ±Ç°BGMÒôÁ¿
+    
+    // ===== è¯­éŸ³æ·¡å…¥æ·¡å‡ºå¼€å§‹ =====
+    // 1. è®°å½•å½“å‰BGMéŸ³é‡
     float originalBGMVolume = m_bgmVolume;
-
-    // 2. ½µµÍBGMÒôÁ¿£¨ÈÃÅÔ°×¸üÇåÎú£©
-    float duckedBGMVolume = originalBGMVolume * 0.3f;  // ½µµ½30%
+    
+    // 2. é™ä½BGMéŸ³é‡ä»¥çªå‡ºè¯­éŸ³
+    float duckedBGMVolume = originalBGMVolume * 0.3f;  // é™ä½30%
     if (m_currentBGMAudioID != -1) {
         AudioEngine::setVolume(m_currentBGMAudioID, duckedBGMVolume);
     }
     log("  Ducking BGM volume from %.2f to %.2f", originalBGMVolume, duckedBGMVolume);
-
-    // 3. ²¥·ÅÅÔ°×
+    
+    // 3. æ’­æ”¾è¯­éŸ³
     int audioID = AudioEngine::play2d(config.filePath, config.loop, m_voiceVolume * config.volume);
-
+    
     if (audioID != AudioEngine::INVALID_AUDIO_ID) {
-        // Ìí¼Óµ½ÅÔ°×ÁĞ±í
+        // æ·»åŠ åˆ°è¯­éŸ³åˆ—è¡¨
         m_playingVoices[audioID] = audioId;
-
-        // 4. ÉèÖÃ²¥·ÅÍê³É»Øµ÷
+        
+        // 4. è®¾ç½®è¯­éŸ³ç»“æŸå›è°ƒ
         AudioEngine::setFinishCallback(audioID, [this, originalBGMVolume](int id, const std::string&) {
-            // ´ÓÁĞ±íÖĞÒÆ³ı
+            // ä»åˆ—è¡¨ä¸­ç§»é™¤
             m_playingVoices.erase(id);
-
-            // »Ö¸´BGMÒôÁ¿
+            
+            // æ¢å¤BGMéŸ³é‡
             if (m_currentBGMAudioID != -1) {
                 AudioEngine::setVolume(m_currentBGMAudioID, originalBGMVolume);
             }
             log("  Voice finished, restoring BGM volume to %.2f", originalBGMVolume);
             });
-
+        
         log("  Playing voice: %s, AudioID: %d", audioId.c_str(), audioID);
-    }
-    else {
-        log("  ERROR: Failed to play voice: %s", audioId.c_str());
-        // ²¥·ÅÊ§°ÜÊ±Ò²»Ö¸´BGMÒôÁ¿
+    } else {
+        // å¦‚æœè¯­éŸ³æ’­æ”¾å¤±è´¥ï¼Œæ¢å¤BGMéŸ³é‡
         if (m_currentBGMAudioID != -1) {
             AudioEngine::setVolume(m_currentBGMAudioID, originalBGMVolume);
         }
+        log("  ERROR: Failed to play voice: %s", audioId.c_str());
+    }
+    
+    return audioID;
+}
+
+// è®¾ç½®è¯­éŸ³éŸ³é‡
+void AudioManager::setVoiceVolume(float volume)
+{
+    m_voiceVolume = std::max(0.0f, std::min(1.0f, volume));
+    
+    if (!m_isMuted) {
+        // æ›´æ–°æ‰€æœ‰æ­£åœ¨æ’­æ”¾çš„è¯­éŸ³éŸ³é‡
+        std::map<int, std::string> voicesCopy = m_playingVoices;
+        
+        for (const auto& pair : voicesCopy) {
+            int audioID = pair.first;
+            const std::string& audioId = pair.second;
+            
+            auto configIt = m_audioConfigs.find(audioId);
+            if (configIt != m_audioConfigs.end()) {
+                float actualVolume = m_voiceVolume * configIt->second.volume;
+                AudioEngine::setVolume(audioID, actualVolume);
+            }
+        }
+    }
+    
+    log("AudioManager: Voice volume set to %.2f", m_voiceVolume);
+}
+
+// åœæ­¢æ‰€æœ‰è¯­éŸ³
+void AudioManager::stopAllVoices()
+{
+    std::map<int, std::string> voicesCopy = m_playingVoices;
+    
+    for (const auto& pair : voicesCopy) {
+        int audioID = pair.first;
+        AudioEngine::stop(audioID);
+        m_playingVoices.erase(audioID);
+    }
+    
+    log("AudioManager: All voices stopped");
+}
+
+// æš‚åœæ‰€æœ‰è¯­éŸ³
+void AudioManager::pauseAllVoices()
+{
+    std::map<int, std::string> voicesCopy = m_playingVoices;
+    
+    for (const auto& pair : voicesCopy) {
+        int audioID = pair.first;
+        AudioEngine::pause(audioID);
+    }
+    
+    log("AudioManager: All voices paused");
+}
+
+// æ¢å¤æ‰€æœ‰è¯­éŸ³
+void AudioManager::resumeAllVoices()
+{
+    if (m_isMuted) return;
+    
+    std::map<int, std::string> voicesCopy = m_playingVoices;
+    
+    for (const auto& pair : voicesCopy) {
+        int audioID = pair.first;
+        AudioEngine::resume(audioID);
+    }
+    
+    log("AudioManager: All voices resumed");
+}
+
+int AudioManager::playEffect(const std::string& audioId)
+{
+    if (m_isMuted) {
+        log("AudioManager: Effect %s not played (muted)", audioId.c_str());
+        return -1;
+    }
+    
+    auto it = m_audioConfigs.find(audioId);
+    if (it == m_audioConfigs.end()) {
+        log("AudioManager: Effect config not found: %s", audioId.c_str());
+        return -1;
+    }
+    
+    const AudioConfig& config = it->second;
+    
+    if (config.type != AudioType::EFFECT) {
+        log("AudioManager: Audio %s is not an effect", audioId.c_str());
+        return -1;
+    }
+    
+    int audioID = AudioEngine::play2d(config.filePath, config.loop, m_effectVolume * config.volume);
+    
+    if (audioID != AudioEngine::INVALID_AUDIO_ID) {
+        m_playingEffects[audioID] = audioId;
+        log("AudioManager: Playing effect: %s, AudioID: %d", audioId.c_str(), audioID);
+        
+        // è®¾ç½®éŸ³æ•ˆæ’­æ”¾ç»“æŸå›è°ƒ
+        AudioEngine::setFinishCallback(audioID, [this](int id, const std::string&) {
+            m_playingEffects.erase(id);
+        });
+    } else {
+        log("AudioManager: Failed to play effect: %s", audioId.c_str());
+    }
+    
+    return audioID;
+}
+
+void AudioManager::stopEffect(int audioID)
+{
+    if (audioID == -1) return;
+    
+    AudioEngine::stop(audioID);
+    m_playingEffects.erase(audioID);
+    log("AudioManager: Stopped effect, AudioID: %d", audioID);
+}
+
+void AudioManager::stopAllEffects()
+{
+    std::map<int, std::string> effectsCopy = m_playingEffects;
+    
+    for (const auto& pair : effectsCopy) {
+        AudioEngine::stop(pair.first);
+    }
+    
+    m_playingEffects.clear();
+    log("AudioManager: All effects stopped");
+}
+
+void AudioManager::pauseEffect(int audioID)
+{
+    if (audioID == -1) return;
+    
+    AudioEngine::pause(audioID);
+    log("AudioManager: Paused effect, AudioID: %d", audioID);
+}
+
+void AudioManager::resumeEffect(int audioID)
+{
+    if (audioID == -1) return;
+    
+    if (m_isMuted) {
+        log("AudioManager: Effect not resumed (muted)");
+        return;
+    }
+    
+    AudioEngine::resume(audioID);
+    log("AudioManager: Resumed effect, AudioID: %d", audioID);
+}
+
+void AudioManager::unloadAllEffects()
+{
+    // åœæ­¢æ‰€æœ‰éŸ³æ•ˆ
+    stopAllEffects();
+    
+    // å¸è½½æ‰€æœ‰éŸ³æ•ˆæ–‡ä»¶
+    std::vector<std::string> loadedFiles;
+    
+    for (const auto& pair : m_audioConfigs) {
+        const AudioConfig& config = pair.second;
+        
+        // åªå¸è½½éŸ³æ•ˆæ–‡ä»¶
+        if (config.type == AudioType::EFFECT) {
+            // æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å·²ç»å¸è½½è¿‡
+            if (std::find(loadedFiles.begin(), loadedFiles.end(), config.filePath) == loadedFiles.end()) {
+                AudioEngine::uncache(config.filePath);
+                loadedFiles.push_back(config.filePath);
+                log("AudioManager: Uncached effect file: %s", config.filePath.c_str());
+            }
+        }
+    }
+    
+    log("AudioManager: Unloaded all effects");
+}
+
+// åˆå§‹åŒ–éŸ³é¢‘ç®¡ç†å™¨
+bool AudioManager::init()
+{
+    log("AudioManager::init()");
+    // è¿™é‡Œå¯ä»¥æ·»åŠ éŸ³é¢‘å¼•æ“çš„åˆå§‹åŒ–ä»£ç 
+    // ä¾‹å¦‚ï¼šAudioEngine::lazyInit();
+
+    // é¢„åŠ è½½æ‰€æœ‰æ ‡è®°ä¸ºé¢„åŠ è½½çš„éŸ³é¢‘
+    for (const auto& pair : m_audioConfigs) {
+        const AudioConfig& config = pair.second;
+        if (config.preload) {
+            AudioEngine::preload(config.filePath);
+            log("AudioManager: Preloaded audio: %s", config.id.c_str());
+        }
     }
 
-    return audioID;
+    return true;
+}
+
+// åˆ é™¤éŸ³é¢‘é…ç½®
+void AudioManager::removeAudioConfig(const std::string& audioId)
+{
+    auto it = m_audioConfigs.find(audioId);
+    if (it != m_audioConfigs.end()) {
+        m_audioConfigs.erase(it);
+        log("AudioManager: Removed audio config: %s", audioId.c_str());
+    }
+}
+
+// æ‰¹é‡åŠ è½½éŸ³é¢‘é…ç½®
+void AudioManager::loadAudioConfigs(const std::vector<AudioConfig>& configs)
+{
+    for (const auto& config : configs) {
+        m_audioConfigs[config.id] = config;
+        log("AudioManager: Loaded audio config: %s", config.id.c_str());
+    }
+}
+
+// æ·¡å…¥èƒŒæ™¯éŸ³ä¹
+void AudioManager::fadeInBGM(const std::string& audioId, float duration)
+{
+    log("AudioManager::fadeInBGM(%s, %.2f)", audioId.c_str(), duration);
+
+    if (m_isMuted) {
+        log("AudioManager: BGM %s not faded in (muted)", audioId.c_str());
+        return;
+    }
+
+    // åœæ­¢å½“å‰BGMï¼ˆå¦‚æœæœ‰çš„è¯ï¼‰
+    if (m_currentBGMAudioID != -1) {
+        AudioEngine::stop(m_currentBGMAudioID);
+        m_currentBGMAudioID = -1;
+    }
+
+    // æŸ¥æ‰¾éŸ³é¢‘é…ç½®
+    auto it = m_audioConfigs.find(audioId);
+    if (it == m_audioConfigs.end()) {
+        log("AudioManager: BGM config not found: %s", audioId.c_str());
+        return;
+    }
+
+    const AudioConfig& config = it->second;
+
+    // æ£€æŸ¥éŸ³é¢‘ç±»å‹æ˜¯å¦ä¸ºBGM
+    if (config.type != AudioType::BGM) {
+        log("AudioManager: Audio %s is not a BGM", audioId.c_str());
+        return;
+    }
+
+    // æ’­æ”¾BGMï¼Œåˆå§‹éŸ³é‡ä¸º0
+    m_currentBGM = audioId;
+    m_currentBGMAudioID = AudioEngine::play2d(config.filePath, config.loop, 0.0f);
+
+    if (m_currentBGMAudioID != AudioEngine::INVALID_AUDIO_ID) {
+        log("AudioManager: Started fading in BGM: %s, AudioID: %d", audioId.c_str(), m_currentBGMAudioID);
+
+        // è®¡ç®—ç›®æ ‡éŸ³é‡
+        float targetVolume = m_bgmVolume * config.volume;
+
+        // åˆ›å»ºä¸€ä¸ªæ·¡å…¥åŠ¨ä½œ
+        // æ³¨æ„ï¼šè¿™é‡Œä½¿ç”¨ç®€å•çš„çº¿æ€§æ·¡å…¥ï¼Œå®é™…é¡¹ç›®ä¸­å¯ä»¥ä½¿ç”¨æ›´å¤æ‚çš„æ’å€¼å‡½æ•°
+        float step = targetVolume / (duration * 60.0f); // å‡è®¾60FPS
+
+        // ç”±äºAudioEngineæ²¡æœ‰å†…ç½®çš„æ·¡å…¥æ·¡å‡ºåŠŸèƒ½ï¼Œæˆ‘ä»¬å¯ä»¥ä½¿ç”¨scheduleæ¥å®ç°
+        // è¿™é‡Œä½¿ç”¨ä¸€ä¸ªç®€å•çš„scheduleæ¥å®ç°æ·¡å…¥æ•ˆæœ
+        Director::getInstance()->getScheduler()->schedule(
+            [this, targetVolume, step, config](float dt) {
+                if (m_currentBGMAudioID == -1) return;
+
+                float currentVolume = AudioEngine::getVolume(m_currentBGMAudioID);
+                float newVolume = currentVolume + step;
+
+                if (newVolume >= targetVolume) {
+                    newVolume = targetVolume;
+                    AudioEngine::setVolume(m_currentBGMAudioID, newVolume);
+                    Director::getInstance()->getScheduler()->unschedule("fade_in_bgm", this);
+                    log("AudioManager: BGM fade in completed");
+                }
+                else {
+                    AudioEngine::setVolume(m_currentBGMAudioID, newVolume);
+                }
+            },
+            this, 1.0f / 60.0f, CC_REPEAT_FOREVER, 0.0f, false, "fade_in_bgm");
+
+        // è®¾ç½®BGMæ’­æ”¾ç»“æŸå›è°ƒ
+        AudioEngine::setFinishCallback(m_currentBGMAudioID, [this](int id, const std::string&) {
+            if (id == m_currentBGMAudioID) {
+                Director::getInstance()->getScheduler()->unschedule("fade_in_bgm", this);
+                m_currentBGMAudioID = -1;
+                m_currentBGM.clear();
+                log("AudioManager: BGM finished playing");
+            }
+            });
+    }
+    else {
+        log("AudioManager: Failed to play BGM: %s", audioId.c_str());
+        m_currentBGM.clear();
+    }
+}
+
+// æ·¡å‡ºèƒŒæ™¯éŸ³ä¹
+void AudioManager::fadeOutBGM(float duration)
+{
+    log("AudioManager::fadeOutBGM(%.2f)", duration);
+
+    if (m_currentBGMAudioID == -1) {
+        log("AudioManager: No BGM is currently playing");
+        return;
+    }
+
+    float currentVolume = AudioEngine::getVolume(m_currentBGMAudioID);
+    float step = currentVolume / (duration * 60.0f); // å‡è®¾60FPS
+
+    Director::getInstance()->getScheduler()->schedule(
+        [this, step](float dt) {
+            if (m_currentBGMAudioID == -1) return;
+
+            float currentVolume = AudioEngine::getVolume(m_currentBGMAudioID);
+            float newVolume = currentVolume - step;
+
+            if (newVolume <= 0.0f) {
+                AudioEngine::stop(m_currentBGMAudioID);
+                m_currentBGMAudioID = -1;
+                m_currentBGM.clear();
+                Director::getInstance()->getScheduler()->unschedule("fade_out_bgm", this);
+                log("AudioManager: BGM fade out completed");
+            }
+            else {
+                AudioEngine::setVolume(m_currentBGMAudioID, newVolume);
+            }
+        },
+        this, 1.0f / 60.0f, CC_REPEAT_FOREVER, 0.0f, false, "fade_out_bgm");
+}
+
+// æ¸…ç†æ·¡å…¥æ·¡å‡ºåŠ¨ä½œ
+void AudioManager::cleanupFadeActions()
+{
+    log("AudioManager::cleanupFadeActions()");
+    // æ¸…ç†æ‰€æœ‰æ·¡å…¥æ·¡å‡ºçš„schedule
+    Director::getInstance()->getScheduler()->unschedule("fade_in_bgm", this);
+    Director::getInstance()->getScheduler()->unschedule("fade_out_bgm", this);
 }

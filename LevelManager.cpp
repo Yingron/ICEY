@@ -1,6 +1,8 @@
 // LevelManager.cpp
 #include "LevelManager.h"
+#include "AudioManager.h"
 #include "cocos2d.h"
+#include "LevelMusicManager.h"
 
 USING_NS_CC;
 
@@ -13,14 +15,29 @@ LevelManager* LevelManager::getInstance() {
     return _instance;
 }
 
+// ä¿®æ­£åŽçš„æž„é€ å‡½æ•° - åªä¿ç•™ä¸€ä¸ª
 LevelManager::LevelManager() {
     _currentLevel = LevelState::LEVEL1;
+
+    // åˆå§‹åŒ–å…³å¡é…ç½®
     initLevelConfigs();
+
+    // æ’­æ”¾åˆå§‹å…³å¡çš„èƒŒæ™¯éŸ³ä¹
+    auto musicManager = LevelMusicManager::getInstance();
+    if (musicManager) {
+        musicManager->playBGMForLevel(_currentLevel);
+    }
+    else {
+        // å¤‡ç”¨æ–¹æ¡ˆï¼šå¦‚æžœ LevelMusicManager ä¸å¯ç”¨ï¼Œä½¿ç”¨ AudioManager
+        AudioManager::getInstance()->playBGM("bgm_level1");
+    }
 }
 
-// LevelManager.cpp - ÐÞ¸Ä initLevelConfigs º¯Êý
 void LevelManager::initLevelConfigs() {
-    // Level1: 5ÕÅ±³¾°Í¼
+    // æ¸…ç†çŽ°æœ‰é…ç½®
+    _levelConfigs.clear();
+
+    // Level1: 5å¼ èƒŒæ™¯å›¾
     LevelConfig level1;
     level1.level = LevelState::LEVEL1;
     level1.name = "Level 1";
@@ -33,7 +50,7 @@ void LevelManager::initLevelConfigs() {
     };
     _levelConfigs.push_back(level1);
 
-    // Level2-1 µ½ Level2-5£¨ÏÖÓÐÅäÖÃ±£³Ö²»±ä£©
+    // Level2-1 åˆ° Level2-6
     LevelConfig level2_1;
     level2_1.level = LevelState::LEVEL2_1;
     level2_1.name = "Level 2-1";
@@ -64,14 +81,14 @@ void LevelManager::initLevelConfigs() {
     level2_5.backgroundImages = { "background-level2-5.png" };
     _levelConfigs.push_back(level2_5);
 
-    // Level2-6: µÚ¶þ¹ØµÚ6ÕÅÍ¼£¨ÐÂÔö£©
+    // Level2-6
     LevelConfig level2_6;
     level2_6.level = LevelState::LEVEL2_6;
     level2_6.name = "Level 2-6";
     level2_6.backgroundImages = { "background-level2-6.png" };
     _levelConfigs.push_back(level2_6);
 
-    // Level3-1: µÚÈý¹ØµÚ1ÕÅÍ¼£¨ÐÂÔö£©
+    // Level3-1
     LevelConfig level3_1;
     level3_1.level = LevelState::LEVEL3_1;
     level3_1.name = "Level 3-1";
@@ -84,7 +101,7 @@ void LevelManager::initLevelConfigs() {
     };
     _levelConfigs.push_back(level3_1);
 
-    // Level3-2: µÚÈý¹ØµÚ2ÕÅÍ¼£¨ÐÂÔö£©
+    // Level3-2
     LevelConfig level3_2;
     level3_2.level = LevelState::LEVEL3_2;
     level3_2.name = "Level 3-2";
@@ -95,49 +112,49 @@ void LevelManager::initLevelConfigs() {
     };
     _levelConfigs.push_back(level3_2);
 
-    // Level3-3: µÚÈý¹ØµÚ3ÕÅÍ¼£¨ÐÂÔö£©
+    // Level3-3
     LevelConfig level3_3;
     level3_3.level = LevelState::LEVEL3_3;
     level3_3.name = "Level 3-3";
     level3_3.backgroundImages = { "background-level3-3.png" };
     _levelConfigs.push_back(level3_3);
 
-    // Level3-4: µÚÈý¹ØµÚ4ÕÅÍ¼£¨ÐÂÔö£©
+    // Level3-4
     LevelConfig level3_4;
     level3_4.level = LevelState::LEVEL3_4;
     level3_4.name = "Level 3-4";
     level3_4.backgroundImages = { "background-level3-4.png" };
     _levelConfigs.push_back(level3_4);
 
-    // Level3-5: µÚÈý¹ØµÚ5ÕÅÍ¼£¨ÐÂÔö£©
+    // Level3-5
     LevelConfig level3_5;
     level3_5.level = LevelState::LEVEL3_5;
     level3_5.name = "Level 3-5";
     level3_5.backgroundImages = { "background-level3-5.png" };
     _levelConfigs.push_back(level3_5);
 
-    // Level3-6: µÚÈý¹ØµÚ6ÕÅÍ¼£¨ÐÂÔö£©
+    // Level3-6
     LevelConfig level3_6;
     level3_6.level = LevelState::LEVEL3_6;
     level3_6.name = "Level 3-6";
     level3_6.backgroundImages = { "background-level3-6.png" };
     _levelConfigs.push_back(level3_6);
 
-    // Level4-1: µÚËÄ¹ØµÚ1ÕÅÍ¼£¨ÐÂÔö£©
+    // Level4-1
     LevelConfig level4_1;
     level4_1.level = LevelState::LEVEL4_1;
     level4_1.name = "Level 4-1";
     level4_1.backgroundImages = { "background-level4-1.png" };
     _levelConfigs.push_back(level4_1);
 
-    // Level4-2: µÚËÄ¹ØµÚ2ÕÅÍ¼£¨ÐÂÔö£©
+    // Level4-2
     LevelConfig level4_2;
     level4_2.level = LevelState::LEVEL4_2;
     level4_2.name = "Level 4-2";
     level4_2.backgroundImages = { "background-level4-2.png" };
     _levelConfigs.push_back(level4_2);
 
-    // Level4-3: µÚËÄ¹ØµÚ3ÕÅÍ¼£¨ÐÂÔö£©
+    // Level4-3
     LevelConfig level4_3;
     level4_3.level = LevelState::LEVEL4_3;
     level4_3.name = "Level 4-3";
@@ -148,14 +165,14 @@ void LevelManager::initLevelConfigs() {
     };
     _levelConfigs.push_back(level4_3);
 
-    // Level4-4: µÚËÄ¹ØµÚ4ÕÅÍ¼£¨ÐÂÔö£©
+    // Level4-4
     LevelConfig level4_4;
     level4_4.level = LevelState::LEVEL4_4;
     level4_4.name = "Level 4-4";
     level4_4.backgroundImages = { "background-level4-4.png" };
     _levelConfigs.push_back(level4_4);
 
-    // Level4-5: µÚËÄ¹ØµÚ5ÕÅÍ¼£¨ÐÂÔö£©
+    // Level4-5
     LevelConfig level4_5;
     level4_5.level = LevelState::LEVEL4_5;
     level4_5.name = "Level 4-5";
@@ -166,7 +183,7 @@ void LevelManager::initLevelConfigs() {
     };
     _levelConfigs.push_back(level4_5);
 
-    // Level4-6: µÚËÄ¹ØµÚ6ÕÅÍ¼£¨ÐÂÔö£©
+    // Level4-6
     LevelConfig level4_6;
     level4_6.level = LevelState::LEVEL4_6;
     level4_6.name = "Level 4-6";
@@ -176,15 +193,25 @@ void LevelManager::initLevelConfigs() {
         "background-level4-6-3.png"
     };
     _levelConfigs.push_back(level4_6);
+
+    // Final Level
+    LevelConfig finalLevel;
+    finalLevel.level = LevelState::FINAL_LEVEL;
+    finalLevel.name = "Final Level";
+    finalLevel.backgroundImages = {
+        "images/environment/background/final-level-4.png",
+        "images/environment/background/final-level-4.png",
+        "images/environment/background/final-level-4.png",
+        "images/environment/background/final-level-4.png"
+    };
+    _levelConfigs.push_back(finalLevel);
 }
 
 bool LevelManager::canSwitchToNextLevel(float playerWorldX) {
     float maxWorldX = getCurrentLevelMaxWorldX();
 
-    // Íæ¼Òµ½´ïµ±Ç°¹Ø¿¨±ß½çÊ±£¬¿ÉÒÔÇÐ»»µ½ÏÂÒ»¹Ø¿¨
-    // Ê¹ÓÃ¸ü¿íËÉµÄÌõ¼þ£º¾àÀë±ß½ç100ÏñËØÊ±¾Í¿ÉÒÔÇÐ»»
+    // çŽ©å®¶åˆ°è¾¾å½“å‰å…³å¡è¾¹ç•Œæ—¶ï¼Œå¯ä»¥åˆ‡æ¢åˆ°ä¸‹ä¸€å…³å¡
     if (playerWorldX >= maxWorldX - 10.0f) {
-        // ¼ì²éÊÇ·ñ¿ÉÒÔÇÐ»»µ½ÏÂÒ»¹Ø¿¨£¨²»ÊÇ×îºóÒ»¸ö¹Ø¿¨£©
         LevelState nextLevel = _currentLevel;
         switch (_currentLevel) {
         case LevelState::LEVEL1:
@@ -224,39 +251,42 @@ bool LevelManager::canSwitchToNextLevel(float playerWorldX) {
             nextLevel = LevelState::LEVEL3_6;
             break;
         case LevelState::LEVEL3_6:
-            nextLevel = LevelState::LEVEL4_1;  // ÐÂÔö£º´ÓLevel3-6ÇÐ»»µ½Level4-1
+            nextLevel = LevelState::LEVEL4_1;
             break;
         case LevelState::LEVEL4_1:
-            nextLevel = LevelState::LEVEL4_2;  // ÐÂÔö
+            nextLevel = LevelState::LEVEL4_2;
             break;
         case LevelState::LEVEL4_2:
-            nextLevel = LevelState::LEVEL4_3;  // ÐÂÔö
+            nextLevel = LevelState::LEVEL4_3;
             break;
         case LevelState::LEVEL4_3:
-            nextLevel = LevelState::LEVEL4_4;  // ÐÂÔö
+            nextLevel = LevelState::LEVEL4_4;
             break;
         case LevelState::LEVEL4_4:
-            nextLevel = LevelState::LEVEL4_5;  // ÐÂÔö
+            nextLevel = LevelState::LEVEL4_5;
             break;
         case LevelState::LEVEL4_5:
-            nextLevel = LevelState::LEVEL4_6;  // ÐÂÔö
+            nextLevel = LevelState::LEVEL4_6;
             break;
         case LevelState::LEVEL4_6:
-            nextLevel = LevelState::COMPLETED;  // Level4-6ÊÇ×îºóÒ»¹Ø
+            nextLevel = LevelState::FINAL_LEVEL;
+            break;
+        case LevelState::FINAL_LEVEL:
+            nextLevel = LevelState::COMPLETED;
             break;
         default:
-            return false; // ÒÑ¾­ÊÇ×îºóÒ»¸ö¹Ø¿¨
+            return false;
         }
 
-        // Èç¹û²»ÊÇCOMPLETED×´Ì¬£¬¾Í¿ÉÒÔÇÐ»»
         return (nextLevel != LevelState::COMPLETED);
     }
 
     return false;
 }
 
-// LevelManager.cpp - ÐÞ¸Ä switchToNextLevel º¯Êý
 LevelManager::LevelState LevelManager::switchToNextLevel() {
+    auto oldLevel = _currentLevel;
+
     switch (_currentLevel) {
     case LevelState::LEVEL1:
         _currentLevel = LevelState::LEVEL2_1;
@@ -295,35 +325,52 @@ LevelManager::LevelState LevelManager::switchToNextLevel() {
         _currentLevel = LevelState::LEVEL3_6;
         break;
     case LevelState::LEVEL3_6:
-        _currentLevel = LevelState::LEVEL4_1;  // ÐÂÔö
+        _currentLevel = LevelState::LEVEL4_1;
         break;
     case LevelState::LEVEL4_1:
-        _currentLevel = LevelState::LEVEL4_2;  // ÐÂÔö
+        _currentLevel = LevelState::LEVEL4_2;
         break;
     case LevelState::LEVEL4_2:
-        _currentLevel = LevelState::LEVEL4_3;  // ÐÂÔö
+        _currentLevel = LevelState::LEVEL4_3;
         break;
     case LevelState::LEVEL4_3:
-        _currentLevel = LevelState::LEVEL4_4;  // ÐÂÔö
+        _currentLevel = LevelState::LEVEL4_4;
         break;
     case LevelState::LEVEL4_4:
-        _currentLevel = LevelState::LEVEL4_5;  // ÐÂÔö
+        _currentLevel = LevelState::LEVEL4_5;
         break;
     case LevelState::LEVEL4_5:
-        _currentLevel = LevelState::LEVEL4_6;  // ÐÂÔö
+        _currentLevel = LevelState::LEVEL4_6;
         break;
     case LevelState::LEVEL4_6:
-        _currentLevel = LevelState::COMPLETED;  // ÐÂÔö
+        _currentLevel = LevelState::FINAL_LEVEL;
+        break;
+    case LevelState::FINAL_LEVEL:
+        _currentLevel = LevelState::COMPLETED;
         break;
     default:
         break;
     }
+
+    // åˆ‡æ¢éŸ³ä¹
+    auto musicManager = LevelMusicManager::getInstance();
+    if (musicManager && _currentLevel != LevelState::COMPLETED) {
+        musicManager->playBGMForLevel(_currentLevel);
+    }
+
+    log("Level switched from %d to %d", (int)oldLevel, (int)_currentLevel);
 
     return _currentLevel;
 }
 
 void LevelManager::resetLevels() {
     _currentLevel = LevelState::LEVEL1;
+
+    // é‡ç½®éŸ³ä¹
+    auto musicManager = LevelMusicManager::getInstance();
+    if (musicManager) {
+        musicManager->playBGMForLevel(_currentLevel);
+    }
 }
 
 std::vector<std::string> LevelManager::getCurrentLevelBackgrounds() const {
@@ -333,22 +380,16 @@ std::vector<std::string> LevelManager::getCurrentLevelBackgrounds() const {
         }
     }
 
-    // Ä¬ÈÏ·µ»ØµÚÒ»¹Ø
-    return _levelConfigs[0].backgroundImages;
+    // é»˜è®¤è¿”å›žç¬¬ä¸€ä¸ª
+    return _levelConfigs.empty() ? std::vector<std::string>() : _levelConfigs[0].backgroundImages;
 }
 
 float LevelManager::getCurrentLevelWorldWidth() const {
-    // Õâ¸öÖµÐèÒªÔÚMainGameSceneÖÐ¸ù¾ÝÊµ¼Ê±³¾°Í¼¼ÆËã
-    // ÕâÀï·µ»ØÒ»¸ö¹À¼ÆÖµ£¬Êµ¼ÊÖµÔÚ¼ÓÔØ±³¾°ºóÈ·¶¨
     switch (_currentLevel) {
     case LevelState::LEVEL1:
-        return 5 * 1280.0f; // ¼ÙÉèÃ¿ÕÅ±³¾°Í¼¿í¶ÈµÈÓÚÆÁÄ»¿í¶È
-    case LevelState::LEVEL2_1:
-    case LevelState::LEVEL2_2:
-    case LevelState::LEVEL2_3:
-    case LevelState::LEVEL2_4:
-    case LevelState::LEVEL2_5:
-        return 1280.0f; // Level2Ã¿ÕÅÍ¼¿í¶ÈµÈÓÚÆÁÄ»¿í¶È
+        return 5 * 1280.0f;
+    case LevelState::FINAL_LEVEL:
+        return 4 * 1280.0f;
     default:
         return 1280.0f;
     }
@@ -360,5 +401,5 @@ float LevelManager::getCurrentLevelMaxWorldX() const {
 
 bool LevelManager::isPlayerAtLevelBoundary(float playerWorldX) const {
     float maxWorldX = getCurrentLevelMaxWorldX();
-    return playerWorldX >= maxWorldX - 200.0f; // ´Ó100Ôö¼Óµ½200ÏñËØ
+    return playerWorldX >= maxWorldX - 200.0f;
 }

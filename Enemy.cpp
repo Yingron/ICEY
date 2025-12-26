@@ -1,120 +1,434 @@
+// Enemy.cpp
 #include "Enemy.h"
-#include "GameUtils.h"
-#include <stdexcept>
+#include "Player.h"
+#include "EnemyManager.h"
+#include "cocos2d.h"
 
-bool Enemy::init()
-{
-    if (!cocos2d::Sprite::init()) return false;
+USING_NS_CC;
 
-    // [ÖÐÎÄ×¢ÊÍ]: ³õÊ¼»¯»ù´¡ÊýÖµ
-    m_health = 100.0f;
-    m_maxHealth = 100.0f;
-    m_damage = 10.0f;
-    m_speed = 100.0f;
-    m_attackRange = 50.0f;
-    m_detectionRange = 300.0f;
-    m_attackCooldown = 2.0f;
-    m_attackTimer = 0.0f;
+// Enemy is an abstract class, cannot be instantiated directly
+Enemy* Enemy::create(const std::string& enemyType) {
+    CCLOGERROR("Cannot instantiate abstract class Enemy directly");
+    return nullptr;
+}
 
-    m_aiState = EnemyState::IDLE;
-    m_targetPlayer = nullptr;
+bool Enemy::init(const std::string& enemyType) {
+    if (!Sprite::init()) {
+        return false;
+    }
 
+    _enemyType = enemyType;
+    _currentState = EnemyState::IDLE;
+    _target = nullptr;
+    _facingRight = true;
+    _worldPositionX = 0.0f;
+    _worldPositionY = 0.0f;
+    _velocity = Vec2::ZERO;
+    _currentAttackCooldown = 0.0f;
+
+    // Initialize enemy data
+    initEnemyData();
+    
+    // Setup animations
+    setupAnimations();
+
+    // è®¾ç½®åˆå§‹çº¹ç† - ä»ŽidleåŠ¨ç”»ä¸­èŽ·å–ç¬¬ä¸€å¸§
+    if (_animations.count("idle") > 0) {
+        Animation* idleAnim = _animations["idle"];
+        if (!idleAnim->getFrames().empty()) {
+            SpriteFrame* firstFrame = idleAnim->getFrames().at(0)->getSpriteFrame();
+            if (firstFrame) {
+                this->setSpriteFrame(firstFrame);
+                log("Set initial sprite frame for enemy");
+            }
+        }
+    }
+
+    // Setup physics properties - ç§»åˆ°è®¾ç½®åˆå§‹çº¹ç†ä¹‹åŽ
+    setupPhysics();
+
+    // Start default animation
+    playAnimation("idle");
+
+    // Start update
     this->scheduleUpdate();
+
     return true;
 }
 
-void Enemy::update(float delta)
-{
-    // [Òì³£´¦Àí]: È«¾Ö Update ±£»¤£¬·ÀÖ¹Ä³Ò»Ö¡Âß¼­´íÎóµ¼ÖÂÓÎÏ·±ÀÀ£
-    try {
-        if (m_aiState == EnemyState::DEAD) return;
-
-        if (m_attackTimer > 0.0f) m_attackTimer -= delta;
-
-        // Ö´ÐÐºËÐÄAI
-        updateAI(delta);
-
-        // [ÖÐÎÄ×¢ÊÍ]: ¸üÐÂÅö×²ºÐÎ»ÖÃ£¬Ê¹Æä¸úËæ¾«ÁéÒÆ¶¯
-        updateHurtbox();
+Enemy::~Enemy() {
+    // Clean up animation cache
+    for (const auto& pair : _animations) {
+        AnimationCache::getInstance()->removeAnimation(pair.first);
     }
-    catch (const std::exception& e) {
-        GameUtils::log(std::string("Enemy Update Error: ") + e.what());
-    }
+    _animations.clear();
 }
 
-void Enemy::updateAI(float delta)
-{
-    if (!m_targetPlayer) return;
+void Enemy::update(float delta) {
+    // Update attack cooldown
+    if (_currentAttackCooldown > 0) {
+        _currentAttackCooldown -= delta;
+    }
 
-    // [ÖÐÎÄ×¢ÊÍ]: »ù´¡¾àÀë¼ì²â
-    float dist = this->getPosition().distance(m_targetPlayer->getPosition());
+    // Execute different updates based on current state
+    switch (_currentState) {
+        case EnemyState::IDLE:
+        case EnemyState::PATROLLING:
+        case EnemyState::CHASING:
+            updateAI(delta);
+            updatePhysics(delta);
+            break;
+        case EnemyState::ATTACKING:
+            // Don't move during attack state
+            break;
+        case EnemyState::HURT:
+            // Handle hit stun in hurt state
+            break;
+        case EnemyState::DEAD:
+            // No updates in dead state
+            return;
+    }
 
-    switch (m_aiState)
-    {
-    case EnemyState::IDLE:
-        if (dist <= m_detectionRange) setState(EnemyState::CHASE);
-        break;
-    case EnemyState::CHASE:
-        // [·¶Î§Ë÷µÐ]: »ù´¡¾àÀëÅÐ¶¨£¬¾ßÌåµÄËÄ·½Î»ÅÐ¶¨ÔÚ¹¥»÷º¯ÊýÖÐÏ¸»¯
-        if (dist <= m_attackRange) {
-            if (m_attackTimer <= 0.0f) setState(EnemyState::ATTACK);
+    // Update world position
+    updateWorldPosition(delta);
+}
+
+void Enemy::setCurrentState(EnemyState state) {
+    if (_currentState == state) {
+        return;
+    }
+
+    EnemyState previousState = _currentState;
+    _currentState = state;
+
+    // Play animation based on new state
+    switch (state) {
+        case EnemyState::IDLE:
+            playAnimation("idle");
+            break;
+        case EnemyState::PATROLLING:
+            playAnimation("walk");
+            break;
+        case EnemyState::CHASING:
+            playAnimation("run");
+            break;
+        case EnemyState::ATTACKING:
+            playAnimation("attack");
+            break;
+        case EnemyState::HURT: {
+            // Disable physics on hurt
+            if (this->getPhysicsBody()) {
+                this->getPhysicsBody()->setEnabled(false);
+            }
+            
+            // Play hurt animation once
+            if (_animations.count("hurt") > 0) {
+                playAnimation("hurt", false);
+            }
+            
+            // Create sequence to play hurt animation and then return to previous state
+            auto returnToPrevious = CallFunc::create([this]() {
+                // Re-enable physics
+                if (this->getPhysicsBody()) {
+                    this->getPhysicsBody()->setEnabled(true);
+                }
+                
+                // Return to previous behavior based on player proximity
+                if (_target) {
+                    float distanceToPlayer = std::abs(_target->getWorldPositionX() - _worldPositionX);
+                    if (distanceToPlayer <= _detectionRange) {
+                        setCurrentState(EnemyState::CHASING);
+                    } else {
+                        setCurrentState(EnemyState::PATROLLING);
+                    }
+                } else {
+                    setCurrentState(EnemyState::PATROLLING);
+                }
+            });
+            
+            float hurtDuration = 0.5f; // Default duration if no animation
+            if (_animations.count("hurt") > 0 && _animations["hurt"] != nullptr) {
+                hurtDuration = _animations["hurt"]->getDelayPerUnit() * _animations["hurt"]->getFrames().size();
+            }
+            
+            // Create sequence
+            auto sequence = Sequence::create(
+                DelayTime::create(hurtDuration),
+                returnToPrevious,
+                nullptr
+            );
+            
+            // Run the sequence to return to previous state
+            this->runAction(sequence);
+            break;
         }
-        else if (dist > m_detectionRange * 1.5f) {
-            setState(EnemyState::IDLE);
+        case EnemyState::DEAD: {
+            // Disable physics on death
+            if (this->getPhysicsBody()) {
+                this->getPhysicsBody()->setEnabled(false);
+            }
+            
+            // Create sequence to play death animation once and then remove enemy
+            auto removeEnemy = CallFunc::create([this]() {
+                // Notify EnemyManager to remove this enemy
+                auto enemyManager = EnemyManager::getInstance();
+                enemyManager->removeEnemy(this);
+                log("Enemy removed from EnemyManager after death");
+            });
+            
+            FiniteTimeAction* sequence;
+            if (_animations.count("dead") > 0 && _animations["dead"] != nullptr) {
+                // Get dead animation
+                Animation* deadAnim = _animations["dead"];
+                // Create dead animation action
+                auto deadAction = Animate::create(deadAnim);
+                // First play the death animation once, then remove enemy
+                sequence = Sequence::create(deadAction, removeEnemy, nullptr);
+                _currentAnimationKey = "dead"; // Update current animation key
+            } else {
+                // No death animation, just remove enemy after a short delay
+                auto delay = DelayTime::create(0.5f);
+                sequence = Sequence::create(delay, removeEnemy, nullptr);
+            }
+            
+            // Run the sequence
+            this->runAction(sequence);
+            break;
         }
-        else {
-            chasePlayer(delta);
+    }
+}
+
+bool Enemy::canAttack() const {
+    if (isDead() || _currentState == EnemyState::ATTACKING || _currentState == EnemyState::HURT) {
+        return false;
+    }
+    
+    if (_currentAttackCooldown > 0) {
+        return false;
+    }
+    
+    if (!_target) {
+        return false;
+    }
+    
+    // Check if target is within attack range
+    float distance = std::abs(_target->getWorldPositionX() - _worldPositionX);
+    return distance <= _attackRange;
+}
+
+void Enemy::takeDamage(float damage) {
+    if (isDead() || _currentState == EnemyState::HURT) {
+        return;
+    }
+
+    // Reduce health
+    _currentHealth -= damage;
+    
+    // Check if enemy is dead
+    if (_currentHealth <= 0) {
+        _currentHealth = 0;
+        setCurrentState(EnemyState::DEAD);
+    } else {
+        // Set to hurt state
+        setCurrentState(EnemyState::HURT);
+    }
+}
+
+void Enemy::setWorldPosition(float x, float y) {
+    _worldPositionX = x;
+    _worldPositionY = y;
+    
+    // Get visible size to calculate ground level
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    float groundScreenY = visibleSize.height * 0.3f;
+    
+    // Update sprite position with correct screen coordinate mapping
+    this->setPosition(x, groundScreenY);
+}
+
+void Enemy::updateAI(float delta) {
+    if (!_target) {
+        return;
+    }
+
+    // Check if player is within detection range
+    float distanceToPlayer = std::abs(_target->getWorldPositionX() - _worldPositionX);
+    
+    if (distanceToPlayer <= _detectionRange) {
+        // Player is within detection range, chase
+        chase(delta);
+        
+        // Check if can attack
+        if (canAttack()) {
+            attack();
         }
-        break;
-    case EnemyState::ATTACK:
-        attack();
-        break;
+    } else {
+        // Player is not within detection range, patrol
+        patrol(delta);
     }
 }
 
-void Enemy::chasePlayer(float delta)
-{
-    // [ÖÐÎÄ×¢ÊÍ]: XÖá·½ÏòÒÆ¶¯Âß¼­
-    float dirX = (m_targetPlayer->getPositionX() > this->getPositionX()) ? 1.0f : -1.0f;
-    float newX = this->getPositionX() + dirX * m_speed * delta;
-    this->setPositionX(newX);
-    this->setFlippedX(dirX < 0); // ¸ù¾ÝÒÆ¶¯·½Ïò·­×ªÌùÍ¼
+void Enemy::onPlayerDetected() {
+    setCurrentState(EnemyState::CHASING);
 }
 
-void Enemy::takeDamage(float damage)
-{
-    if (m_aiState == EnemyState::DEAD) return;
-    m_health -= damage;
+void Enemy::onPlayerLost() {
+    setCurrentState(EnemyState::PATROLLING);
+}
 
-    // [ÖÐÎÄ×¢ÊÍ]: ÊÜ»÷ÉÁ°×Ð§¹û
-    this->runAction(cocos2d::Sequence::create(
-        cocos2d::TintTo::create(0.1f, 255, 0, 0),
-        cocos2d::TintTo::create(0.1f, 255, 255, 255),
-        nullptr
-    ));
+bool Enemy::onContactBegin(PhysicsContact& contact) {
+    // Default implementation, subclasses can override
+    return true;
+}
 
-    if (m_health <= 0) {
-        die();
+void Enemy::loadAnimation(const std::string& animationName, const std::vector<std::string>& frames, float delay) {
+    Animation* animation = Animation::create();
+    auto fileUtils = FileUtils::getInstance();
+    
+    for (const auto& framePath : frames) {
+        // Try to load the frame from file
+        std::vector<std::string> possiblePaths = {
+            framePath,
+            "images/characters/enemies/" + framePath,
+            "Resources/images/characters/enemies/" + framePath,
+            "C:/aishi/test3/Resources/images/characters/enemies/" + framePath
+        };
+        
+        SpriteFrame* frame = nullptr;
+        
+        // Try each possible path
+        for (const auto& path : possiblePaths) {
+            if (fileUtils->isFileExist(path)) {
+                // Load the texture
+                auto texture = Director::getInstance()->getTextureCache()->addImage(path);
+                if (texture) {
+                    // Create sprite frame from texture
+                    frame = SpriteFrame::createWithTexture(texture, Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height));
+                    log("Loaded enemy animation frame from: %s", path.c_str());
+                    break;
+                }
+            }
+        }
+        
+        if (frame) {
+            animation->addSpriteFrame(frame);
+        } else {
+            CCLOGERROR("Failed to load enemy animation frame: %s", framePath.c_str());
+        }
+    }
+    
+    animation->setDelayPerUnit(delay);
+    animation->setRestoreOriginalFrame(true);
+    
+    AnimationCache::getInstance()->addAnimation(animation, animationName);
+    _animations[animationName] = animation;
+}
+
+void Enemy::playAnimation(const std::string& animationName, bool loop) {
+    if (_currentAnimationKey == animationName) {
+        return;
+    }
+    
+    _currentAnimationKey = animationName;
+    
+    Action* action;
+    if (loop) {
+        action = RepeatForever::create(Animate::create(AnimationCache::getInstance()->getAnimation(animationName)));
+    } else {
+        action = Animate::create(AnimationCache::getInstance()->getAnimation(animationName));
+    }
+    
+    this->stopAllActions();
+    this->runAction(action);
+}
+
+void Enemy::patrol(float delta) {
+    // Default patrol behavior: move back and forth between left and right bounds
+    if (_currentState != EnemyState::PATROLLING) {
+        setCurrentState(EnemyState::PATROLLING);
+    }
+
+    _patrolTimer += delta;
+    
+    // Simple patrol logic: move left and right
+    if (_patrolTimer >= _patrolDuration) {
+        _patrolTimer = 0.0f;
+        _facingRight = !_facingRight;
+    }
+    
+    // Set velocity
+    float direction = _facingRight ? 1.0f : -1.0f;
+    _velocity.x = direction * _moveSpeed;
+    
+    // Flip sprite
+    this->setFlippedX(!_facingRight);
+}
+
+void Enemy::chase(float delta) {
+    if (_currentState != EnemyState::CHASING) {
+        setCurrentState(EnemyState::CHASING);
+    }
+    
+    if (!_target) {
+        return;
+    }
+    
+    // Calculate direction to player
+    float direction = (_target->getWorldPositionX() > _worldPositionX) ? 1.0f : -1.0f;
+    
+    // Set velocity
+    _velocity.x = direction * _moveSpeed;
+    
+    // Flip sprite
+    this->setFlippedX(direction < 0);
+}
+
+void Enemy::checkTargetInRange() {
+    // Check if target is within attack range
+    if (_target) {
+        float distance = std::abs(_target->getWorldPositionX() - _worldPositionX);
+        if (distance <= _attackRange && canAttack()) {
+            attack();
+        }
     }
 }
 
-void Enemy::die() {
-    m_aiState = EnemyState::DEAD;
-    this->stopAllActions(); // Í£Ö¹ËùÓÐAIºÍ¶¯»­
-
-    // [ÖÐÎÄ×¢ÊÍ]: ÇÐ»»µ½»÷°Ü×´Ì¬µÄÍ¼Æ¬
-    try {
-        // ×ÓÀà»áÖØÐ´¾ßÌåÂß¼­£¬ÕâÀï×öÍ¨ÓÃ´¦Àí
-        this->setColor(cocos2d::Color3B::GRAY);
-        this->runAction(cocos2d::Sequence::create(
-            cocos2d::FadeOut::create(1.5f), // Ê¬ÌåÍ£ÁôÒ»»áµ­³ö
-            cocos2d::RemoveSelf::create(),
-            nullptr
-        ));
+void Enemy::updatePhysics(float delta) {
+    // Update position
+    _worldPositionX += _velocity.x * delta;
+    
+    // Remove gravity application to prevent enemies from falling
+    // _velocity.y -= 98.0f * delta; - This was causing continuous downward movement
+    
+    // Keep enemies on same level as player
+    if (_target) {
+        _worldPositionY = _target->getWorldPositionY();
+    } else {
+        _worldPositionY = 0; // Default to ground if no target
     }
-    catch (...) {}
+    _velocity.y = 0;
+    
+    // Don't update sprite position here - let updateWorldPosition handle it
+    // to ensure proper screen coordinate mapping
 }
 
-void Enemy::setState(EnemyState newState) { m_aiState = newState; }
-void Enemy::updateHurtbox() {}
-void Enemy::attack() {}
+void Enemy::updateWorldPosition(float delta) {
+    // Get visible size to calculate ground level
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    float groundScreenY = visibleSize.height * 0.3f;
+    
+    // Update sprite position with correct screen coordinate mapping
+    this->setPosition(_worldPositionX, groundScreenY);
+}
+
+void Enemy::setupPhysics() {
+    // Create physics collision body
+    auto physicsBody = PhysicsBody::createBox(this->getContentSize(), PhysicsMaterial(0.1f, 0.0f, 0.5f));
+    physicsBody->setDynamic(true);
+    physicsBody->setGravityEnable(false);    // Disable physics engine gravity for enemies
+    physicsBody->setCategoryBitmask(0x04);    // Enemy category
+    physicsBody->setCollisionBitmask(0x00);    // No physical collision with any object
+    physicsBody->setContactTestBitmask(0x01);  // Detect collision with player
+    
+    this->setPhysicsBody(physicsBody);
+}

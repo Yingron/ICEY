@@ -1,4 +1,4 @@
-// LevelManager.h
+// LevelManager.h - ä¿®å¤ç¼–ç å¹¶æ·»åŠ ç¼ºå°‘çš„æšä¸¾
 #pragma once
 #ifndef LEVELMANAGER_H
 #define LEVELMANAGER_H
@@ -8,60 +8,59 @@
 
 class LevelManager {
 public:
-    // ¹Ø¿¨×´Ì¬
-   // LevelManager.h
-// ĞŞ¸ÄÃ¶¾ÙÀà LevelState
-   // LevelManager.h
-// ĞŞ¸ÄÃ¶¾ÙÀà LevelState
-  // LevelManager.h - È·±£Ã¶¾ÙÀà°üº¬ËùÓĞ¹Ø¿¨
+    // å…³å¡çŠ¶æ€æšä¸¾
     enum class LevelState {
-        LEVEL1,      // µÚÒ»¹Ø
-        LEVEL2_1,    // µÚ¶ş¹ØµÚ1ÕÅÍ¼
-        LEVEL2_2,    // µÚ¶ş¹ØµÚ2ÕÅÍ¼
-        LEVEL2_3,    // µÚ¶ş¹ØµÚ3ÕÅÍ¼
-        LEVEL2_4,    // µÚ¶ş¹ØµÚ4ÕÅÍ¼
-        LEVEL2_5,    // µÚ¶ş¹ØµÚ5ÕÅÍ¼
-        LEVEL2_6,    // µÚ¶ş¹ØµÚ6ÕÅÍ¼
-        LEVEL3_1,    // µÚÈı¹ØµÚ1ÕÅÍ¼
-        LEVEL3_2,    // µÚÈı¹ØµÚ2ÕÅÍ¼
-        LEVEL3_3,    // µÚÈı¹ØµÚ3ÕÅÍ¼
-        LEVEL3_4,    // µÚÈı¹ØµÚ4ÕÅÍ¼
-        LEVEL3_5,    // µÚÈı¹ØµÚ5ÕÅÍ¼
-        LEVEL3_6,    // µÚÈı¹ØµÚ6ÕÅÍ¼
-        LEVEL4_1,    // µÚËÄ¹ØµÚ1ÕÅÍ¼
-        LEVEL4_2,    // µÚËÄ¹ØµÚ2ÕÅÍ¼
-        LEVEL4_3,    // µÚËÄ¹ØµÚ3ÕÅÍ¼
-        LEVEL4_4,    // µÚËÄ¹ØµÚ4ÕÅÍ¼
-        LEVEL4_5,    // µÚËÄ¹ØµÚ5ÕÅÍ¼
-        LEVEL4_6,    // µÚËÄ¹ØµÚ6ÕÅÍ¼
-        COMPLETED    // ËùÓĞ¹Ø¿¨Íê³É
+        START_SCENE,     // å¼€å§‹åœºæ™¯
+        LEVEL1,          // å…³å¡1
+        LEVEL2_1,        // å…³å¡2-1
+        LEVEL2_2,        // å…³å¡2-2
+        LEVEL2_3,        // å…³å¡2-3
+        LEVEL2_4,        // å…³å¡2-4
+        LEVEL2_5,        // å…³å¡2-5
+        LEVEL2_6,        // å…³å¡2-6
+        LEVEL3_1,        // å…³å¡3-1
+        LEVEL3_2,        // å…³å¡3-2
+        LEVEL3_3,        // å…³å¡3-3
+        LEVEL3_4,        // å…³å¡3-4
+        LEVEL3_5,        // å…³å¡3-5
+        LEVEL3_6,        // å…³å¡3-6
+        LEVEL4_1,        // å…³å¡4-1
+        LEVEL4_2,        // å…³å¡4-2
+        LEVEL4_3,        // å…³å¡4-3
+        LEVEL4_4,        // å…³å¡4-4
+        LEVEL4_5,        // å…³å¡4-5
+        LEVEL4_6,        // å…³å¡4-6
+        PAUSE_SCENE,     // æš‚åœåœºæ™¯
+        GAMEOVER_SCENE,  // æ¸¸æˆç»“æŸåœºæ™¯
+        FINAL_LEVEL,     // æœ€ç»ˆå…³å¡
+        COMPLETED        // æ¸¸æˆå®Œæˆ
     };
 
     static LevelManager* getInstance();
 
-    // ¹Ø¿¨¹ÜÀí
+    // è·å–å½“å‰å…³å¡
     LevelState getCurrentLevel() const { return _currentLevel; }
     void setCurrentLevel(LevelState level);
 
-    // ¼ì²éÊÇ·ñ¿ÉÒÔÇĞ»»µ½ÏÂÒ»¹Ø¿¨
+    // æ£€æŸ¥æ˜¯å¦å¯ä»¥åˆ‡æ¢åˆ°ä¸‹ä¸€å…³
     bool canSwitchToNextLevel(float playerWorldX);
 
-    // ÇĞ»»µ½ÏÂÒ»¹Ø¿¨
+    // åˆ‡æ¢åˆ°ä¸‹ä¸€å…³
     LevelState switchToNextLevel();
 
-    // ÖØÖÃ¹Ø¿¨
+    // é‡ç½®å…³å¡
     void resetLevels();
 
-    // »ñÈ¡µ±Ç°¹Ø¿¨µÄ±³¾°Í¼Æ¬ÁĞ±í
+    // è·å–å½“å‰å…³å¡çš„èƒŒæ™¯å›¾ç‰‡
     std::vector<std::string> getCurrentLevelBackgrounds() const;
 
-    // »ñÈ¡µ±Ç°¹Ø¿¨µÄÊÀ½ç¿í¶È£¨ËùÓĞ±³¾°Í¼×Ü¿í¶È£©
+    // è·å–å½“å‰å…³å¡çš„ä¸–ç•Œå®½åº¦
     float getCurrentLevelWorldWidth() const;
 
-    // »ñÈ¡µ±Ç°¹Ø¿¨µÄ×î´óÊÀ½çÎ»ÖÃ£¨Íæ¼Ò²»ÄÜ³¬¹ıµÄÎ»ÖÃ£©
+    // è·å–å½“å‰å…³å¡çš„æœ€å¤§ä¸–ç•ŒXåæ ‡
     float getCurrentLevelMaxWorldX() const;
 
-    // ¼ì²éÍæ¼ÒÊÇ·ñµ½´ïµ±Ç°¹Ø¿¨±ß½ç
+    // æ£€æŸ¥ç©å®¶æ˜¯å¦åœ¨å…³å¡è¾¹ç•Œ
     bool isPlayerAtLevelBoundary(float playerWorldX) const;
 
 private:
@@ -71,17 +70,17 @@ private:
     static LevelManager* _instance;
     LevelState _currentLevel;
 
-    // ¹Ø¿¨ÅäÖÃ
+    // å…³å¡é…ç½®
     struct LevelConfig {
         LevelState level;
         std::string name;
         std::vector<std::string> backgroundImages;
-        float worldWidth;  // Êµ¼Ê¿í¶È»áÔÚ¼ÓÔØºó¼ÆËã
+        float worldWidth;  // å¯é€‰çš„ï¼šå…³å¡ä¸–ç•Œå®½åº¦
     };
 
     std::vector<LevelConfig> _levelConfigs;
 
-    // ³õÊ¼»¯¹Ø¿¨ÅäÖÃ
+    // åˆå§‹åŒ–å…³å¡é…ç½®
     void initLevelConfigs();
 };
 

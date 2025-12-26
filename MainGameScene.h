@@ -4,12 +4,16 @@
 #define MAINGAMESCENE_H
 
 #include "cocos2d.h"
-#include "Player.h"
 #include "Level1SceneBackground.h"
 #include "LevelManager.h"
 #include "ItemManager.h"
 #include "Item.h"
-#include"HudLayer.h"
+#include "HudLayer.h"
+#include "EnemyManager.h"
+#include "Enemy.h"
+
+// Forward declaration
+class Player;
 
 class MainGameScene : public cocos2d::Layer
 {
@@ -19,36 +23,51 @@ public:
     void update(float delta);
     CREATE_FUNC(MainGameScene);
 
+public:
+    void showGameOver();
+    HudLayer* getHudLayer() const { return _hudLayer; }
+    int getEnemyCount() const;
+
 private:
+    // æ•Œäººç›¸å…³æ–¹æ³•
+    void initEnemies();
+    void updateEnemies(float delta);
+    void checkEnemyCollisions(float delta);
+    void createEnemyAt(const std::string& enemyTypeStr, float worldX, float worldY);
+
+    // æ–°å¢æ•Œäººé…ç½®å˜é‡
+    const int MIN_ENEMY_COUNT = 2;  // æœ€å°‘æ•Œäººæ•°
+    const int MAX_ENEMY_COUNT = 5;  // æœ€å¤šæ•Œäººæ•°
+    std::vector<Enemy*> _enemiesList; // å­˜å‚¨å½“å‰åœ°å›¾æ‰€æœ‰æ•Œäºº
     Player* _player;
     SceneBackground* _currentBackground;
+    EnemyManager* _enemyManager;
 
-    HudLayer* _hudLayer;  // Ìí¼Ó HUD ²ãÖ¸Õëhy*****
+    HudLayer* _hudLayer;  // HUD layer pointer hy*****
 
-    // ¹Ø¿¨¹ÜÀí
+    // Level management
     LevelManager* _levelManager;
 
     bool _isGameOver;//hy*****
     void checkPlayerHealth();
-    void showGameOver();
 
-    // ÉãÏñ»úÏà¹Ø
+    // Camera related
     float _cameraOffsetX;
     float _screenWidth;
     float _worldWidth;
     float _minCameraX;
     float _maxCameraX;
 
-    // ¹Ø¿¨ÇĞ»»Ïà¹Ø
+    // Level transition
     bool _isTransitioning;
     float _transitionTimer;
     const float TRANSITION_DURATION = 1.0f;
 
-    // ÎïÆ·ÏµÍ³
+    // Item system
     std::vector<Item*> _levelItems;
     cocos2d::Label* _collectionLabel;
 
-    // ³õÊ¼»¯·½·¨
+    // Initialization methods
     void initBackground();
     void initPlayer();
     void initInput();
@@ -58,32 +77,35 @@ private:
     void initHud();//hy*****
     void showCollectionUI();
 
-    // ¸üĞÂ·½·¨
+    // Update methods
     void updateCamera(float delta);
     void checkLevelTransition(float delta);
     void switchToNextLevel();
     void checkItemCollisions(float delta);
     void updateCollectionUI();
 
-    // ¸¨Öúº¯Êı
+    // Helper methods
     bool isPlayerAtRightBoundary();
     void placeItemAt(const std::string& itemId, float worldX, float worldY);
 
-    // ÊäÈë´¦Àí¼àÌıÆ÷
+    // Keyboard related
     cocos2d::EventListenerKeyboard* _keyboardListener;
     cocos2d::Label* _debugLabel;
     cocos2d::Label* _levelLabel;
 
-    // ¼üÅÌÊÂ¼ş»Øµ÷
+    // Keyboard event callbacks
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
 
-    // ÎïÀíÅö×²»Øµ÷
+    // Collision event callback
     bool onContactBegin(cocos2d::PhysicsContact& contact);
 
-    // ³¡¾°ÉúÃüÖÜÆÚº¯Êı
+    // Scene lifecycle methods
     virtual void onEnter() override;
     virtual void onExit() override;
+    
+    void removeEnemy(Enemy* enemy);
+    void cleanupDeadEnemies();
 };
 
 #endif // MAINGAMESCENE_H
