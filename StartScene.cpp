@@ -1,9 +1,10 @@
-//æµ‹è¯•ç‰ˆæœ¬æ ‡æ³¨æ‰äº†ä¸€äº›æœªå®Œæˆéœ€è¦å¼•ç”¨çš„æ–‡ä»¶
+//²âÊÔ°æ±¾±ê×¢µôÁËÒ»Ğ©Î´Íê³ÉĞèÒªÒıÓÃµÄÎÄ¼ş
 #include"StartScene.h"
 #include <stdexcept> 
 #include"MainGameScene.h"
 #include<iostream>
 #include"AudioManager.h"
+#include "LevelMusicManager.h"
 //#include"ResourceManager.h"
 //#include"GameConfig.h"
 //#include"GameSceneManager.h"
@@ -11,42 +12,45 @@ USING_NS_CC;
 using namespace cocos2d::ui;
 
 
-Scene* StartScene::createScene()//åˆ›å»ºåˆå§‹åœºæ™¯StartScene
+Scene* StartScene::createScene()//´´½¨³õÊ¼³¡¾°StartScene
 {
 	try
 	{
-		// æ•è·åœºæ™¯åˆ›å»ºè¿‡ç¨‹ä¸­çš„å¼‚å¸¸
+		// ²¶»ñ³¡¾°´´½¨¹ı³ÌÖĞµÄÒì³£
 		auto scene = StartScene::create();
 		if (!scene)
 		{
-			//ä¸»åŠ¨æŠ›å‡ºåœºæ™¯åˆ›å»ºå¤±è´¥çš„å¼‚å¸¸
-			throw std::runtime_error("StartScene åˆ›å»ºå¤±è´¥ï¼šè¿”å›ç©ºæŒ‡é’ˆ");
+			//Ö÷¶¯Å×³ö³¡¾°´´½¨Ê§°ÜµÄÒì³£
+			throw std::runtime_error("StartScene ´´½¨Ê§°Ü£º·µ»Ø¿ÕÖ¸Õë");
 		}
 		return scene;
 	}
 	catch (const std::exception& e)
 	{
-		//æ•è·æ ‡å‡†å¼‚å¸¸å¹¶è¾“å‡ºï¼Œé¿å…ç¨‹åºå´©æºƒ
-		std::cerr << "StartScene::createScene å¼‚å¸¸ï¼š" << e.what() << std::endl;
-		// +++ æ–°å¢ï¼šå…œåº•è¿”å›ç©ºåœºæ™¯ï¼Œé˜²æ­¢ç¨‹åºå´©æºƒ
+		//²¶»ñ±ê×¼Òì³£²¢Êä³ö£¬±ÜÃâ³ÌĞò±ÀÀ£
+		std::cerr << "StartScene::createScene Òì³££º" << e.what() << std::endl;
+		// +++ ĞÂÔö£º¶µµ×·µ»Ø¿Õ³¡¾°£¬·ÀÖ¹³ÌĞò±ÀÀ£
 		return Scene::create();
 	}
 	catch (...)
 	{
-		// +++ æ–°å¢ï¼šæ•è·æœªçŸ¥å¼‚å¸¸ï¼Œè¦†ç›–æ‰€æœ‰å¼‚å¸¸ç±»å‹
-		std::cerr << "StartScene::createScene æœªçŸ¥å¼‚å¸¸" << std::endl;
+		// +++ ĞÂÔö£º²¶»ñÎ´ÖªÒì³££¬¸²¸ÇËùÓĞÒì³£ÀàĞÍ
+		std::cerr << "StartScene::createScene Î´ÖªÒì³£" << std::endl;
 		return Scene::create();
 	}
 }
 
 bool StartScene::init()
 {
+	
+	// ²¥·Å±êÌâÒôÀÖ
+	AudioManager::getInstance()->playBGM("bgm_title");
 	try 
 	{
 		if (!Scene::init())
 		{
-			//åˆå§‹åŒ–çˆ¶ç±»å¤±è´¥æ—¶ä¸»åŠ¨æŠ›å¼‚å¸¸
-			throw std::runtime_error("Scene::init() åˆå§‹åŒ–å¤±è´¥");
+			//³õÊ¼»¯¸¸ÀàÊ§°ÜÊ±Ö÷¶¯Å×Òì³£
+			throw std::runtime_error("Scene::init() ³õÊ¼»¯Ê§°Ü");
 		}
 
 		createUI();
@@ -55,14 +59,14 @@ bool StartScene::init()
 	}
 	catch (const std::exception& e) 
 	{
-		//æ•è·åˆå§‹åŒ–é˜¶æ®µçš„æ ‡å‡†å¼‚å¸¸
-		std::cerr << "StartScene::init å¼‚å¸¸ï¼š" << e.what() << std::endl;
+		//²¶»ñ³õÊ¼»¯½×¶ÎµÄ±ê×¼Òì³£
+		std::cerr << "StartScene::init Òì³££º" << e.what() << std::endl;
 		return false; 
 	}
 	catch (...) 
 	{
-		//æ•è·åˆå§‹åŒ–é˜¶æ®µçš„æœªçŸ¥å¼‚å¸¸
-		std::cerr << "StartScene::init æœªçŸ¥å¼‚å¸¸" << std::endl;
+		//²¶»ñ³õÊ¼»¯½×¶ÎµÄÎ´ÖªÒì³£
+		std::cerr << "StartScene::init Î´ÖªÒì³£" << std::endl;
 		return false;
 	}
 }
@@ -71,11 +75,11 @@ void StartScene::createUI()
 {
 	try
 	{
-		//è·å–å±å¹•å°ºå¯¸
+		//»ñÈ¡ÆÁÄ»³ß´ç
 		auto visibleSize = Director::getInstance()->getVisibleSize();
 		Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-		//åˆ›å»ºèƒŒæ™¯
+		//´´½¨±³¾°
 		std::string bgPath = /*GameConfig::TEXTURE_PATH + */"images/ui/start_bg.png";
 		auto background = Sprite::create(bgPath);
 		if (background)
@@ -89,60 +93,60 @@ void StartScene::createUI()
 		}
 		else
 		{
-			throw std::runtime_error("èƒŒæ™¯å›¾åŠ è½½å¤±è´¥ï¼š" + bgPath);
+			throw std::runtime_error("±³¾°Í¼¼ÓÔØÊ§°Ü£º" + bgPath);
 		}
 
 
-		//åˆ›å»ºæ ‡é¢˜
-		m_titleLabel = Label::createWithTTF(u8"è‰¾å¸Œ","fonts/forui.ttf", 188);
+		//´´½¨±êÌâ
+		m_titleLabel = Label::createWithTTF(u8"°¬Ï£","fonts/forui.ttf", 188);
 		if (!m_titleLabel)
 		{
-			throw std::runtime_error("æ ‡é¢˜Labelåˆ›å»ºå¤±è´¥");
+			throw std::runtime_error("±êÌâLabel´´½¨Ê§°Ü");
 		}
 		m_titleLabel->setPosition(origin.x + visibleSize.width / 2,
 			origin.y + visibleSize.height * 0.8f);
-		m_titleLabel->setTextColor(Color4B(176, 224, 230, 255));  // è“ç´«è‰²
-		m_titleLabel->enableShadow(Color4B::WHITE, Size(2, -2), 2);  // ç™½è‰²é˜´å½±
-		m_titleLabel->enableOutline(Color4B(75, 0, 130, 255), 3);    // é›è“è‰²æè¾¹
+		m_titleLabel->setTextColor(Color4B(176, 224, 230, 255));  // À¶×ÏÉ«
+		m_titleLabel->enableShadow(Color4B::WHITE, Size(2, -2), 2);  // °×É«ÒõÓ°
+		m_titleLabel->enableOutline(Color4B(75, 0, 130, 255), 3);    // µåÀ¶É«Ãè±ß
 		m_titleLabel->setHorizontalAlignment(TextHAlignment::CENTER);
 		m_titleLabel->setVerticalAlignment(TextVAlignment::CENTER);
-		this->addChild(m_titleLabel, 1);  // æ·»åŠ åˆ°åœºæ™¯
+		this->addChild(m_titleLabel, 1);  // Ìí¼Óµ½³¡¾°
 
 
-		// åˆ›å»ºå‰¯æ ‡é¢˜
+		// ´´½¨¸±±êÌâ
 		m_subTitleLabel = Label::createWithTTF(u8"ICEY", "fonts/forui2.ttf", 48);
 		if (!m_subTitleLabel)
 		{
-			// å¦‚æœå‰¯æ ‡é¢˜å­—ä½“ä¸å­˜åœ¨ï¼Œä½¿ç”¨ç³»ç»Ÿå­—ä½“
+			// Èç¹û¸±±êÌâ×ÖÌå²»´æÔÚ£¬Ê¹ÓÃÏµÍ³×ÖÌå
 			m_subTitleLabel = Label::createWithSystemFont(u8"ICEY", "Arial", 48);
 			if (!m_subTitleLabel)
 			{
-				CCLOG("å‰¯æ ‡é¢˜åˆ›å»ºå¤±è´¥");
+				CCLOG("¸±±êÌâ´´½¨Ê§°Ü");
 			}
 		}
 
 		if (m_subTitleLabel)
 		{
-			// è®¾ç½®å‰¯æ ‡é¢˜ä½ç½®ï¼ˆåœ¨ä¸»æ ‡é¢˜ä¸‹æ–¹ï¼‰
+			// ÉèÖÃ¸±±êÌâÎ»ÖÃ£¨ÔÚÖ÷±êÌâÏÂ·½£©
 			m_subTitleLabel->setPosition(origin.x + visibleSize.width / 2,
-				m_titleLabel->getPositionY() - 120);  // åœ¨ä¸»æ ‡é¢˜ä¸‹æ–¹120åƒç´ 
+				m_titleLabel->getPositionY() - 120);  // ÔÚÖ÷±êÌâÏÂ·½120ÏñËØ
 
-			// è®¾ç½®å‰¯æ ‡é¢˜é¢œè‰²ï¼ˆæ¯”ä¸»æ ‡é¢˜æµ…ä¸€äº›çš„ç´«è‰²ï¼‰
-			m_subTitleLabel->setTextColor(Color4B(186, 85, 211, 255));  // ä¸­å…°èŠ±ç´«
-			m_subTitleLabel->enableShadow(Color4B::WHITE, Size(1, -1), 1);  // ç™½è‰²é˜´å½±
-			m_subTitleLabel->enableGlow(Color4B(221, 160, 221, 128));       // æµ…ç´«è‰²å‘å…‰
+			// ÉèÖÃ¸±±êÌâÑÕÉ«£¨±ÈÖ÷±êÌâÇ³Ò»Ğ©µÄ×ÏÉ«£©
+			m_subTitleLabel->setTextColor(Color4B(186, 85, 211, 255));  // ÖĞÀ¼»¨×Ï
+			m_subTitleLabel->enableShadow(Color4B::WHITE, Size(1, -1), 1);  // °×É«ÒõÓ°
+			m_subTitleLabel->enableGlow(Color4B(221, 160, 221, 128));       // Ç³×ÏÉ«·¢¹â
 			m_subTitleLabel->setHorizontalAlignment(TextHAlignment::CENTER);
 			m_subTitleLabel->setVerticalAlignment(TextVAlignment::CENTER);
 
 			this->addChild(m_subTitleLabel, 1);
 
-			// å‰¯æ ‡é¢˜æ·»åŠ æ·¡å…¥åŠ¨ç”»
+			// ¸±±êÌâÌí¼Óµ­Èë¶¯»­
 			m_subTitleLabel->setOpacity(0);
 			auto fadeIn = FadeIn::create(1.5f);
 			auto delay = DelayTime::create(0.5f);
 			m_subTitleLabel->runAction(Sequence::create(delay, fadeIn, nullptr));
 
-			// æ·»åŠ å‘¼å¸åŠ¨ç”»
+			// Ìí¼ÓºôÎü¶¯»­
 			auto scaleUp = ScaleTo::create(1.2f, 1.05f);
 			auto scaleDown = ScaleTo::create(1.2f, 0.95f);
 			auto breathSequence = Sequence::create(scaleUp, scaleDown, nullptr);
@@ -150,90 +154,92 @@ void StartScene::createUI()
 			m_subTitleLabel->runAction(breathRepeat);
 		}
 
-		//å¼€å§‹æŒ‰é’®
+		//¿ªÊ¼°´Å¥
 
-		// æŒ‰é’®2ç§çŠ¶æ€çš„å›¾ç‰‡è·¯å¾„ï¼ˆæ­£å¸¸/æŒ‰ä¸‹ï¼‰
+		// °´Å¥2ÖÖ×´Ì¬µÄÍ¼Æ¬Â·¾¶£¨Õı³£/°´ÏÂ£©
 		std::string startNormal = "images/ui/start&exit_btn_normal.png";
 		std::string startPressed = "images/ui/start&exit_btn_pressed.png";
 
 
 
-		// åˆ›å»ºæŒ‰é’®ï¼ˆä¼ å…¥ä¸‰ç§çŠ¶æ€çš„å®Œæ•´è·¯å¾„ï¼‰
+		// ´´½¨°´Å¥£¨´«ÈëÈıÖÖ×´Ì¬µÄÍêÕûÂ·¾¶£©
 		m_startButton = Button::create(
 			/*GameConfig::TEXTURE_PATH +*/ startNormal,
 			/*GameConfig::TEXTURE_PATH +*/ startPressed
 		);
 
-		if (m_startButton)  // æŒ‰é’®åˆ›å»ºæˆåŠŸ
+		if (m_startButton)  // °´Å¥´´½¨³É¹¦
 		{
-			// æŒ‰é’®ä½ç½®ï¼šå±å¹•ä¸­é—´åä¸‹ï¼ˆ40%é«˜åº¦å¤„ï¼Œæ°´å¹³å±…ä¸­ï¼‰
+			// °´Å¥Î»ÖÃ£ºÆÁÄ»ÖĞ¼äÆ«ÏÂ£¨40%¸ß¶È´¦£¬Ë®Æ½¾ÓÖĞ£©
 			m_startButton->setPosition(Vec2(origin.x + visibleSize.width / 2,
 				origin.y + visibleSize.height * 0.5f));
-			// ç»‘å®šç‚¹å‡»äº‹ä»¶ï¼ˆç‚¹å‡»åè°ƒç”¨ onStartClicked å‡½æ•°ï¼‰
+			// °ó¶¨µã»÷ÊÂ¼ş£¨µã»÷ºóµ÷ÓÃ onStartClicked º¯Êı£©
 			m_startButton->addClickEventListener(CC_CALLBACK_1(StartScene::onStartClicked, this));
 
-			// ç»™æŒ‰é’®æ·»åŠ æ–‡å­—æ ‡ç­¾
-			auto startLabel = Label::createWithTTF(u8"å¼€å§‹æ¸¸æˆ", "fonts/forui2.ttf", 32);
+			// ¸ø°´Å¥Ìí¼ÓÎÄ×Ö±êÇ©
+			auto startLabel = Label::createWithTTF(u8"¿ªÊ¼ÓÎÏ·", "fonts/forui2.ttf", 32);
 			if (!startLabel)
 			{
-				throw std::runtime_error("å¼€å§‹æŒ‰é’®Labelåˆ›å»ºå¤±è´¥");
+				throw std::runtime_error("¿ªÊ¼°´Å¥Label´´½¨Ê§°Ü");
 			}
-			startLabel->setTextColor(Color4B::WHITE);  // æ–‡å­—ç™½è‰²
-			m_startButton->setTitleLabel(startLabel);  // è®¾ç½®ä¸ºæŒ‰é’®æ ‡é¢˜
-			this->addChild(m_startButton, 1);  // æ·»åŠ åˆ°åœºæ™¯,ä¸æ ‡é¢˜åŒå±‚
+			startLabel->setTextColor(Color4B::WHITE);  // ÎÄ×Ö°×É«
+			m_startButton->setTitleLabel(startLabel);  // ÉèÖÃÎª°´Å¥±êÌâ
+			this->addChild(m_startButton, 1);  // Ìí¼Óµ½³¡¾°,Óë±êÌâÍ¬²ã
 		}
 		else
 		{
-			throw std::runtime_error("å¼€å§‹æŒ‰é’®åˆ›å»ºå¤±è´¥ï¼š" + startNormal + "/" + startPressed);
+			throw std::runtime_error("¿ªÊ¼°´Å¥´´½¨Ê§°Ü£º" + startNormal + "/" + startPressed);
 		}
-		//é€€å‡ºæŒ‰é’®
+		//ÍË³ö°´Å¥
 
-		// æŒ‰é’®2ç§çŠ¶æ€çš„å›¾ç‰‡è·¯å¾„ï¼ˆæ­£å¸¸/æŒ‰ä¸‹ï¼‰
+		// °´Å¥2ÖÖ×´Ì¬µÄÍ¼Æ¬Â·¾¶£¨Õı³£/°´ÏÂ£©
 		std::string exitNormal = "images/ui/start&exit_btn_normal.png";
 		std::string exitPressed = "images/ui/start&exit_btn_pressed.png";
 
 
 
-		// åˆ›å»ºæŒ‰é’®ï¼ˆä¼ å…¥2ç§çŠ¶æ€çš„å®Œæ•´è·¯å¾„ï¼‰
+		// ´´½¨°´Å¥£¨´«Èë2ÖÖ×´Ì¬µÄÍêÕûÂ·¾¶£©
 		m_exitButton = Button::create(
 			/*GameConfig::TEXTURE_PATH +*/ exitNormal,
 			/*GameConfig::TEXTURE_PATH +*/ exitPressed
 		);
 
-		if (m_exitButton)  // æŒ‰é’®åˆ›å»ºæˆåŠŸ
+		if (m_exitButton)  // °´Å¥´´½¨³É¹¦
 		{
-			// æŒ‰é’®ä½ç½®ï¼šå±å¹•ä¸­é—´åä¸‹ï¼ˆ40%é«˜åº¦å¤„ï¼Œæ°´å¹³å±…ä¸­ï¼‰
+			// °´Å¥Î»ÖÃ£ºÆÁÄ»ÖĞ¼äÆ«ÏÂ£¨40%¸ß¶È´¦£¬Ë®Æ½¾ÓÖĞ£©
 			m_exitButton->setPosition(Vec2(origin.x + visibleSize.width / 2,
 				origin.y + visibleSize.height * 0.3f));
-			// ç»‘å®šç‚¹å‡»äº‹ä»¶ï¼ˆç‚¹å‡»åè°ƒç”¨ onExitClicked å‡½æ•°ï¼‰
+			// °ó¶¨µã»÷ÊÂ¼ş£¨µã»÷ºóµ÷ÓÃ onExitClicked º¯Êı£©
 			m_exitButton->addClickEventListener(CC_CALLBACK_1(StartScene::onExitClicked, this));
 
-			// ç»™æŒ‰é’®æ·»åŠ æ–‡å­—æ ‡ç­¾
-			auto exitLabel = Label::createWithTTF(u8"é€€å‡ºæ¸¸æˆ", "fonts/forui2.ttf", 32);
+			// ¸ø°´Å¥Ìí¼ÓÎÄ×Ö±êÇ©
+			auto exitLabel = Label::createWithTTF(u8"ÍË³öÓÎÏ·", "fonts/forui2.ttf", 32);
 			if (!exitLabel)
 			{
-				throw std::runtime_error("é€€å‡ºæŒ‰é’®Labelåˆ›å»ºå¤±è´¥");
+				throw std::runtime_error("ÍË³ö°´Å¥Label´´½¨Ê§°Ü");
 			}
-			exitLabel->setTextColor(Color4B::WHITE);  // æ–‡å­—ç™½è‰²
-			m_exitButton->setTitleLabel(exitLabel);  // è®¾ç½®ä¸ºæŒ‰é’®æ ‡é¢˜
-			this->addChild(m_exitButton, 1);  // æ·»åŠ åˆ°åœºæ™¯,ä¸æ ‡é¢˜åŒå±‚
+			exitLabel->setTextColor(Color4B::WHITE);  // ÎÄ×Ö°×É«
+			m_exitButton->setTitleLabel(exitLabel);  // ÉèÖÃÎª°´Å¥±êÌâ
+			this->addChild(m_exitButton, 1);  // Ìí¼Óµ½³¡¾°,Óë±êÌâÍ¬²ã
 		}
 		else
 		{
-			throw std::runtime_error("é€€å‡ºæŒ‰é’®åˆ›å»ºå¤±è´¥ï¼š" + exitNormal + "/" + exitPressed);
+			throw std::runtime_error("ÍË³ö°´Å¥´´½¨Ê§°Ü£º" + exitNormal + "/" + exitPressed);
 		}
 
-		// æ’­æ”¾å¼€å§‹åœºæ™¯èƒŒæ™¯éŸ³ä¹
-		AudioManager::getInstance()->playBGM("bgm_title");
+
+		// ²¥·Å¿ªÊ¼³¡¾°±³¾°ÒôÀÖ
+		LevelMusicManager::getInstance()->playBGMForLevel(LevelManager::LevelState::START_SCENE);
+
 	}
 	catch (const std::exception& e) 
 	{
-		std::cerr << "StartScene::createUI å¼‚å¸¸ï¼š" << e.what() << std::endl;
+		std::cerr << "StartScene::createUI Òì³££º" << e.what() << std::endl;
 		throw;
 	}
 	catch (...) 
 	{
-		std::cerr << "StartScene::createUI æœªçŸ¥å¼‚å¸¸" << std::endl;
+		std::cerr << "StartScene::createUI Î´ÖªÒì³£" << std::endl;
 		throw;
 	}
 }
@@ -243,20 +249,20 @@ void StartScene::onStartClicked(Ref* sender)
 	try 
 	{
 		AudioManager::getInstance()->playUISound("ui_button_click");
-		// é€šè¿‡åœºæ™¯ç®¡ç†å™¨åˆ‡æ¢åˆ°æ¸¸æˆä¸»åœºæ™¯
+		// Í¨¹ı³¡¾°¹ÜÀíÆ÷ÇĞ»»µ½ÓÎÏ·Ö÷³¡¾°
 		auto gameScene = MainGameScene::createScene();
-		//æ ¡éªŒæ¸¸æˆåœºæ™¯åˆ›å»ºç»“æœ
+		//Ğ£ÑéÓÎÏ·³¡¾°´´½¨½á¹û
 		if (!gameScene)
 		{
-			throw std::runtime_error("MainGameScene åˆ›å»ºå¤±è´¥ï¼šè¿”å›ç©ºæŒ‡é’ˆ");
+			throw std::runtime_error("MainGameScene ´´½¨Ê§°Ü£º·µ»Ø¿ÕÖ¸Õë");
 		}
 		Director::getInstance()->replaceScene(TransitionFade::create(0.5f, gameScene));
 	}
 	catch (const std::exception& e) 
 	{
-		//æ•è·åœºæ™¯åˆ‡æ¢å¼‚å¸¸å¹¶è¾“å‡º
-		std::cerr << "StartScene::onStartClicked å¼‚å¸¸ï¼š" << e.what() << std::endl;
-		//å¼‚å¸¸å…œåº•ï¼Œæ˜¾ç¤ºé”™è¯¯æç¤º
+		//²¶»ñ³¡¾°ÇĞ»»Òì³£²¢Êä³ö
+		std::cerr << "StartScene::onStartClicked Òì³££º" << e.what() << std::endl;
+		//Òì³£¶µµ×£¬ÏÔÊ¾´íÎóÌáÊ¾
 		auto alert = Label::createWithSystemFont("Failed to start game!", "", 48);
 		alert->setTextColor(Color4B::RED);
 		alert->setPosition(Director::getInstance()->getVisibleSize() / 2);
@@ -264,8 +270,8 @@ void StartScene::onStartClicked(Ref* sender)
 	}
 	catch (...) 
 	{
-		//æ•è·æœªçŸ¥å¼‚å¸¸
-		std::cerr << "StartScene::onStartClicked æœªçŸ¥å¼‚å¸¸" << std::endl;
+		//²¶»ñÎ´ÖªÒì³£
+		std::cerr << "StartScene::onStartClicked Î´ÖªÒì³£" << std::endl;
 	}
 }
 
@@ -275,41 +281,23 @@ void StartScene::onExitClicked(Ref* sender)
 	{
 		AudioManager::getInstance()->playUISound("ui_button_click");
 		Director::getInstance()->end();
-		//Windowså¹³å°å…œåº•é€€å‡ºé€»è¾‘
+		//WindowsÆ½Ì¨¶µµ×ÍË³öÂß¼­
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 		exit(0);
 #endif
 	}
 	catch (const std::exception& e) 
 	{
-		std::cerr << "StartScene::onExitClicked å¼‚å¸¸ï¼š" << e.what() << std::endl;
-		//å¼ºåˆ¶é€€å‡ºå…œåº•
+		std::cerr << "StartScene::onExitClicked Òì³££º" << e.what() << std::endl;
+		//Ç¿ÖÆÍË³ö¶µµ×
 		exit(1);
 	}
 	catch (...) 
 	{
-		// æ•è·æœªçŸ¥å¼‚å¸¸
-		std::cerr << "StartScene::onExitClicked æœªçŸ¥å¼‚å¸¸" << std::endl;
+		// ²¶»ñÎ´ÖªÒì³£
+		std::cerr << "StartScene::onExitClicked Î´ÖªÒì³£" << std::endl;
 		exit(1);
 	}
 }
-
-
-
-/*
-void StartScene::loadSceneResources()
-{
-	// é¢„åŠ è½½èƒŒæ™¯å›¾ã€æŒ‰é’®å›¾ç‰‡ç­‰èµ„æº
-	ResourceManager::getInstance()->preloadTextures({
-		"start_bg.png",
-		"ui/start&exit_btn_normal.png",
-		"ui/start&exit_btn_pressed.png",
-		});
-
-	// é¢„åŠ è½½éŸ³æ•ˆ
-	//SoundManager::getInstance()->preloadSounds();
-}
-
-*/
 
 

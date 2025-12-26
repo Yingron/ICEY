@@ -35,6 +35,7 @@ private:
 
 public:
     static EnemyManager* getInstance();
+    static void destroyInstance();
     
     void initialize();
     void cleanup();

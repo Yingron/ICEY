@@ -108,6 +108,7 @@ searchPaths.push_back("images/character/player");
 searchPaths.push_back("images/environment/background");  // 添加Level2背景路径
 searchPaths.push_back("C:/aishi/test2/Resources/images/environment/background");  // Level2绝对路径
 searchPaths.push_back(".");
+
 fileUtils->setSearchPaths(searchPaths);
 
 // 创建主游戏场景

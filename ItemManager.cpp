@@ -2,6 +2,7 @@
 #include "ItemManager.h"
 #include "cocos2d.h"
 #include <fstream>
+#include"AudioManager.h"
 
 USING_NS_CC;
 

@@ -5,7 +5,7 @@
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 
-class PauseScene : public cocos2d::Scene
+class PauseScene : public cocos2d::Layer
 {
 private:
     cocos2d::ui::Button* m_resumeButton;
@@ -18,6 +18,9 @@ public:
     static cocos2d::Scene* createScene();
     virtual bool init() override;
     virtual ~PauseScene();
+
+    virtual void onEnter() override;
+    virtual void onExit() override;
 
     CREATE_FUNC(PauseScene);
 

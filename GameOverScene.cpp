@@ -1,9 +1,10 @@
-#include "GameOverScene.h"
+ï»¿#include "GameOverScene.h"
 #include "MainGameScene.h"
 #include "StartScene.h"
 #include "cocos2d.h"
 #include <iostream>
 #include"AudioManager.h"
+#include "LevelMusicManager.h"
 
 USING_NS_CC;
 using namespace cocos2d::ui;
@@ -22,7 +23,7 @@ Scene* GameOverScene::createScene()
 
 bool GameOverScene::init()
 {
-    if (!Scene::init())
+    if (!Layer::init())
     {
         return false;
     }
@@ -36,74 +37,89 @@ bool GameOverScene::init()
 
 std::string GameOverScene::getDeathDescription(int count)
 {
-    s_currentSessionDeathCount++;  // Ôö¼Ó±¾´Î»á»°µÄ¼ÆÊý
-    if (s_currentSessionDeathCount == 1) {
-        return u8"ÄãËÀÍöÁË";
+    s_currentSessionDeathCount++;  // å¢žåŠ å½“å‰ä¼šè¯çš„æ­»äº¡æ•°
+    if (s_currentSessionDeathCount == 1)
+    {
+        return "ä½ æ­»äº†";
     }
-    else if (s_currentSessionDeathCount == 2) {
-        return u8"ÄãÓÖËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 2)
+    {
+        return "ç¬¬äºŒæ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 3) {
-        return u8"ÄãË«ËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 3)
+    {
+        return "ç¬¬ä¸‰æ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 4) {
-        return u8"Äã…ªËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 4)
+    {
+        return "ç¬¬å››æ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 5) {
-        return u8"Äã…¬ËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 5)
+    {
+        return "ç¬¬äº”æ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 6) {
-        return u8"Äã…¬ÓÖËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 6)
+    {
+        return "ç¬¬å…­æ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 7) {
-        return u8"Äã…¬Ë«ËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 7)
+    {
+        return "ç¬¬ä¸ƒæ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 8) {
-        return u8"Äã…¬…ªËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 8)
+    {
+        return "ç¬¬å…«æ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 9) {
-        return u8"Äã…¬…¬ËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 9)
+    {
+        return "ç¬¬ä¹æ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 10) {
-        return u8"Äã…¬…¬ÓÖËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 10)
+    {
+        return "ç¬¬åæ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 11) {
-        return u8"Äã…¬…¬Ë«ËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 11)
+    {
+        return "ç¬¬åä¸€æ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 12) {
-        return u8"Äã…¬…¬…ªËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 12)
+    {
+        return "ç¬¬åäºŒæ¬¡å¤±è´¥";
     }
-    else if (s_currentSessionDeathCount == 13) {
-        return u8"Äã…¬…¬…¬ËÀÍöÁË";
+    else if (s_currentSessionDeathCount == 13)
+    {
+        return "ç¬¬åä¸‰æ¬¡å¤±è´¥";
     }
-    else {
-        
-        return u8"ÒÑ¾­¼Ç²»ÇåÄãµÄËÀÍö´ÎÊýÁË";
+    else
+    {
+        return "å·²ç»å¤±è´¥å¤šæ¬¡äº†...";
     }
 }
 
 void GameOverScene::createUI()
 {
+
+    LevelMusicManager::getInstance()->playBGMForLevel(LevelManager::LevelState::GAMEOVER_SCENE);
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-    // ´´½¨°ëÍ¸Ã÷ºÚÉ«±³¾°
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½
     m_background = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
     m_background->setPosition(origin);
     this->addChild(m_background, 0);
 
 
-    // »ñÈ¡²¢Ôö¼ÓËÀÍö´ÎÊý
+    // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     auto userDefault = UserDefault::getInstance();
     int deathCount = userDefault->getIntegerForKey("death_count", 0);
-    deathCount++;  // Ôö¼Ó±¾´ÎËÀÍö
+    deathCount++;  // ï¿½ï¿½ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     userDefault->setIntegerForKey("death_count", deathCount);
     userDefault->flush();
 
-    // »ñÈ¡ËÀÍöÃèÊö
+    // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     std::string deathDescription = getDeathDescription(deathCount);
 
-    // ´´½¨Game Over±êÌâ
+    // ï¿½ï¿½ï¿½ï¿½Game Overï¿½ï¿½ï¿½ï¿½
     m_gameOverLabel = Label::createWithTTF(deathDescription, "fonts/forui3.ttf", 72);
     if (!m_gameOverLabel)
     {
@@ -112,22 +128,22 @@ void GameOverScene::createUI()
 
     m_gameOverLabel->setPosition(origin.x + visibleSize.width / 2,
         origin.y + visibleSize.height * 0.7f);
-    m_gameOverLabel->setTextColor(Color4B(220, 20, 60, 255)); // ºìÉ«
+    m_gameOverLabel->setTextColor(Color4B(220, 20, 60, 255)); // ï¿½ï¿½É«
     m_gameOverLabel->enableShadow(Color4B::BLACK, Size(3, -3), 3);
     this->addChild(m_gameOverLabel, 1);
 
-    // °´Å¥Í¼Æ¬Â·¾¶
+    // ï¿½ï¿½Å¥Í¼Æ¬Â·ï¿½ï¿½
     std::string btnNormal = "images/ui/start&exit_btn_normal.png";
     std::string btnPressed = "images/ui/start&exit_btn_pressed.png";
 
-    // ÖØÐÂ¿ªÊ¼°´Å¥
+    // ï¿½ï¿½ï¿½Â¿ï¿½Ê¼ï¿½ï¿½Å¥
     m_restartButton = Button::create(btnNormal, btnPressed);
     if (m_restartButton)
     {
         m_restartButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.5f));
         m_restartButton->addClickEventListener(CC_CALLBACK_1(GameOverScene::onRestartClicked, this));
 
-        auto restartLabel = Label::createWithTTF(u8"ÖØÐÂ¿ªÊ¼", "fonts/forui2.ttf", 32);
+        auto restartLabel = Label::createWithTTF(u8"ï¿½ï¿½ï¿½Â¿ï¿½Ê¼", "fonts/forui2.ttf", 32);
         if (!restartLabel)
         {
             restartLabel = Label::createWithSystemFont("RESTART", "Arial", 32);
@@ -138,14 +154,14 @@ void GameOverScene::createUI()
         this->addChild(m_restartButton, 1);
     }
 
-    // Ö÷²Ëµ¥°´Å¥
+    // ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½Å¥
     m_menuButton = Button::create(btnNormal, btnPressed);
     if (m_menuButton)
     {
         m_menuButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.4f));
         m_menuButton->addClickEventListener(CC_CALLBACK_1(GameOverScene::onMenuClicked, this));
 
-        auto menuLabel = Label::createWithTTF(u8"·µ»ØÖ÷²Ëµ¥", "fonts/forui2.ttf", 32);
+        auto menuLabel = Label::createWithTTF(u8"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½", "fonts/forui2.ttf", 32);
         if (!menuLabel)
         {
             menuLabel = Label::createWithSystemFont("MAIN MENU", "Arial", 32);
@@ -159,31 +175,31 @@ void GameOverScene::createUI()
 
 void GameOverScene::onRestartClicked(Ref* sender)
 {
-    log("ÖØÐÂ¿ªÊ¼ÓÎÏ·");
+    log("ï¿½ï¿½ï¿½Â¿ï¿½Ê¼ï¿½ï¿½Ï·");
     AudioManager::getInstance()->playUISound("ui_button_click");
-    // ´´½¨ÐÂµÄÓÎÏ·³¡¾°²¢ÇÐ»»
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½
     auto gameScene = MainGameScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, gameScene));
 }
 
 void GameOverScene::onMenuClicked(Ref* sender)
 {
-    log("·µ»ØÖ÷²Ëµ¥");
+    log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½");
     AudioManager::getInstance()->playUISound("ui_button_click");
-    // ´´½¨¿ªÊ¼³¡¾°²¢ÇÐ»»
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½
     auto startScene = StartScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, startScene));
 }
 
 void GameOverScene::initKeyboardListener()
 {
-    // ´´½¨¼üÅÌ¼àÌýÆ÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½
     m_keyboardListener = EventListenerKeyboard::create();
 
-    // ÉèÖÃ°´¼ü»Øµ÷
+    // ï¿½ï¿½ï¿½Ã°ï¿½ï¿½ï¿½ï¿½Øµï¿½
     m_keyboardListener->onKeyPressed = CC_CALLBACK_2(GameOverScene::onKeyPressed, this);
 
-    // Ìí¼Ó¼àÌýÆ÷
+    // ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½ï¿½ï¿½
     _eventDispatcher->addEventListenerWithSceneGraphPriority(m_keyboardListener, this);
 }
 
@@ -193,13 +209,13 @@ void GameOverScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
     {
         case cocos2d::EventKeyboard::KeyCode::KEY_ENTER:
         case cocos2d::EventKeyboard::KeyCode::KEY_KP_ENTER:
-            // Enter¼ü£ºÖØÐÂ¿ªÊ¼ÓÎÏ·
+            // Enterï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¿ï¿½Ê¼ï¿½ï¿½Ï·
             onRestartClicked(nullptr);
             event->stopPropagation();
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE:
-            // ESC¼ü£º·µ»ØÖ÷²Ëµ¥
+            // ESCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½
             onMenuClicked(nullptr);
             event->stopPropagation();
             break;
@@ -211,7 +227,7 @@ void GameOverScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
 
 GameOverScene::~GameOverScene()
 {
-    // ÇåÀí¼üÅÌ¼àÌýÆ÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½
     if (m_keyboardListener)
     {
         _eventDispatcher->removeEventListener(m_keyboardListener);

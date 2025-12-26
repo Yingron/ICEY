@@ -5,42 +5,42 @@
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 
-class GameOverScene : public cocos2d::Scene
+class GameOverScene : public cocos2d::Layer
 {
 public:
-    // ´´½¨³¡¾°
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     static cocos2d::Scene* createScene();
 
-    // ³õÊ¼»¯
+    // ï¿½ï¿½Ê¼ï¿½ï¿½
     virtual bool init() override;
 
     CREATE_FUNC(GameOverScene);
 
 private:
-    static int s_currentSessionDeathCount;  // ±¾´Î»á»°µÄËÀÍö´ÎÊý
-    // UIÔªËØ
+    static int s_currentSessionDeathCount;  // ï¿½ï¿½ï¿½Î»á»°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // UIÔªï¿½ï¿½
     cocos2d::Label* m_gameOverLabel;
     cocos2d::ui::Button* m_restartButton;
     cocos2d::ui::Button* m_menuButton;
     cocos2d::LayerColor* m_background;
 
-    // ¼üÅÌ¼àÌýÆ÷
+    // ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½
     cocos2d::EventListenerKeyboard* m_keyboardListener;
 
-    // ´´½¨UI
+    // ï¿½ï¿½ï¿½ï¿½UI
     void createUI();
 
     std::string GameOverScene::getDeathDescription(int count);
 
-    // °´Å¥»Øµ÷
+    // ï¿½ï¿½Å¥ï¿½Øµï¿½
     void onRestartClicked(cocos2d::Ref* sender);
     void onMenuClicked(cocos2d::Ref* sender);
 
-    // ¼üÅÌÊÂ¼þ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
     void initKeyboardListener();
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
 
-    // Îö¹¹º¯Êý
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     virtual ~GameOverScene();
 };
 

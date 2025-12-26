@@ -285,46 +285,71 @@ void MainGameScene::updateCollectionUI() {
 }
 
 bool MainGameScene::onContactBegin(PhysicsContact& contact) {
-    auto nodeA = contact.getShapeA()->getBody()->getNode();
-    auto nodeB = contact.getShapeB()->getBody()->getNode();
+    // Get physics bodies
+    auto bodyA = contact.getShapeA()->getBody();
+    auto bodyB = contact.getShapeB()->getBody();
+    
+    // Check if physics bodies are valid
+    if (!bodyA || !bodyB) {
+        return false;
+    }
+    
+    // Get nodes from physics bodies
+    auto nodeA = bodyA->getNode();
+    auto nodeB = bodyB->getNode();
+    
+    // Check if nodes are valid
+    if (!nodeA || !nodeB) {
+        return false;
+    }
 
-    // ����Ƿ�����Һ���Ʒ����ײ
+    // 检查是否是玩家和物品的碰撞
     if ((nodeA == _player && dynamic_cast<Item*>(nodeB)) ||
         (nodeB == _player && dynamic_cast<Item*>(nodeA))) {
-
-        Item* item = dynamic_cast<Item*>(nodeA != _player ? nodeA : nodeB);
+        Item* item = nullptr;
+        if (nodeA != _player) {
+            item = dynamic_cast<Item*>(nodeA);
+        } else {
+            item = dynamic_cast<Item*>(nodeB);
+        }
         if (item) {
             item->collect();
-
-            // ��_levelItems���Ƴ�
+            // 从_levelItems中移除
             auto it = std::find(_levelItems.begin(), _levelItems.end(), item);
             if (it != _levelItems.end()) {
                 _levelItems.erase(it);
             }
-
             updateCollectionUI();
         }
     }
-    // ���Ƿ�����Һ���˲�ײ
+    // 检查是否是玩家和敌人的碰撞
     else if ((nodeA == _player && dynamic_cast<Enemy*>(nodeB)) ||
              (nodeB == _player && dynamic_cast<Enemy*>(nodeA))) {
-
-        Enemy* enemy = dynamic_cast<Enemy*>(nodeA != _player ? nodeA : nodeB);
+        Enemy* enemy = nullptr;
+        if (nodeA != _player) {
+            enemy = dynamic_cast<Enemy*>(nodeA);
+        } else {
+            enemy = dynamic_cast<Enemy*>(nodeB);
+        }
         if (enemy && !enemy->isDead()) {
-            // �����ҽ���
-            // TODO: ���øû������˲�ײ���ص���ʵ��
+            // 玩家受伤
+            // TODO: 使用用户定义的碰撞伤害值来实现
             log("Player collided with enemy!");
         }
     }
-    // ���Ƿ�����Һ���͵���ײ
-    else if ((nodeA == _player && contact.getShapeB()->getBody()->getCategoryBitmask() == 0x04) ||
-             (nodeB == _player && contact.getShapeA()->getBody()->getCategoryBitmask() == 0x04)) {
-
-        // ��׼ʵ���͵��Ͷ��ѹ��
-        _player->takeDamage(15.0f); // ��ͨԶ�̱�ֵ���뵽����Ҫ��
+    // 检查是否是玩家和投射物的碰撞
+    else if ((nodeA == _player && bodyB->getCategoryBitmask() == 0x04) ||
+             (nodeB == _player && bodyA->getCategoryBitmask() == 0x04)) {
+        // 简单实现投射物伤害逻辑
+        _player->takeDamage(15.0f); // 使用默认伤害值，可以根据需要调整
         
-        // ���͵��
-        auto projectile = (nodeA != _player) ? nodeA : nodeB;
+        // 移除投射物
+        Node* projectile = nullptr;
+        if (nodeA != _player) {
+            projectile = nodeA;
+        } else {
+            projectile = nodeB;
+        }
         projectile->removeFromParentAndCleanup(true);
         
         log("Player hit by projectile!");
@@ -1074,7 +1099,9 @@ void MainGameScene::initEnemies() {
 
     // 初始化敌人管理器实例
     _enemyManager = EnemyManager::getInstance();
-
+    if (!_enemyManager) {
+        log("ERROR: EnemyManager not initialized!");
+    }
     // 设置敌人的目标为玩家
     _enemyManager->setPlayer(_player);
 

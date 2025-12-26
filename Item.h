@@ -7,10 +7,10 @@
 #include <string>
 
 enum class ItemType {
-    COLLECTIBLE,    // 可收集物品
+    COLLECTIBLE,    // 收集物品
     KEY_ITEM,       // 关键物品
     CONSUMABLE,     // 消耗品
-    DOCUMENT        // 文件/海报类
+    DOCUMENT        // 文档/道具
 };
 
 class Item : public cocos2d::Sprite {
@@ -28,10 +28,10 @@ public:
     // 收集物品
     void collect();
 
-    // 获取成就关联（如果有）
+    // 获取关联成就（如果有）
     std::string getLinkedAchievement() const { return _linkedAchievement; }
 
-    // 世界坐标相关
+    // 世界位置设置
     void setWorldPosition(float worldX, float worldY);
     float getWorldPositionX() const { return _worldPositionX; }
     float getWorldPositionY() const { return _worldPositionY; }
@@ -44,7 +44,7 @@ private:
     bool _isCollected;
     std::string _linkedAchievement;
 
-    // 世界坐标
+    // 世界位置
     float _worldPositionX;
     float _worldPositionY;
 

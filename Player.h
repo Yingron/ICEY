@@ -9,6 +9,8 @@
 
 // 前向声明MainGameScene类
 class MainGameScene;
+// 前向声明EnemyManager类
+class EnemyManager;
 
 class Player : public cocos2d::Sprite {
 public:
@@ -81,6 +83,10 @@ public:
     void skill2();
     bool canUseSkill1() const;
     bool canUseSkill2() const;
+
+    // 添加技能效果应用函数的声明
+    void applySkill1Effect();
+    void applySkill2Effect();
     
     // 游戏结束相关方法
     void setMainGameScene(MainGameScene* scene) { _mainGameScene = scene; }
@@ -164,5 +170,8 @@ private:
     
     // 指向MainGameScene的指针，用于触发游戏结束
     MainGameScene* _mainGameScene;
+    // 技能辅助方法
+   // 修改声明，确保返回类型为 EnemyManager*
+    EnemyManager* getSafeEnemyManager();
 };
 #endif // PLAYER_H

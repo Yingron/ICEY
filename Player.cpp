@@ -61,7 +61,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-idle-%d.png", i),
             StringUtils::format("icey-idle-%d.png", i),
             StringUtils::format("characters/player/icey-idle-%d.png", i),
-            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-idle-%d.png", i)
         };
 
         bool found = false;
@@ -87,7 +86,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-run-to-right-%d.png", i),
             StringUtils::format("icey-run-to-right-%d.png", i),
             StringUtils::format("characters/player/icey-run-to-right-%d.png", i),
-            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-run-to-right-%d.png", i)
         };
 
         bool found = false;
@@ -113,7 +111,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-run-to-left-%d.png", i),
             StringUtils::format("icey-run-to-left-%d.png", i),
             StringUtils::format("characters/player/icey-run-to-left-%d.png", i),
-            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-run-to-left-%d.png", i)
         };
 
         bool found = false;
@@ -139,7 +136,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-normalattack-rignt%d.png", i),
             StringUtils::format("icey-normalattack-rignt%d.png", i),
             StringUtils::format("characters/player/icey-normalattack-rignt%d.png", i),
-            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-normalattack-rignt%d.png", i)
         };
 
         bool found = false;
@@ -165,7 +161,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-jump-%d.png", i),
             StringUtils::format("icey-jump-%d.png", i),
             StringUtils::format("characters/player/icey-jump-%d.png", i),
-            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-jump-%d.png", i)
         };
 
         bool found = false;
@@ -191,7 +186,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-run-to-right-%d.png", i),
             StringUtils::format("icey-run-to-right-%d.png", i),
             StringUtils::format("characters/player/icey-run-to-right-%d.png", i),
-            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-run-to-right-%d.png", i)
         };
 
         bool found = false;
@@ -217,7 +211,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-run-to-left-%d.png", i),
             StringUtils::format("icey-run-to-left-%d.png", i),
             StringUtils::format("characters/player/icey-run-to-left-%d.png", i),
-            StringUtils::format("C:/aishi/test2/Resources/images/characters/player/icey-run-to-left-%d.png", i)
         };
 
         bool found = false;
@@ -337,7 +330,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-skill1-%d.png", i),
             StringUtils::format("icey-skill1-%d.png", i),
             StringUtils::format("characters/player/icey-skill1-%d.png", i),
-            StringUtils::format("C:/aishi/test3/Resources/images/characters/player/icey-skill1-%d.png", i)
         };
 
         bool found = false;
@@ -376,7 +368,6 @@ void Player::loadAnimations() {
             StringUtils::format("Resources/images/characters/player/icey-skill2-%d.png", i),
             StringUtils::format("icey-skill2-%d.png", i),
             StringUtils::format("characters/player/icey-skill2-%d.png", i),
-            StringUtils::format("C:/aishi/test3/Resources/images/characters/player/icey-skill2-%d.png", i)
         };
 
         bool found = false;
@@ -565,15 +556,6 @@ bool Player::init(const std::string& spriteFile) {
     _skill1AnimKey = "skill1";
     _skill2AnimKey = "skill2";
 
-    // 添加物理体
-    auto physicsBody = PhysicsBody::createBox(this->getContentSize());
-    physicsBody->setDynamic(true);
-    physicsBody->setGravityEnable(false); // 禁用物理引擎重力
-    physicsBody->setCategoryBitmask(0x01); // 玩家类别
-    physicsBody->setCollisionBitmask(0x00); // 不与任何物体发生物理碰撞
-    physicsBody->setContactTestBitmask(0x02 | 0x04); // 检测与物品和敌人的碰撞
-    this->setPhysicsBody(physicsBody);
-
     auto fileUtils = FileUtils::getInstance();
     std::string playerFile = "icey-idle-1.png";  // 使用待机动画的第一帧作为初始图像
 
@@ -613,6 +595,17 @@ bool Player::init(const std::string& spriteFile) {
             this->setTextureRect(Rect(0, 0, 50, 100));
             this->setColor(Color3B::GREEN);
 
+            // 添加物理体
+            auto physicsBody = PhysicsBody::createBox(this->getContentSize());
+            if (physicsBody) {
+                physicsBody->setDynamic(true);
+                physicsBody->setGravityEnable(false); // 禁用物理引擎重力
+                physicsBody->setCategoryBitmask(0x01); // 玩家类别
+                physicsBody->setCollisionBitmask(0x00); // 不与任何物体发生物理碰撞
+                physicsBody->setContactTestBitmask(0x02 | 0x04); // 检测与物品和敌人的碰撞
+                this->setPhysicsBody(physicsBody);
+            }
+
             this->setAnchorPoint(Vec2(0.5f, 0.5f));
             loadAnimations();
             setCurrentState(PlayerState::IDLE);
@@ -636,6 +629,17 @@ bool Player::init(const std::string& spriteFile) {
     log("Player sprite loaded successfully, size: %f x %f",
         this->getContentSize().width, this->getContentSize().height);
 
+    // 添加物理体
+    auto physicsBody = PhysicsBody::createBox(this->getContentSize());
+    if (physicsBody) {
+        physicsBody->setDynamic(true);
+        physicsBody->setGravityEnable(false); // 禁用物理引擎重力
+        physicsBody->setCategoryBitmask(0x01); // 玩家类别
+        physicsBody->setCollisionBitmask(0x00); // 不与任何物体发生物理碰撞
+        physicsBody->setContactTestBitmask(0x02 | 0x04); // 检测与物品和敌人的碰撞
+        this->setPhysicsBody(physicsBody);
+    }
+
     this->setAnchorPoint(Vec2(0.5f, 0.5f));
     loadAnimations();
     setCurrentState(PlayerState::IDLE);
@@ -644,238 +648,270 @@ bool Player::init(const std::string& spriteFile) {
     return true;
 }
 
+// Player.cpp - 在类定义中添加辅助方法
+EnemyManager* Player::getSafeEnemyManager() {
+    auto enemyManager = EnemyManager::getInstance();
+    if (!enemyManager) {
+        static bool warned = false;
+        if (!warned) {
+            log("CRITICAL: EnemyManager instance is null!");
+            warned = true;
+        }
+    }
+    return enemyManager;
+}
+
 // 技能1实现
 void Player::skill1() {
     // 基础安全检查
-    if (!this) {
-        log("Skill1: Invalid Player pointer!");
+    if (!this || isDead()) {
+        log("Skill1: Invalid player or player is dead");
         return;
     }
-    
+
     if (!canUseSkill1()) {
-        log("Skill1 not available");
+        log("Skill1: Cannot use skill (cooldown: %.2f, state: %d)",
+            _skill1CooldownTimer, (int)_currentState);
         return;
     }
-    
-    log("Player uses Skill1");
-    
+
+    log("=== Player uses Skill1 ===");
+
+    // 停止当前所有动作和移动
+    this->stopAllActions();
+    stopMoving();
+    _velocity.x = 0;
+
     // 设置技能状态
     _currentState = PlayerState::SKILL1;
-    setCurrentState(PlayerState::SKILL1);
-    
-    // 攻击时停止移动
-    _isMovingLeft = false;
-    _isMovingRight = false;
-    _velocity.x = 0;
-    
+
     // 播放技能音效
     auto audioManager = AudioManager::getInstance();
     if (audioManager) {
         audioManager->playEffect("sfx_skill1");
-    } else {
-        log("Skill1: AudioManager is null!");
     }
-    
-    // 应用技能效果（伤害）
-    // 技能1：对前方一定范围内的敌人造成伤害
-    float damage = _skill1Damage;
-    float range = _skill1Range;
-    
-    // 检测并伤害敌人
-    auto enemyManager = EnemyManager::getInstance();
-    if (enemyManager) {
-        const auto& enemies = enemyManager->getAllEnemies();
-        log("Skill1: Checking %zu enemies", enemies.size());
-        for (Enemy* enemy : enemies) {
-            if (enemy && !enemy->isDead()) {
-                // 计算敌人与玩家之间的距离
-                float distance = std::abs(enemy->getWorldPositionX() - this->getWorldPositionX());
-                
-                // 如果敌人在技能范围内（不区分左右方向）
-                if (distance <= range) {
-                    // 对敌人造成伤害
-                    enemy->takeDamage(damage);
-                    log("Skill1 hits enemy! Damage: %.0f, Enemy health: %.0f", damage, enemy->getCurrentHealth());
-                }
-            } else if (!enemy) {
-                log("Skill1: Found null enemy pointer!");
-            }
-        }
-    } else {
-        log("Skill1: EnemyManager is null!");
+
+    // 检查是否有技能动画
+    if (_animations.find("skill1") == _animations.end() ||
+        !_animations["skill1"] ||
+        _animations["skill1"]->getFrames().empty()) {
+        log("ERROR: Skill1 animation not found or empty!");
+
+        // 如果没有动画，直接应用技能效果然后返回
+        applySkill1Effect();
+        return;
     }
-    
-    // 设置技能冷却时间
-    _skill1CooldownTimer = _skill1Cooldown;
-    
-    // 技能动画结束后恢复到适当状态
-    auto skill1Complete = CallFunc::create([this]() {
-        if (!this) {
-            log("Skill1 complete: Invalid Player pointer!");
+
+    // 获取技能动画
+    auto skillAnim = _animations["skill1"];
+    float totalDuration = skillAnim->getDelayPerUnit() * skillAnim->getFrames().size();
+
+    log("Skill1 animation duration: %.2f seconds", totalDuration);
+
+    // 播放技能动画
+    auto animate = Animate::create(skillAnim);
+
+    // 在动画中间帧应用技能效果
+    float effectDelay = totalDuration * 0.5f;
+
+    // 技能效果回调
+    auto applyEffect = CallFunc::create([this]() {
+        applySkill1Effect();
+        });
+
+    // 技能完成回调
+    auto skillComplete = CallFunc::create([this]() {
+        if (!this || !this->getParent()) {
+            log("Skill1 complete: Player node no longer exists");
             return;
         }
-        
+
+        log("Skill1 animation complete, returning to appropriate state");
+
+        // 恢复状态
         if (_isGrounded) {
-            _currentState = PlayerState::IDLE;
-            setCurrentState(PlayerState::IDLE);
-        } else {
-            _currentState = PlayerState::JUMPING;
+            if (_isMovingLeft || _isMovingRight) {
+                setCurrentState(PlayerState::RUNNING);
+            }
+            else {
+                setCurrentState(PlayerState::IDLE);
+            }
+        }
+        else {
             setCurrentState(PlayerState::JUMPING);
         }
-    });
-    
-    if (!skill1Complete) {
-        log("Skill1: Failed to create CallFunc!");
-        // 确保状态恢复
-        _currentState = PlayerState::IDLE;
-        setCurrentState(PlayerState::IDLE);
+        });
+
+    // 创建动画序列
+    auto sequence = Sequence::create(
+        animate,
+        skillComplete,
+        nullptr
+    );
+
+    // 创建效果序列
+    auto effectSequence = Sequence::create(
+        DelayTime::create(effectDelay),
+        applyEffect,
+        nullptr
+    );
+
+    // 运行动作
+    this->runAction(sequence);
+    this->runAction(effectSequence);
+
+    // 设置冷却时间
+    _skill1CooldownTimer = _skill1Cooldown;
+}
+
+// 技能1效果应用函数
+void Player::applySkill1Effect() {
+    log("Applying Skill1 effect");
+
+    auto enemyManager = getSafeEnemyManager();
+    if (!enemyManager) {
+        log("ERROR: Cannot get EnemyManager instance");
         return;
     }
-    
-    // 设置技能持续时间（根据动画长度调整）
-    float skillDuration = 1.0f;
-    if (skillDuration <= 0.0f) {
-        log("Skill1: Invalid skill duration!");
-        skillDuration = 0.5f; // 默认值
-    }
-    
-    // 创建延迟时间动作
-    auto delayTime = DelayTime::create(skillDuration);
-    if (!delayTime) {
-        log("Skill1: Failed to create DelayTime!");
-        // 确保状态恢复
-        _currentState = PlayerState::IDLE;
-        setCurrentState(PlayerState::IDLE);
+
+    const auto& enemies = enemyManager->getAllEnemies();
+    if (enemies.empty()) {
+        log("No enemies to attack with skill1");
         return;
     }
-    
-    // 运行技能完成动作
-    auto sequence = Sequence::create(delayTime, skill1Complete, nullptr);
-    if (sequence) {
-        this->runAction(sequence);
-    } else {
-        log("Skill1: Failed to create Sequence!");
-        // 确保状态恢复
-        _currentState = PlayerState::IDLE;
-        setCurrentState(PlayerState::IDLE);
+
+    log("Checking %d enemies for skill1", (int)enemies.size());
+
+    int hitCount = 0;
+    for (Enemy* enemy : enemies) {
+        if (!enemy || enemy->isDead()) {
+            continue;
+        }
+
+        float distance = std::abs(enemy->getWorldPositionX() - _worldPositionX);
+        if (distance <= _skill1Range) {
+            enemy->takeDamage(_skill1Damage);
+            hitCount++;
+
+            log("Skill1 hit enemy at distance %.0f, damage: %.0f, enemy health: %.0f",
+                distance, _skill1Damage, enemy->getCurrentHealth());
+        }
     }
+
+    log("Skill1 hit %d enemies", hitCount);
 }
 
 // 技能2实现
 void Player::skill2() {
-    // 基础安全检查
-    if (!this) {
-        log("Skill2: Invalid Player pointer!");
+    if (!this || isDead()) {
+        log("Skill2: Invalid player or player is dead");
         return;
     }
-    
+
     if (!canUseSkill2()) {
-        log("Skill2 not available");
+        log("Skill2: Cannot use skill (cooldown: %.2f, state: %d)",
+            _skill2CooldownTimer, (int)_currentState);
         return;
     }
-    
-    log("Player uses Skill2");
-    
-    // 设置技能状态
-    _currentState = PlayerState::SKILL2;
-    setCurrentState(PlayerState::SKILL2);
-    
-    // 攻击时停止移动
-    _isMovingLeft = false;
-    _isMovingRight = false;
+
+    log("=== Player uses Skill2 ===");
+
+    this->stopAllActions();
+    stopMoving();
     _velocity.x = 0;
-    
-    // 播放技能音效
+
+    _currentState = PlayerState::SKILL2;
+
     auto audioManager = AudioManager::getInstance();
     if (audioManager) {
         audioManager->playEffect("sfx_skill2");
-    } else {
-        log("Skill2: AudioManager is null!");
     }
-    
-    // 应用技能效果（伤害）
-    // 技能2：对更大范围内的敌人造成伤害（可以攻击前后）
-    float damage = _skill2Damage;
-    float range = _skill2Range;
-    
-    // 检测并伤害敌人
-    auto enemyManager = EnemyManager::getInstance();
-    if (enemyManager) {
-        const auto& enemies = enemyManager->getAllEnemies();
-        log("Skill2: Checking %zu enemies", enemies.size());
-        for (Enemy* enemy : enemies) {
-            if (enemy && !enemy->isDead()) {
-                // 计算敌人与玩家之间的距离
-                float distance = std::abs(enemy->getWorldPositionX() - this->getWorldPositionX());
-                
-                // 如果敌人在技能范围内
-                if (distance <= range) {
-                    // 对敌人造成伤害（技能2可以攻击前后）
-                    enemy->takeDamage(damage);
-                    log("Skill2 hits enemy! Damage: %.0f, Enemy health: %.0f", damage, enemy->getCurrentHealth());
-                }
-            } else if (!enemy) {
-                log("Skill2: Found null enemy pointer!");
-            }
-        }
-    } else {
-        log("Skill2: EnemyManager is null!");
+
+    if (_animations.find("skill2") == _animations.end() ||
+        !_animations["skill2"] ||
+        _animations["skill2"]->getFrames().empty()) {
+        log("ERROR: Skill2 animation not found or empty!");
+        applySkill2Effect();
+        return;
     }
-    
-    // 设置技能冷却时间
-    _skill2CooldownTimer = _skill2Cooldown;
-    
-    // 技能动画结束后恢复到适当状态
-    auto skill2Complete = CallFunc::create([this]() {
-        if (!this) {
-            log("Skill2 complete: Invalid Player pointer!");
+
+    auto skillAnim = _animations["skill2"];
+    float totalDuration = skillAnim->getDelayPerUnit() * skillAnim->getFrames().size();
+
+    log("Skill2 animation duration: %.2f seconds", totalDuration);
+
+    auto animate = Animate::create(skillAnim);
+    float effectDelay = totalDuration * 0.5f;
+
+    auto applyEffect = CallFunc::create([this]() {
+        applySkill2Effect();
+        });
+
+    auto skillComplete = CallFunc::create([this]() {
+        if (!this || !this->getParent()) {
+            log("Skill2 complete: Player node no longer exists");
             return;
         }
-        
+
+        log("Skill2 animation complete");
+
         if (_isGrounded) {
-            _currentState = PlayerState::IDLE;
-            setCurrentState(PlayerState::IDLE);
-        } else {
-            _currentState = PlayerState::JUMPING;
+            if (_isMovingLeft || _isMovingRight) {
+                setCurrentState(PlayerState::RUNNING);
+            }
+            else {
+                setCurrentState(PlayerState::IDLE);
+            }
+        }
+        else {
             setCurrentState(PlayerState::JUMPING);
         }
-    });
-    
-    if (!skill2Complete) {
-        log("Skill2: Failed to create CallFunc!");
-        // 确保状态恢复
-        _currentState = PlayerState::IDLE;
-        setCurrentState(PlayerState::IDLE);
+        });
+
+    auto sequence = Sequence::create(animate, skillComplete, nullptr);
+    auto effectSequence = Sequence::create(DelayTime::create(effectDelay), applyEffect, nullptr);
+
+    this->runAction(sequence);
+    this->runAction(effectSequence);
+
+    _skill2CooldownTimer = _skill2Cooldown;
+}
+
+// 技能2效果应用函数
+void Player::applySkill2Effect() {
+    log("Applying Skill2 effect");
+
+    auto enemyManager = getSafeEnemyManager();
+    if (!enemyManager) {
+        log("ERROR: Cannot get EnemyManager instance");
         return;
     }
-    
-    // 设置技能持续时间（根据动画长度调整）
-    float skillDuration = 1.5f;
-    if (skillDuration <= 0.0f) {
-        log("Skill2: Invalid skill duration!");
-        skillDuration = 0.8f; // 默认值
-    }
-    
-    // 创建延迟时间动作
-    auto delayTime = DelayTime::create(skillDuration);
-    if (!delayTime) {
-        log("Skill2: Failed to create DelayTime!");
-        // 确保状态恢复
-        _currentState = PlayerState::IDLE;
-        setCurrentState(PlayerState::IDLE);
+
+    const auto& enemies = enemyManager->getAllEnemies();
+    if (enemies.empty()) {
+        log("No enemies to attack with skill2");
         return;
     }
-    
-    // 运行技能完成动作
-    auto sequence = Sequence::create(delayTime, skill2Complete, nullptr);
-    if (sequence) {
-        this->runAction(sequence);
-    } else {
-        log("Skill2: Failed to create Sequence!");
-        // 确保状态恢复
-        _currentState = PlayerState::IDLE;
-        setCurrentState(PlayerState::IDLE);
+
+    log("Checking %d enemies for skill2", (int)enemies.size());
+
+    int hitCount = 0;
+    for (Enemy* enemy : enemies) {
+        if (!enemy || enemy->isDead()) {
+            continue;
+        }
+
+        float distance = std::abs(enemy->getWorldPositionX() - _worldPositionX);
+        if (distance <= _skill2Range) {
+            enemy->takeDamage(_skill2Damage);
+            hitCount++;
+
+            log("Skill2 hit enemy at distance %.0f, damage: %.0f, enemy health: %.0f",
+                distance, _skill2Damage, enemy->getCurrentHealth());
+        }
     }
+
+    log("Skill2 hit %d enemies", hitCount);
 }
 
 // Player.cpp - 修改 update 函数
@@ -1310,41 +1346,58 @@ void Player::setCurrentState(PlayerState state) {
         }
         break;
         
+        // Player.cpp - 修改setCurrentState函数中的技能状态处理
         case PlayerState::SKILL1:
+        case PlayerState::SKILL2:
         {
-            // 播放技能1动画（不区分左右方向）
-            std::string animationKey = "skill1";
+            // 技能状态已经在skill1()和skill2()函数中处理动画
+            // 这里只设置状态，不播放动画，避免重复播放
+            log("Setting skill state %d", (int)state);
 
-            _currentAnimationKey = animationKey;
+            // 停止当前所有动作（但保留技能动作）
+            // 注意：这里不要调用stopAllActions()，以免中断正在播放的技能动画
+            _currentState = state;
 
-            auto it = _animations.find(animationKey);
-            if (it != _animations.end() && it->second->getFrames().size() > 0) {
-                auto animate = Animate::create(it->second);
-                this->runAction(animate);
-                log("Playing skill1 animation with %d frames", (int)it->second->getFrames().size());
+            // 根据技能类型设置动画键
+            if (state == PlayerState::SKILL1) {
+                _currentAnimationKey = "skill1";
             }
             else {
-                log("ERROR: Skill1 animation not found or empty");
+                _currentAnimationKey = "skill2";
             }
         }
         break;
         
-        case PlayerState::SKILL2:
+        case PlayerState::DEAD:
         {
-            // 播放技能2动画（不区分左右方向）
-            std::string animationKey = "skill2";
-
-            _currentAnimationKey = animationKey;
-
-            auto it = _animations.find(animationKey);
-            if (it != _animations.end() && it->second->getFrames().size() > 0) {
-                auto animate = Animate::create(it->second);
-                this->runAction(animate);
-                log("Playing skill2 animation with %d frames", (int)it->second->getFrames().size());
+            log("Player entering DEAD state");
+            
+            // 停止所有动作
+            this->stopAllActions();
+            
+            // 设置死亡状态
+            _currentState = PlayerState::DEAD;
+            _currentAnimationKey = "dead";
+            
+            // 禁用并移除物理碰撞体
+            if (this->getPhysicsBody()) {
+                this->getPhysicsBody()->setEnabled(false);
+                this->removeComponent(this->getPhysicsBody());
             }
-            else {
-                log("ERROR: Skill2 animation not found or empty");
+            
+            // 清理动画资源，避免内存泄漏
+            for (auto& pair : _animations) {
+                CC_SAFE_RELEASE(pair.second);
             }
+            _animations.clear();
+            
+            // 重置状态变量
+            _isMovingLeft = false;
+            _isMovingRight = false;
+            _velocity = Vec2::ZERO;
+            _isGrounded = false;
+            
+            log("Player DEAD state processed: animations cleared, physics disabled");
         }
         break;
 
@@ -1761,30 +1814,31 @@ void Player::takeDamage(float damage) {
     }
 }
 
+// Player.cpp - 改进detectAndDamageEnemies函数
 void Player::detectAndDamageEnemies() {
-    // 攻击范围
-    float attackRange = 50.0f;
-    
-    // 获取EnemyManager实例
     auto enemyManager = EnemyManager::getInstance();
     if (!enemyManager) {
+        log("No EnemyManager found for attack detection");
         return;
     }
-    
-    // 对所有敌人进行攻击检测
+
     const auto& enemies = enemyManager->getAllEnemies();
+    if (enemies.empty()) {
+        log("No enemies found for attack detection");
+        return;
+    }
+
+    float attackRange = 50.0f;
+    float damage = 30.0f;
+
     for (Enemy* enemy : enemies) {
         if (enemy && !enemy->isDead()) {
-            // 计算敌人与玩家之间的距离
             float distance = std::abs(enemy->getWorldPositionX() - this->getWorldPositionX());
-            
-            // 如果敌人在攻击范围内
+
             if (distance <= attackRange) {
-                // 对敌人造成伤害
-                float damage = 30.0f; // 攻击伤害值
                 enemy->takeDamage(damage);
-                
-                log("Player attacks enemy! Damage: %.0f, Enemy health: %.0f", damage, enemy->getCurrentHealth());
+                log("Player attacks enemy! Damage: %.0f, Enemy health: %.0f",
+                    damage, enemy->getCurrentHealth());
             }
         }
     }

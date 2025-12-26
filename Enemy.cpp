@@ -57,10 +57,7 @@ bool Enemy::init(const std::string& enemyType) {
 }
 
 Enemy::~Enemy() {
-    // Clean up animation cache
-    for (const auto& pair : _animations) {
-        AnimationCache::getInstance()->removeAnimation(pair.first);
-    }
+    // No need to clean up animation cache as it's shared globally
     _animations.clear();
 }
 
@@ -163,36 +160,40 @@ void Enemy::setCurrentState(EnemyState state) {
             break;
         }
         case EnemyState::DEAD: {
-            // Disable physics on death
+            // Disable and remove physics body
             if (this->getPhysicsBody()) {
                 this->getPhysicsBody()->setEnabled(false);
+                this->removeComponent(this->getPhysicsBody());
             }
             
-            // Create sequence to play death animation once and then remove enemy
-            auto removeEnemy = CallFunc::create([this]() {
-                // Notify EnemyManager to remove this enemy
-                auto enemyManager = EnemyManager::getInstance();
-                enemyManager->removeEnemy(this);
-                log("Enemy removed from EnemyManager after death");
-            });
-            
-            FiniteTimeAction* sequence;
+            // Play death animation if available and wait for completion before removing
+            auto enemyManager = EnemyManager::getInstance();
             if (_animations.count("dead") > 0 && _animations["dead"] != nullptr) {
                 // Get dead animation
                 Animation* deadAnim = _animations["dead"];
                 // Create dead animation action
                 auto deadAction = Animate::create(deadAnim);
-                // First play the death animation once, then remove enemy
-                sequence = Sequence::create(deadAction, removeEnemy, nullptr);
+                
+                // Create callback to remove enemy after animation completes
+                auto removeEnemyCallback = CallFunc::create([this, enemyManager]() {
+                    enemyManager->removeEnemy(this);
+                    log("Enemy removed from EnemyManager after death animation completed");
+                });
+                
+                // Create sequence: play animation -> remove enemy
+                auto sequence = Sequence::create(deadAction, removeEnemyCallback, nullptr);
+                this->runAction(sequence);
                 _currentAnimationKey = "dead"; // Update current animation key
             } else {
-                // No death animation, just remove enemy after a short delay
-                auto delay = DelayTime::create(0.5f);
-                sequence = Sequence::create(delay, removeEnemy, nullptr);
+                // No death animation, remove immediately with a small delay
+                auto removeEnemyCallback = CallFunc::create([this, enemyManager]() {
+                    enemyManager->removeEnemy(this);
+                    log("Enemy removed from EnemyManager after small delay (no death animation)");
+                });
+                auto sequence = Sequence::create(DelayTime::create(0.1f), removeEnemyCallback, nullptr);
+                this->runAction(sequence);
             }
             
-            // Run the sequence
-            this->runAction(sequence);
             break;
         }
     }
@@ -424,11 +425,13 @@ void Enemy::updateWorldPosition(float delta) {
 void Enemy::setupPhysics() {
     // Create physics collision body
     auto physicsBody = PhysicsBody::createBox(this->getContentSize(), PhysicsMaterial(0.1f, 0.0f, 0.5f));
-    physicsBody->setDynamic(true);
-    physicsBody->setGravityEnable(false);    // Disable physics engine gravity for enemies
-    physicsBody->setCategoryBitmask(0x04);    // Enemy category
-    physicsBody->setCollisionBitmask(0x00);    // No physical collision with any object
-    physicsBody->setContactTestBitmask(0x01);  // Detect collision with player
-    
-    this->setPhysicsBody(physicsBody);
+    if (physicsBody) {
+        physicsBody->setDynamic(true);
+        physicsBody->setGravityEnable(false);    // Disable physics engine gravity for enemies
+        physicsBody->setCategoryBitmask(0x04);    // Enemy category
+        physicsBody->setCollisionBitmask(0x00);    // No physical collision with any object
+        physicsBody->setContactTestBitmask(0x01);  // Detect collision with player
+        
+        this->setPhysicsBody(physicsBody);
+    }
 }

@@ -94,13 +94,15 @@ void RangedEnemy::attack() {
         
         // Set projectile physics properties (if collision detection needed)
         auto physicsBody = PhysicsBody::createBox(projectile->getContentSize(), PhysicsMaterial(0.1f, 0.0f, 0.5f));
-        physicsBody->setDynamic(true);
-        physicsBody->setGravityEnable(false);
-        physicsBody->setCategoryBitmask(0x04);    // Projectile category
-        physicsBody->setCollisionBitmask(0x01);    // Collide with player
-        physicsBody->setContactTestBitmask(0x01);  // Test collision
-        
-        projectile->setPhysicsBody(physicsBody);
+        if (physicsBody) {
+            physicsBody->setDynamic(true);
+            physicsBody->setGravityEnable(false);
+            physicsBody->setCategoryBitmask(0x04);    // Projectile category
+            physicsBody->setCollisionBitmask(0x01);    // Collide with player
+            physicsBody->setContactTestBitmask(0x01);  // Test collision
+            
+            projectile->setPhysicsBody(physicsBody);
+        }
         
         // Projectile collision detection logic should be added here
         // Inflict damage when projectile collides with player

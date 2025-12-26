@@ -16,6 +16,13 @@ EnemyManager* EnemyManager::getInstance() {
     return _instance;
 }
 
+void EnemyManager::destroyInstance() {
+    if (_instance) {
+        delete _instance;
+        _instance = nullptr;
+    }
+}
+
 EnemyManager::EnemyManager() {
     _player = nullptr;
     initEnemyDatabase();
@@ -96,22 +103,16 @@ void EnemyManager::removeAllEnemies() {
 
 void EnemyManager::update(float delta) {
     // Iterate through enemy list and update each enemy
-    // Use reverse iteration to avoid iterator invalidation
-    for (auto it = _enemies.rbegin(); it != _enemies.rend(); ++it) {
-        Enemy* enemy = *it;
-        
+    // Create a copy of the list to avoid iterator invalidation during removal
+    std::vector<Enemy*> enemiesCopy = _enemies;
+    
+    for (auto enemy : enemiesCopy) {
         if (enemy) {
-            if (enemy->isDead()) {
-                // Remove dead enemy
-                safelyRemoveEnemy(enemy);
-                // Erase by converting reverse iterator to forward iterator
-                auto forwardIt = it.base();
-                --forwardIt;
-                _enemies.erase(forwardIt);
-            } else {
-                // Update enemy
+            if (!enemy->isDead()) {
+                // Only update living enemies
                 enemy->update(delta);
             }
+            // Dead enemies will be removed by their own death animation sequence
         }
     }
 }
@@ -212,10 +213,10 @@ void EnemyManager::safelyRemoveEnemy(Enemy* enemy) {
         return;
     }
     
-    // Stop all actions
-    enemy->stopAllActions();
+    // Do not stop all actions here as it might cancel the death animation sequence
+    // enemy->stopAllActions();
     
-    // Remove physics collision body
+    // Remove physics collision body if it still exists
     if (enemy->getPhysicsBody()) {
         enemy->setPhysicsBody(nullptr);
     }
@@ -223,8 +224,8 @@ void EnemyManager::safelyRemoveEnemy(Enemy* enemy) {
     // Remove from parent node
     if (enemy->getParent()) {
         enemy->removeFromParentAndCleanup(true);
+    } else {
+        // If enemy has no parent, we still need to release it
+        enemy->release();
     }
-    
-    // EnemyManager releases its reference to the enemy
-    enemy->release();
 }

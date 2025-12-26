@@ -79,31 +79,62 @@ void AudioManager::destroyInstance()
 void AudioManager::initDefaultConfigs()
 {
     log("AudioManager::initDefaultConfigs()");
-    // 示例音频配置
-    // 实际项目中应该根据资源目录结构添加真实的音频文件
-    
-    // 背景音乐
-    addAudioConfig("bgm_main", AudioType::BGM, "bgm/main.mp3", true, 1.0f);
-    addAudioConfig("bgm_boss", AudioType::BGM, "bgm/boss.mp3", true, 1.0f);
-    addAudioConfig("bgm_gameover", AudioType::BGM, "bgm/gameover.mp3", false, 1.0f);
-    
-    // 音效
+
+    // === 背景音乐 ===
+    // 标题界面音乐
+    addAudioConfig("bgm_title", AudioType::BGM, "audio/bgm/title_bgm.mp3", true, 0.8f);
+
+    // 关卡音乐
+    addAudioConfig("bgm_level1", AudioType::BGM, "audio/bgm/level1_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level2_1", AudioType::BGM, "audio/bgm/level2-1_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level2_2", AudioType::BGM, "audio/bgm/level2-2_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level2_3", AudioType::BGM, "audio/bgm/level2-3_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level2_4", AudioType::BGM, "audio/bgm/level2-4_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level2_5", AudioType::BGM, "audio/bgm/level2-5_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level2_6", AudioType::BGM, "audio/bgm/level2-6_bgm.mp3", true, 0.8f);
+
+    addAudioConfig("bgm_level3_1", AudioType::BGM, "audio/bgm/level3-1_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level3_2", AudioType::BGM, "audio/bgm/level3-2_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level3_3", AudioType::BGM, "audio/bgm/level3-3_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level3_4", AudioType::BGM, "audio/bgm/level3-4_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level3_5", AudioType::BGM, "audio/bgm/level3-5_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level3_6", AudioType::BGM, "audio/bgm/level3-6_bgm.mp3", true, 0.8f);
+
+    addAudioConfig("bgm_level4_1", AudioType::BGM, "audio/bgm/level4-1_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level4_2", AudioType::BGM, "audio/bgm/level4-2_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level4_3", AudioType::BGM, "audio/bgm/level4-3_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level4_4", AudioType::BGM, "audio/bgm/level4-4_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level4_5", AudioType::BGM, "audio/bgm/level4-5_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_level4_6", AudioType::BGM, "audio/bgm/level4-6_bgm.mp3", true, 0.8f);
+
+    addAudioConfig("bgm_final_level", AudioType::BGM, "audio/bgm/final_level_bgm.mp3", true, 0.8f);
+    addAudioConfig("bgm_pause", AudioType::BGM, "audio/bgm/pause_bgm.mp3", true, 0.6f);
+
+    // === 音效 ===
+    // 玩家动作音效
+    addAudioConfig("sfx_attack", AudioType::EFFECT, "audio/sfx/attack.mp3", false, 0.7f);
+    addAudioConfig("sfx_dash", AudioType::EFFECT, "audio/sfx/dash.mp3", false, 0.7f);
+    addAudioConfig("sfx_jump", AudioType::EFFECT, "audio/sfx/jump.mp3", false, 0.6f);
+    addAudioConfig("sfx_skill1", AudioType::EFFECT, "audio/sfx/skill1.mp3", false, 0.8f);
+    addAudioConfig("sfx_skill2", AudioType::EFFECT, "audio/sfx/skill2.mp3", false, 0.8f);
+
+    // 原有的示例音效（保留）
     addAudioConfig("effect_jump", AudioType::EFFECT, "effects/jump.mp3", false, 0.8f);
     addAudioConfig("effect_attack", AudioType::EFFECT, "effects/attack.mp3", false, 1.0f);
     addAudioConfig("effect_hit", AudioType::EFFECT, "effects/hit.mp3", false, 0.8f);
     addAudioConfig("effect_die", AudioType::EFFECT, "effects/die.mp3", false, 1.0f);
     addAudioConfig("effect_shield", AudioType::EFFECT, "effects/shield.mp3", false, 0.8f);
     addAudioConfig("effect_pickup", AudioType::EFFECT, "effects/pickup.mp3", false, 0.7f);
-    
+
     // UI音效
     addAudioConfig("ui_button_click", AudioType::EFFECT, "ui/button_click.mp3", false, 0.5f);
     addAudioConfig("ui_level_complete", AudioType::EFFECT, "ui/level_complete.mp3", false, 0.8f);
     addAudioConfig("ui_error", AudioType::EFFECT, "ui/error.mp3", false, 0.6f);
-    
+
     // 语音
     addAudioConfig("voice_start", AudioType::EFFECT, "voices/start.mp3", false, 1.0f);
     addAudioConfig("voice_gameover", AudioType::EFFECT, "voices/gameover.mp3", false, 1.0f);
-    
+
     log("AudioManager: %d audio configs initialized", m_audioConfigs.size());
 }
 
