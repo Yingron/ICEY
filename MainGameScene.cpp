@@ -1,4 +1,4 @@
-#include "MainGameScene.h"
+﻿#include "MainGameScene.h"
 #include "GameConfig.h"
 #include "Level1SceneBackground.h"  // ȷ��������ȷ��ͷ�ļ�
 #include "LevelManager.h"
@@ -10,6 +10,7 @@
 #include "EnemyManager.h"
 #include "Player.h"
 #include <physics3d/CCPhysics3DObject.h>
+#include "PostLevel4Handler.h"
 
 USING_NS_CC;
 
@@ -36,7 +37,10 @@ bool MainGameScene::init() {
         return false;
     }
 
-   
+    // 添加无敌模式支持
+    if (Player::getInstance()) {  
+       Player::getInstance()->toggleInvincibleMode();  
+    }
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
@@ -64,6 +68,8 @@ bool MainGameScene::init() {
 
     initHud();//hy
 
+    initItemBag();
+
     // ��ʼ������UI
     initDebugUI();
 
@@ -82,8 +88,24 @@ bool MainGameScene::init() {
 
     // ��ʼ���˷���
     initEnemies();
+    
+    // Initialize PostLevel4Handler
+    _postLevel4Handler = PostLevel4Handler::create();
+    if (_postLevel4Handler) {
+        this->addChild(_postLevel4Handler);
+        log("PostLevel4Handler initialized successfully");
+    } else {
+        log("ERROR: Failed to initialize PostLevel4Handler");
+    }
 
     return true;
+}
+
+void MainGameScene::initItemBag() {
+    // 创建背包层
+    _itemBagLayer = ItemBagLayer::create();
+    _itemBagLayer->setLocalZOrder(1000); // 确保在最上层显示
+    this->addChild(_itemBagLayer);
 }
 
 // MainGameScene.cpp - ��initHud�������������Ӵ���
@@ -151,14 +173,14 @@ void MainGameScene::onEnter() {
 
 void MainGameScene::onExit() {
     Layer::onExit();
-    
+
     // 清理玩家资源
     if (_player) {
         _player->removeFromParentAndCleanup(true);
         _player = nullptr;
         log("Player resources cleaned up in onExit");
     }
-    
+
     // 清理敌人管理器
     if (_enemyManager) {
         _enemyManager->removeAllEnemies();
@@ -167,29 +189,29 @@ void MainGameScene::onExit() {
         _enemyManager = nullptr;
         log("EnemyManager destroyed in onExit");
     }
-    
+
     // 移除碰撞监听器
     if (_contactListener) {
         _eventDispatcher->removeEventListener(_contactListener);
         _contactListener = nullptr;
         log("Collision contact listener removed in onExit");
     }
-    
+
     // 清理场景中的敌人列表（非拥有权）
     _enemiesList.clear();
     log("Scene enemy pointers cleared in onExit");
-    
+
     // 清理级别管理器引用
     if (_levelManager) {
         _levelManager = nullptr;
     }
-    
+
     // 清理其他资源
     if (_levelLabel) {
         _levelLabel->removeFromParentAndCleanup(true);
         _levelLabel = nullptr;
     }
-    
+
     // 清理项目资源
     for (auto item : _levelItems) {
         item->removeFromParentAndCleanup(true);
@@ -197,9 +219,9 @@ void MainGameScene::onExit() {
     _levelItems.clear();
 }
 
-// MainGameScene.cpp - �޸�initItems����
+// MainGameScene.cpp - 修复initItems函数
 void MainGameScene::initItems() {
-    // ���������Ʒ
+    // 清空现有物品
     for (auto item : _levelItems) {
         item->removeFromParent();
     }
@@ -210,29 +232,29 @@ void MainGameScene::initItems() {
 
     log("Initializing items for level: %d", (int)currentLevel);
 
-    // ���ݵ�ǰ�ؿ�������Ʒ
+    // 根据当前关卡放置物品
     if (currentLevel == LevelManager::LevelState::LEVEL1) {
-        // ��ӣ�����������Ʒ
-        placeItemAt("study_block", 500, 100);
-        placeItemAt("oolong_tea", 1200, 150);
+        // 在樱花大道放置物品
+        placeItemAt("study_du", 500, 100);
+        placeItemAt("oolong", 1200, 150);
         placeItemAt("campus_card", 1800, 100);
-        placeItemAt("know_not", 2200, 120);
+        placeItemAt("do_not_know", 2200, 120);
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL2_1) {
-        // �������ݷ�����Ʒ
+        // 在体育馆放置物品
         placeItemAt("safety_helmet", 600, 100);
         placeItemAt("poster", 900, 120);
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL2_2) {
-        placeItemAt("takeout", 500, 100);
-        placeItemAt("donation_proof", 800, 120);
+        placeItemAt("take_out", 500, 100);
+        placeItemAt("donation_certificate", 800, 120);
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL2_3) {
         placeItemAt("hanoi_tower", 600, 100);
         placeItemAt("sj_larry", 900, 120);
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL2_4) {
-        placeItemAt("code_65472", 500, 100);
+        placeItemAt("65472", 500, 100);
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_1) {
         placeItemAt("bulletin_board", 500, 120);
@@ -240,25 +262,25 @@ void MainGameScene::initItems() {
     else if (currentLevel == LevelManager::LevelState::LEVEL3_2) {
         placeItemAt("trash_bin_1", 600, 100);
     }
-    // ���Ը�����ҪΪ�����ؿ�������Ʒ
+    // 可以根据需要为其他关卡添加物品
 
     log("Total items in level: %d", _levelItems.size());
 }
 
-// MainGameScene.cpp - ����placeItemAt����
-void MainGameScene::placeItemAt(const std::string& itemId, float worldX, float worldY) {
+// MainGameScene.cpp - 更新placeItemAt函数
+void MainGameScene::placeItemAt(const std::string & itemId, float worldX, float worldY) {
     Item* item = ItemManager::getInstance()->createItem(itemId);
     if (item) {
-        // ��������λ��
+        // 设置世界位置
         item->setWorldPosition(worldX, worldY);
 
-        // ���ñ�ǩ�Ա�ʶ��
+        // 设置标签以便识别
         item->setTag(1000);
 
-        // ���ӵ�����
+        // 添加到场景
         this->addChild(item, 5);
 
-        // ���ӵ���Ʒ�б�
+        // 添加到物品列表
         _levelItems.push_back(item);
 
         log("Placed item %s at (%.0f, %.0f)", itemId.c_str(), worldX, worldY);
@@ -281,7 +303,7 @@ void MainGameScene::checkItemCollisions(float delta) {
             item->collect();
             it = _levelItems.erase(it);
 
-            // ����UI
+            // 更新UI
             updateCollectionUI();
         }
         else {
@@ -290,21 +312,21 @@ void MainGameScene::checkItemCollisions(float delta) {
     }
 }
 
-// MainGameScene.cpp - �޸�showCollectionUI����
+// MainGameScene.cpp - 修复showCollectionUI函数
 void MainGameScene::showCollectionUI() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    _collectionLabel = Label::createWithSystemFont("��Ʒ�ռ�: 0/13", "Arial", 20);
+    _collectionLabel = Label::createWithSystemFont("物品收集: 0/13", "Arial", 20);
     _collectionLabel->setPosition(Vec2(visibleSize.width - 120, visibleSize.height - 30));
     _collectionLabel->setColor(Color3B::GREEN);
     _collectionLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
     this->addChild(_collectionLabel, 100);
 
-    // ��ʼ����һ��UI
+    // 初始更新一次UI
     updateCollectionUI();
 }
 
-// MainGameScene.cpp - ����updateCollectionUI����
+// MainGameScene.cpp - 更新updateCollectionUI函数
 void MainGameScene::updateCollectionUI() {
     if (!_collectionLabel) return;
 
@@ -312,9 +334,9 @@ void MainGameScene::updateCollectionUI() {
     int collected = itemManager->getCollectedCount();
     int total = itemManager->getTotalItemCount();
 
-    _collectionLabel->setString(StringUtils::format("��Ʒ�ռ�: %d/%d", collected, total));
+    _collectionLabel->setString(StringUtils::format("物品收集: %d/%d", collected, total));
 
-    // �ռ���������Ʒʱ��ʾ����Ч��
+    // 收集到所有物品时显示特殊效果
     if (collected == total) {
         _collectionLabel->setColor(Color3B::RED);
         _collectionLabel->stopAllActions();
@@ -329,81 +351,24 @@ void MainGameScene::updateCollectionUI() {
 }
 
 bool MainGameScene::onContactBegin(PhysicsContact& contact) {
-    // Get physics bodies
-    auto bodyA = contact.getShapeA()->getBody();
-    auto bodyB = contact.getShapeB()->getBody();
-    
-    // Check if physics bodies are valid
-    if (!bodyA || !bodyB) {
-        return false;
-    }
-    
-    // Get nodes from physics bodies
-    auto nodeA = bodyA->getNode();
-    auto nodeB = bodyB->getNode();
-    
-    // Check if nodes are valid
-    if (!nodeA || !nodeB) {
-        return false;
-    }
-    
-    // 检查玩家是否存在且未死亡
-    bool isPlayerValid = (_player && !_player->isDead());
+    auto nodeA = contact.getShapeA()->getBody()->getNode();
+    auto nodeB = contact.getShapeB()->getBody()->getNode();
 
     // 检查是否是玩家和物品的碰撞
-    if (isPlayerValid && ((nodeA == _player && dynamic_cast<Item*>(nodeB)) ||
-        (nodeB == _player && dynamic_cast<Item*>(nodeA)))) {
-        Item* item = nullptr;
-        if (nodeA != _player) {
-            item = dynamic_cast<Item*>(nodeA);
-        } else {
-            item = dynamic_cast<Item*>(nodeB);
-        }
+    if ((nodeA == _player && dynamic_cast<Item*>(nodeB)) ||
+        (nodeB == _player && dynamic_cast<Item*>(nodeA))) {
+
+        Item* item = dynamic_cast<Item*>(nodeA != _player ? nodeA : nodeB);
         if (item) {
             item->collect();
+
             // 从_levelItems中移除
             auto it = std::find(_levelItems.begin(), _levelItems.end(), item);
             if (it != _levelItems.end()) {
                 _levelItems.erase(it);
             }
+
             updateCollectionUI();
-        }
-    }
-    // 检查是否是玩家和敌人的碰撞
-    else if (isPlayerValid && ((nodeA == _player && dynamic_cast<Enemy*>(nodeB)) ||
-             (nodeB == _player && dynamic_cast<Enemy*>(nodeA)))) {
-        Enemy* enemy = nullptr;
-        if (nodeA != _player) {
-            enemy = dynamic_cast<Enemy*>(nodeA);
-        } else {
-            enemy = dynamic_cast<Enemy*>(nodeB);
-        }
-        if (enemy && !enemy->isDead()) {
-            // 玩家受伤
-            // TODO: 使用用户定义的碰撞伤害值来实现
-            log("Player collided with enemy!");
-        }
-    }
-    // 检查是否是玩家和投射物的碰撞
-    else if (isPlayerValid && ((nodeA == _player && bodyB->getCategoryBitmask() == 0x04) ||
-             (nodeB == _player && bodyA->getCategoryBitmask() == 0x04))) {
-        // 简单实现投射物伤害逻辑
-        _player->takeDamage(15.0f); // 使用默认伤害值，可以根据需要调整
-        
-        // 移除投射物，确保投射物有效
-        Node* projectile = nullptr;
-        if (nodeA != _player) {
-            projectile = nodeA;
-        } else {
-            projectile = nodeB;
-        }
-        
-        // 增强空指针检查，避免访问已销毁的投射物
-        if (projectile) {
-            projectile->removeFromParentAndCleanup(true);
-            log("Player hit by projectile!");
-        } else {
-            log("WARNING: Attempted to remove null projectile");
         }
     }
 
@@ -481,8 +446,8 @@ void MainGameScene::initPlayer() {
     if (_player) {
         auto visibleSize = Director::getInstance()->getVisibleSize();
 
-        float initialWorldX = _screenWidth * 0.1f; 
-        float initialWorldY = 0.0f;              
+        float initialWorldX = _screenWidth * 0.1f;
+        float initialWorldY = 0.0f;
 
         // ������ҵ���������
         auto physicsBody = _player->getPhysicsBody();
@@ -506,7 +471,7 @@ void MainGameScene::initPlayer() {
         _player->setScale(2.0f);
 
         this->addChild(_player, 10);
-        
+
         // 设置MainGameScene指针
         _player->setMainGameScene(this);
 
@@ -557,6 +522,18 @@ void MainGameScene::initDebugUI() {
     _levelLabel->setPosition(Vec2(visibleSize.width * 0.5f, visibleSize.height - 60));
     _levelLabel->setColor(Color3B::GREEN);
     this->addChild(_levelLabel, 100);
+
+    // ��ʼ���ڵ���ʽ��ʾ��ǩ
+    _gameModeLabel = Label::createWithSystemFont(
+        "",
+        "Arial", 24
+    );
+    _gameModeLabel->setPosition(Vec2(visibleSize.width * 0.5f, visibleSize.height * 0.8f));
+    _gameModeLabel->setColor(Color3B::BLUE);
+    _gameModeLabel->setVisible(false);
+    this->addChild(_gameModeLabel, 101);
+    
+    _gameModeLabelTimer = 0.0f;
 
     // ����������ʾ��ǩ - �ϲ������ʾ
     auto instructionLabel = Label::createWithSystemFont(
@@ -638,7 +615,7 @@ void MainGameScene::updateCamera(float delta) {
 
     float actualPlayerScreenX = playerWorldX + _cameraOffsetX;
 
-    // �޸���������ĻYλ��Ӧ�ù̶�����������Yλ��Ӱ�죨��������������
+    // �޸���������ĻYλ��Ӧ�ù̶�����������Yλ��Ӱ�죨������������
     // ��Ϊ��Ծ�ȶ����Ѿ�����ҵ����������д���������ֻ��Ҫ��ȷӳ�䵽��Ļ
     float groundScreenY = visibleSize.height * GameConfig::PLAYER_GROUND_Y_PERCENT;
 
@@ -665,25 +642,32 @@ void MainGameScene::updateCamera(float delta) {
 void MainGameScene::checkLevelTransition(float delta) {
     if (!_player || _isTransitioning) return;
 
-    // ��ȡ�������λ��
+    // ��ȡ��ǰ���ڵ���ʽ
+    auto currentGameMode = _levelManager->getCurrentGameMode();
+
+    // ��ȡ��ǰ���ڵ���״̬
+    auto currentLevel = _levelManager->getCurrentLevel();
+    
+    // ��ȡ���λ��
     float playerWorldX = _player->getWorldPositionX();
 
-    // ����Ƿ񵽴ﵱǰ�ؿ��߽�
+    // ���Ƿ���Լ�ڹ���߽�
     if (isPlayerAtRightBoundary()) {
-        // ��¼��ǰ�ؿ�״̬
+        // ��ȡ��ǰ���ڵ���״̬
         auto currentLevel = _levelManager->getCurrentLevel();
 
-        // ���ÿ��Ƿ���з˿ŵ��ˣ���Ҫ�ڵ�һ��关卡（LEVEL1）不检查敌人
-        if (currentLevel != LevelManager::LevelState::LEVEL1) {
-            if (_enemyManager && _enemyManager->getAliveEnemiesCount() > 0) {
-                log("Cannot transition: %d enemies still alive", _enemyManager->getAliveEnemiesCount());
-                return;
-            }
+        // ��ݵ���ڵ���ʽ���ж��Ƿ���Ҫ���ù��ˣ���DEFAULTģʽ��Ҫ��ǰ��
+        bool needCheckEnemies = (currentGameMode == LevelManager::GameMode::DEFAULT) && 
+                               (currentLevel != LevelManager::LevelState::LEVEL1);
+        
+        if (needCheckEnemies && _enemyManager && _enemyManager->getAliveEnemiesCount() > 0) {
+            log("Cannot transition: %d enemies still alive", _enemyManager->getAliveEnemiesCount());
+            return;
         }
 
-        // ����Ƿ�����л�����һ�ؿ�
+        // ���ÿ��Ƿ���з˿ŵ��ˣ���ֹ��״��
         if (_levelManager->canSwitchToNextLevel(playerWorldX)) {
-            // ��ʼ�ؿ��л�
+            // ��ʼ���л��ؿ���
             _isTransitioning = true;
             _transitionTimer = 0.0f;
 
@@ -696,11 +680,33 @@ void MainGameScene::checkLevelTransition(float delta) {
     }
 }
 
+// ��ʾ���ڵ���ʽ��ʾ��
+void MainGameScene::showGameModeMessage(const std::string& modeName) {
+    if (_gameModeLabel) {
+        _gameModeLabel->setString("���ڵ���ʽ�� " + modeName);
+        _gameModeLabel->setVisible(true);
+        _gameModeLabelTimer = 2.0f; // ��ʾ2��
+    }
+}
+
 void MainGameScene::update(float delta) {
+    if (_isGameOver) return;
+    
+    // Check if we're at Level4-6's final background and if we should trigger the special handling
+    if (_levelManager->isAtLevel4FinalBackground() && !_levelManager->hasTriggeredLevel4Completion()) {
+        // Mark that we've triggered the Level4 completion handler to prevent multiple triggers
+        _levelManager->setTriggeredLevel4Completion(true);
+        
+        // Start the PostLevel4Handler processing
+        if (_postLevel4Handler) {
+            _postLevel4Handler->startProcessing();
+        }
+    }
+    
     // 更新玩家
     if (_player) {
         _player->update(delta);
-      
+
         // 定期检查玩家动画状态是否正常
         static float stateCheckTimer = 0.0f;
         stateCheckTimer += delta;
@@ -718,6 +724,14 @@ void MainGameScene::update(float delta) {
     checkLevelTransition(delta);
 
     checkPlayerHealth();//******************hy
+
+    // ���ڵ���ʽ��ʾ��ʱ��
+    if (_gameModeLabelTimer > 0.0f) {
+        _gameModeLabelTimer -= delta;
+        if (_gameModeLabelTimer <= 0.0f) {
+            _gameModeLabel->setVisible(false);
+        }
+    }
 
     // �����ؿ��л�����Ч��
     if (_isTransitioning) {
@@ -743,7 +757,7 @@ void MainGameScene::update(float delta) {
 
     // ���˲�ײ
     checkEnemyCollisions(delta);
-    
+
     // ���˳�����
     cleanupDeadEnemies();
 
@@ -810,17 +824,21 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
     if (_player) {
         _player->onKeyPressed(keyCode);
     }
-    // 添加测试热键 T 来强制重置玩家状态
+    // T键切换通关模式
     if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_T) {
-        if (_player) {
-            log("Forcing player to idle state");
-
-            // 停止所有动作
-            _player->stopAllActions();
-
-            // 强制设置为待机状态
-            _player->setCurrentState(PlayerState::IDLE);
-        }
+        LevelManager::getInstance()->toggleGameMode();
+        
+        // ��ȡ��ǰ���ڵ���ʽ��ʾ��Ϣ
+        auto currentMode = LevelManager::getInstance()->getCurrentGameMode();
+        std::string modeName = (currentMode == LevelManager::GameMode::DEFAULT) ? "��ȫ��" : "ע��";
+        
+        // ��ʾ���ڵ���ʽ��ʾ��
+        showGameModeMessage(modeName);
+        
+        // ���ó���ģʽ���غ���
+        AudioManager::getInstance()->playEffect("mode_switch");
+        
+        log("按T键切换通关模式: %s", modeName.c_str());
     }
 
     if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//��esc��ͣ     hy
@@ -832,6 +850,11 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
         log("Game paused");
         event->stopPropagation();
         return;
+    }
+
+    if (keyCode == EventKeyboard::KeyCode::KEY_TAB) {
+        _itemBagLayer->onKeyPressed(keyCode, event);
+        event->stopPropagation();
     }
 
     int currentMax = 0;
@@ -978,94 +1001,94 @@ void MainGameScene::switchToNextLevel() {
     std::string levelName;
 
     switch (nextLevel) {
-    case LevelManager::LevelState::LEVEL1:
-        levelName = "Level 1";
-        _levelLabel->setColor(Color3B::GREEN);
-        break;
-    case LevelManager::LevelState::LEVEL2_1:
-        levelName = "Level 2-1";
-        _levelLabel->setColor(Color3B::ORANGE);
-        break;
-    case LevelManager::LevelState::LEVEL2_2:
-        levelName = "Level 2-2";
-        _levelLabel->setColor(Color3B::ORANGE);
-        break;
-    case LevelManager::LevelState::LEVEL2_3:
-        levelName = "Level 2-3";
-        _levelLabel->setColor(Color3B::ORANGE);
-        break;
-    case LevelManager::LevelState::LEVEL2_4:
-        levelName = "Level 2-4";
-        _levelLabel->setColor(Color3B::ORANGE);
-        break;
-    case LevelManager::LevelState::LEVEL2_5:
-        levelName = "Level 2-5";
-        _levelLabel->setColor(Color3B::ORANGE);
-        break;
-    case LevelManager::LevelState::LEVEL2_6:
-        levelName = "Level 2-6";
-        _levelLabel->setColor(Color3B::ORANGE);
-        break;
-    case LevelManager::LevelState::LEVEL3_1:
-        levelName = "Level 3-1";
-        _levelLabel->setColor(Color3B(128, 0, 128));
-        break;
-    case LevelManager::LevelState::LEVEL3_2:
-        levelName = "Level 3-2";
-        _levelLabel->setColor(Color3B(128, 0, 128));
-        break;
-    case LevelManager::LevelState::LEVEL3_3:
-        levelName = "Level 3-3";
-        _levelLabel->setColor(Color3B(128, 0, 128));
-        break;
-    case LevelManager::LevelState::LEVEL3_4:
-        levelName = "Level 3-4";
-        _levelLabel->setColor(Color3B(128, 0, 128));
-        break;
-    case LevelManager::LevelState::LEVEL3_5:
-        levelName = "Level 3-5";
-        _levelLabel->setColor(Color3B(128, 0, 128));
-        break;
-    case LevelManager::LevelState::LEVEL3_6:
-        levelName = "Level 3-6";
-        _levelLabel->setColor(Color3B(128, 0, 128));
-        break;
-    case LevelManager::LevelState::LEVEL4_1:  // ����
-        levelName = "Level 4-1";
-        _levelLabel->setColor(Color3B::BLUE);
-        break;
-    case LevelManager::LevelState::LEVEL4_2:  // ����
-        levelName = "Level 4-2";
-        _levelLabel->setColor(Color3B::BLUE);
-        break;
-    case LevelManager::LevelState::LEVEL4_3:  // ����
-        levelName = "Level 4-3";
-        _levelLabel->setColor(Color3B::BLUE);
-        break;
-    case LevelManager::LevelState::LEVEL4_4:  // ����
-        levelName = "Level 4-4";
-        _levelLabel->setColor(Color3B::BLUE);
-        break;
-    case LevelManager::LevelState::LEVEL4_5:  // ����
-        levelName = "Level 4-5";
-        _levelLabel->setColor(Color3B::BLUE);
-        break;
-    case LevelManager::LevelState::LEVEL4_6:  // ����
-        levelName = "Level 4-6";
-        _levelLabel->setColor(Color3B::BLUE);
-        break;
-    case LevelManager::LevelState::FINAL_LEVEL:
-        levelName = "Final Level";
-        _levelLabel->setColor(Color3B::RED);
-        break;
-    case LevelManager::LevelState::COMPLETED:
-        levelName = "Game Completed!";
-        _levelLabel->setColor(Color3B::RED);
-        break;
-    default:
-        levelName = "Unknown Level";
-        _levelLabel->setColor(Color3B::MAGENTA);
-        break;
+        case LevelManager::LevelState::LEVEL1:
+            levelName = "Level 1";
+            _levelLabel->setColor(Color3B::GREEN);
+            break;
+        case LevelManager::LevelState::LEVEL2_1:
+            levelName = "Level 2-1";
+            _levelLabel->setColor(Color3B::ORANGE);
+            break;
+        case LevelManager::LevelState::LEVEL2_2:
+            levelName = "Level 2-2";
+            _levelLabel->setColor(Color3B::ORANGE);
+            break;
+        case LevelManager::LevelState::LEVEL2_3:
+            levelName = "Level 2-3";
+            _levelLabel->setColor(Color3B::ORANGE);
+            break;
+        case LevelManager::LevelState::LEVEL2_4:
+            levelName = "Level 2-4";
+            _levelLabel->setColor(Color3B::ORANGE);
+            break;
+        case LevelManager::LevelState::LEVEL2_5:
+            levelName = "Level 2-5";
+            _levelLabel->setColor(Color3B::ORANGE);
+            break;
+        case LevelManager::LevelState::LEVEL2_6:
+            levelName = "Level 2-6";
+            _levelLabel->setColor(Color3B::ORANGE);
+            break;
+        case LevelManager::LevelState::LEVEL3_1:
+            levelName = "Level 3-1";
+            _levelLabel->setColor(Color3B(128, 0, 128));
+            break;
+        case LevelManager::LevelState::LEVEL3_2:
+            levelName = "Level 3-2";
+            _levelLabel->setColor(Color3B(128, 0, 128));
+            break;
+        case LevelManager::LevelState::LEVEL3_3:
+            levelName = "Level 3-3";
+            _levelLabel->setColor(Color3B(128, 0, 128));
+            break;
+        case LevelManager::LevelState::LEVEL3_4:
+            levelName = "Level 3-4";
+            _levelLabel->setColor(Color3B(128, 0, 128));
+            break;
+        case LevelManager::LevelState::LEVEL3_5:
+            levelName = "Level 3-5";
+            _levelLabel->setColor(Color3B(128, 0, 128));
+            break;
+        case LevelManager::LevelState::LEVEL3_6:
+            levelName = "Level 3-6";
+            _levelLabel->setColor(Color3B(128, 0, 128));
+            break;
+        case LevelManager::LevelState::LEVEL4_1:  // ����
+            levelName = "Level 4-1";
+            _levelLabel->setColor(Color3B::BLUE);
+            break;
+        case LevelManager::LevelState::LEVEL4_2:  // ����
+            levelName = "Level 4-2";
+            _levelLabel->setColor(Color3B::BLUE);
+            break;
+        case LevelManager::LevelState::LEVEL4_3:  // ����
+            levelName = "Level 4-3";
+            _levelLabel->setColor(Color3B::BLUE);
+            break;
+        case LevelManager::LevelState::LEVEL4_4:  // ����
+            levelName = "Level 4-4";
+            _levelLabel->setColor(Color3B::BLUE);
+            break;
+        case LevelManager::LevelState::LEVEL4_5:  // ����
+            levelName = "Level 4-5";
+            _levelLabel->setColor(Color3B::BLUE);
+            break;
+        case LevelManager::LevelState::LEVEL4_6:  // ����
+            levelName = "Level 4-6";
+            _levelLabel->setColor(Color3B::BLUE);
+            break;
+        case LevelManager::LevelState::FINAL_LEVEL:
+            levelName = "Final Level";
+            _levelLabel->setColor(Color3B::RED);
+            break;
+        case LevelManager::LevelState::COMPLETED:
+            levelName = "Game Completed!";
+            _levelLabel->setColor(Color3B::RED);
+            break;
+        default:
+            levelName = "Unknown Level";
+            _levelLabel->setColor(Color3B::MAGENTA);
+            break;
     }
 
     _levelLabel->setString(levelName);
@@ -1106,7 +1129,7 @@ void MainGameScene::switchToNextLevel() {
 
     // ��ʼ���¹ؿ�����Ʒ
     initItems();
-    
+
     // ��ʼ���¹ؿ����˷���
     initEnemies();
 
@@ -1178,10 +1201,10 @@ void MainGameScene::initEnemies() {
         log("ERROR: EnemyManager not initialized!");
         return;
     }
-    
+
     // 清空EnemyManager中的敌人
     _enemyManager->removeAllEnemies();
-    
+
     // 设置敌人的目标为玩家
     _enemyManager->setPlayer(_player);
 
@@ -1204,28 +1227,28 @@ void MainGameScene::initEnemies() {
         currentLevel <= LevelManager::LevelState::LEVEL4_6) {
 
         // 检查当前关卡是否有BOSS
-    bool hasBoss = false;
-    // 3个boss分别生成在level2-6, level3-6, level4-6
-    if (currentLevel == LevelManager::LevelState::LEVEL2_6 ||
-        currentLevel == LevelManager::LevelState::LEVEL3_6 ||
-        currentLevel == LevelManager::LevelState::LEVEL4_6) {
-        hasBoss = true;
-    }
-
-    // 普通敌人数：3-5个
-    // 如果有关卡boss，则不生成普通敌人（确保玩家专注于boss战）
-    int regularEnemyCount = 0;
-    if (!hasBoss) {
-        // 只在2-4关卡随机生成3-5个普通和精英敌人
-        // 检查是否是2-4关卡
-        bool isLevel2_4 = (currentLevel >= LevelManager::LevelState::LEVEL2_1 && currentLevel <= LevelManager::LevelState::LEVEL2_4) ||
-                         (currentLevel >= LevelManager::LevelState::LEVEL3_1 && currentLevel <= LevelManager::LevelState::LEVEL3_4) ||
-                         (currentLevel >= LevelManager::LevelState::LEVEL4_1 && currentLevel <= LevelManager::LevelState::LEVEL4_4);
-        
-        if (isLevel2_4) {
-            regularEnemyCount = 3 + rand() % 3; // 3-5个
+        bool hasBoss = false;
+        // 3个boss分别生成在level2-6, level3-6, level4-6
+        if (currentLevel == LevelManager::LevelState::LEVEL2_6 ||
+            currentLevel == LevelManager::LevelState::LEVEL3_6 ||
+            currentLevel == LevelManager::LevelState::LEVEL4_6) {
+            hasBoss = true;
         }
-    }
+
+        // 普通敌人数：3-5个
+        // 如果有关卡boss，则不生成普通敌人（确保玩家专注于boss战）
+        int regularEnemyCount = 0;
+        if (!hasBoss) {
+            // 只在2-4关卡随机生成3-5个普通和精英敌人
+            // 检查是否是2-4关卡
+            bool isLevel2_4 = (currentLevel >= LevelManager::LevelState::LEVEL2_1 && currentLevel <= LevelManager::LevelState::LEVEL2_4) ||
+                (currentLevel >= LevelManager::LevelState::LEVEL3_1 && currentLevel <= LevelManager::LevelState::LEVEL3_4) ||
+                (currentLevel >= LevelManager::LevelState::LEVEL4_1 && currentLevel <= LevelManager::LevelState::LEVEL4_4);
+
+            if (isLevel2_4) {
+                regularEnemyCount = 3 + rand() % 3; // 3-5个
+            }
+        }
 
         log("Generating enemies for level %d (has boss: %s)",
             (int)currentLevel, hasBoss ? "YES" : "NO");
@@ -1258,7 +1281,7 @@ void MainGameScene::initEnemies() {
 
             // 根据关卡确定BOSS类型
             std::string bossType = "";
-            
+
             // level2-6生成BOSS1-CAIXUNKUN
             if (currentLevel == LevelManager::LevelState::LEVEL2_6) {
                 bossType = "BOSS1-CAIXUNKUN";
@@ -1362,4 +1385,28 @@ bool MainGameScene::isPlayerAtRightBoundary() {
 
     // ����ʹ�ñ�����ʵ�ʿ���
     return (playerWorldX >= _worldWidth - boundaryThreshold);
+}
+
+// ��Ԥ���ڵ���ʽ���л���
+void MainGameScene::testGameModeSwitching() {
+    log("===== ��ʼ���ڵ���ʽ��Ԥ�� =====");
+    
+    // ��ʾ��ǰ���ڵ���ʽ
+    auto currentMode = LevelManager::getInstance()->getCurrentGameMode();
+    std::string modeName = (currentMode == LevelManager::GameMode::DEFAULT) ? "��ȫ��" : "ע��";
+    log("��ǰ���ڵ���ʽ�� %s", modeName.c_str());
+    
+    // ���Ե��ڵ���ʽ��Ԥ��
+    log("1. ��Ԥ��: T���ؽ���ڵ���ʽ���Ƿ���Ч");
+    log("2. ��Ԥ��: DEFAULTģʽ���Ƿ���Ҫ��ǰ��");
+    log("3. ��Ԥ��: EASYģʽ���Ƿ���ʹ��Ҫ��ǰ��");
+    log("4. ��Ԥ��: ���ڵ���ʽ��ʾ���Ƿ���ʾ");
+    log("5. ��Ԥ��: ���ڵ���ʽ���غ���Ƿ���");
+    
+    // ��ʾ��Ԥ��ָ��
+    log("��Ԥ��ָ��:");
+    log("- ��T���ؽ���ڵ���ʽ");
+    log("- ���ڿ��ڵ���ӽ���Ҷ���д�߽��ȡ��ؿ���״̬");
+    log("- ��Ԥ��ͳ��");
+    log("===== ��Ԥ���ڵ���ʽ��Ԥ�� =====");
 }

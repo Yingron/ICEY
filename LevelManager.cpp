@@ -17,20 +17,27 @@ LevelManager* LevelManager::getInstance() {
 
 // 修正后的构造函数 - 只保留一个
 LevelManager::LevelManager() {
+    log("Initializing LevelManager...");
+    
+    // ��ʼ���ؿ���״̬��LEVEL1
     _currentLevel = LevelState::LEVEL1;
-
-    // 初始化关卡配置
+    
+    // ��ʼ���ڵ���ʽ��Ĭ��ģʽ
+    _currentGameMode = GameMode::DEFAULT;
+    
+    // ��ʼ���ؿ���ó��ݲ���
     initLevelConfigs();
-
-    // 播放初始关卡的背景音乐
-    auto musicManager = LevelMusicManager::getInstance();
-    if (musicManager) {
-        musicManager->playBGMForLevel(_currentLevel);
-    }
-    else {
-        // 备用方案：如果 LevelMusicManager 不可用，使用 AudioManager
-        AudioManager::getInstance()->playBGM("bgm_level1");
-    }
+    
+    // ��ʼ���ؿ��ݲ���
+    log("LevelManager initialized with %zu level configs.", _levelConfigs.size());
+    
+    // ���Ŷ���ģʽ���غ���
+    AudioManager::getInstance()->playBGM("background_music");
+    log("Background music started");
+    
+    // 初始化新增成员变量
+    _currentBackgroundIndex = 0;
+    _triggeredLevel4Completion = false;
 }
 
 void LevelManager::initLevelConfigs() {
@@ -269,6 +276,11 @@ bool LevelManager::canSwitchToNextLevel(float playerWorldX) {
             nextLevel = LevelState::LEVEL4_6;
             break;
         case LevelState::LEVEL4_6:
+            // 在Level4-6的最后一张背景图处，我们需要特殊处理，不直接切换到最终关卡
+            // 而是等待玩家输入确认
+            if (isAtLevel4FinalBackground() && !_triggeredLevel4Completion) {
+                return false; // 暂时阻止自动切换
+            }
             nextLevel = LevelState::FINAL_LEVEL;
             break;
         case LevelState::FINAL_LEVEL:
@@ -371,6 +383,10 @@ void LevelManager::resetLevels() {
     if (musicManager) {
         musicManager->playBGMForLevel(_currentLevel);
     }
+    
+    // 重置背景索引和触发状态
+    _currentBackgroundIndex = 0;
+    _triggeredLevel4Completion = false;
 }
 
 std::vector<std::string> LevelManager::getCurrentLevelBackgrounds() const {
@@ -402,4 +418,48 @@ float LevelManager::getCurrentLevelMaxWorldX() const {
 bool LevelManager::isPlayerAtLevelBoundary(float playerWorldX) const {
     float maxWorldX = getCurrentLevelMaxWorldX();
     return playerWorldX >= maxWorldX - 200.0f;
+}
+
+// ���ó���ڵ���ʽ
+void LevelManager::setCurrentGameMode(GameMode mode) {
+    _currentGameMode = mode;
+    log("Game mode set to %s", (mode == GameMode::DEFAULT ? "DEFAULT" : "EASY"));
+}
+
+// ��ת���ڵ���ʽ
+void LevelManager::toggleGameMode() {
+    _currentGameMode = (_currentGameMode == GameMode::DEFAULT) ? GameMode::EASY : GameMode::DEFAULT;
+    log("Game mode toggled to %s", (_currentGameMode == GameMode::DEFAULT ? "DEFAULT" : "EASY"));
+}
+
+// 设置当前显示的背景图片索引
+void LevelManager::setCurrentBackgroundIndex(int index) {
+    _currentBackgroundIndex = index;
+    log("Current background index set to %d", index);
+}
+
+// 获取当前显示的背景图片索引
+int LevelManager::getCurrentBackgroundIndex() const {
+    return _currentBackgroundIndex;
+}
+
+// 检查是否到达Level4-6的最后一张背景图(background-level4-6-3.png)
+bool LevelManager::isAtLevel4FinalBackground() const {
+    // 检查是否在Level4-6
+    if (_currentLevel != LevelState::LEVEL4_6) {
+        return false;
+    }
+    
+    // 检查是否是最后一张背景图 (索引为2)
+    return _currentBackgroundIndex == 2;
+}
+
+// 标记是否已触发Level4结束处理
+bool LevelManager::hasTriggeredLevel4Completion() const {
+    return _triggeredLevel4Completion;
+}
+
+void LevelManager::setTriggeredLevel4Completion(bool triggered) {
+    _triggeredLevel4Completion = triggered;
+    log("Level4 completion trigger set to %s", triggered ? "true" : "false");
 }

@@ -1,4 +1,4 @@
-
+//setInvincible
 // Player.cpp
 #include "Player.h"
 #include "GameConfig.h"
@@ -9,7 +9,7 @@
 
 USING_NS_CC;
 
-// åˆå§‹åŒ–é™æ€å®ä¾‹
+// ³õÊ¼»¯¾²Ì¬ÊµÀı
 Player* Player::_instance = nullptr;
 
 Player* Player::getInstance() {
@@ -27,9 +27,9 @@ Player* Player::create(const std::string& spriteFile) {
     return nullptr;
 }
 
-// Player.cpp - ä¿®å¤ optimizeAttackFrames å‡½æ•°ä¸­çš„è­¦å‘Š
+// Player.cpp - ĞŞ¸´ optimizeAttackFrames º¯ÊıÖĞµÄ¾¯¸æ
 std::vector<std::string> Player::optimizeAttackFrames(const std::vector<std::string>& originalFrames, int targetFrameCount) {
-    if ((int)originalFrames.size() <= targetFrameCount) {  // å°† originalFrames.size() è½¬æ¢ä¸º int
+    if ((int)originalFrames.size() <= targetFrameCount) {  // ½« originalFrames.size() ×ª»»Îª int
         return originalFrames;
     }
 
@@ -38,7 +38,7 @@ std::vector<std::string> Player::optimizeAttackFrames(const std::vector<std::str
 
     for (int i = 0; i < targetFrameCount; i++) {
         int index = (int)(i * step);
-        if (index < (int)originalFrames.size()) {  // å°† originalFrames.size() è½¬æ¢ä¸º int
+        if (index < (int)originalFrames.size()) {  // ½« originalFrames.size() ×ª»»Îª int
             optimizedFrames.push_back(originalFrames[index]);
         }
     }
@@ -49,11 +49,11 @@ std::vector<std::string> Player::optimizeAttackFrames(const std::vector<std::str
     return optimizedFrames;
 }
 
-// Player.cpp - åœ¨ loadAnimations å‡½æ•°ä¸­æ·»åŠ æ”»å‡»åŠ¨ç”»åŠ è½½
+// Player.cpp - ÔÚ loadAnimations º¯ÊıÖĞÌí¼Ó¹¥»÷¶¯»­¼ÓÔØ
 void Player::loadAnimations() {
     log("=== Player loadAnimations ===");
 
-    // æ¸…ç©ºç°æœ‰åŠ¨ç”»
+    // Çå¿ÕÏÖÓĞ¶¯»­
     for (auto& pair : _animations) {
         CC_SAFE_RELEASE(pair.second);
     }
@@ -61,7 +61,7 @@ void Player::loadAnimations() {
 
     auto fileUtils = FileUtils::getInstance();
 
-    // 1. åŠ è½½å¾…æœºåŠ¨ç”»ï¼ˆ27å¸§ï¼‰
+    // 1. ¼ÓÔØ´ı»ú¶¯»­£¨27Ö¡£©
     std::vector<std::string> idleFrames;
     for (int i = 1; i <= 27; i++) {
         std::vector<std::string> possiblePaths = {
@@ -86,7 +86,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // 2. åŠ è½½å‘å³è·‘åŠ¨åŠ¨ç”»ï¼ˆ1-18å¸§ï¼‰
+    // 2. ¼ÓÔØÏòÓÒÅÜ¶¯¶¯»­£¨1-18Ö¡£©
     std::vector<std::string> rightRunFrames;
     for (int i = 1; i <= 18; i++) {
         std::vector<std::string> possiblePaths = {
@@ -111,7 +111,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // 3. åŠ è½½å‘å·¦è·‘åŠ¨åŠ¨ç”»ï¼ˆ1-19å¸§ï¼‰
+    // 3. ¼ÓÔØÏò×óÅÜ¶¯¶¯»­£¨1-19Ö¡£©
     std::vector<std::string> leftRunFrames;
     for (int i = 1; i <= 19; i++) {
         std::vector<std::string> possiblePaths = {
@@ -136,7 +136,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // 4. åŠ è½½å‘å³æ™®é€šæ”»å‡»åŠ¨ç”»ï¼ˆ1-43å¸§ï¼‰
+    // 4. ¼ÓÔØÏòÓÒÆÕÍ¨¹¥»÷¶¯»­£¨1-43Ö¡£©
     std::vector<std::string> normalAttackRightFrames;
     for (int i = 1; i <= 43; i++) {
         std::vector<std::string> possiblePaths = {
@@ -161,7 +161,7 @@ void Player::loadAnimations() {
         }
     }
     std::vector<std::string> optimizedAttackFrames = optimizeAttackFrames(normalAttackRightFrames, 20);
-    // 5. åŠ è½½è·³è·ƒåŠ¨ç”»ï¼ˆ1-17å¸§ï¼‰- ä½¿ç”¨å·²å®šä¹‰çš„ fileUtils
+    // 5. ¼ÓÔØÌøÔ¾¶¯»­£¨1-17Ö¡£©- Ê¹ÓÃÒÑ¶¨ÒåµÄ fileUtils
     std::vector<std::string> jumpFrames;
     for (int i = 1; i <= 17; i++) {
         std::vector<std::string> possiblePaths = {
@@ -185,7 +185,7 @@ void Player::loadAnimations() {
             log("WARNING: Could not find jump frame %d", i);
         }
     }
-    // 8. åŠ è½½å‘å³å†²åˆºåŠ¨ç”»ï¼ˆ1-20å¸§ï¼‰- ä½¿ç”¨ä¸“é—¨çš„å†²åˆºåŠ¨ç”»
+    // 8. ¼ÓÔØÏòÓÒ³å´Ì¶¯»­£¨1-20Ö¡£©- Ê¹ÓÃ×¨ÃÅµÄ³å´Ì¶¯»­
     std::vector<std::string> dashRightFrames;
     for (int i = 1; i <= 20; i++) {
         std::vector<std::string> possiblePaths = {
@@ -211,7 +211,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // 9. åŠ è½½å—å‡»åŠ¨ç”»ï¼ˆ1-30å¸§ï¼‰- ä¸åŒºåˆ†å·¦å³
+    // 9. ¼ÓÔØÊÜ»÷¶¯»­£¨1-30Ö¡£©- ²»Çø·Ö×óÓÒ
     std::vector<std::string> hurtFrames;
     for (int i = 1; i <= 30; i++) {
         std::vector<std::string> possiblePaths = {
@@ -236,14 +236,14 @@ void Player::loadAnimations() {
             log("WARNING: Could not find hurt frame %d", i);
         }
     }
-    // æ£€æŸ¥æ˜¯å¦æœ‰åŠ¨ç”»å¸§
+    // ¼ì²éÊÇ·ñÓĞ¶¯»­Ö¡
     if (idleFrames.empty() && rightRunFrames.empty() && leftRunFrames.empty() &&
         normalAttackRightFrames.empty() && jumpFrames.empty()) {
         log("ERROR: No animation frames found at all!");
         return;
     }
 
-    // åˆ›å»ºå¾…æœºåŠ¨ç”»
+    // ´´½¨´ı»ú¶¯»­
     if (!idleFrames.empty()) {
         cocos2d::Animation* idleAnim = createAnimationFromFiles(idleFrames, GameConfig::Animation::IDLE_FRAME_DELAY);
         if (idleAnim) {
@@ -256,7 +256,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // åˆ›å»ºå‘å³è·‘åŠ¨åŠ¨ç”»
+    // ´´½¨ÏòÓÒÅÜ¶¯¶¯»­
     if (!rightRunFrames.empty()) {
         cocos2d::Animation* runRightAnim = createAnimationFromFiles(rightRunFrames, GameConfig::Animation::RUN_FRAME_DELAY);
         if (runRightAnim) {
@@ -269,7 +269,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // åˆ›å»ºå‘å·¦è·‘åŠ¨åŠ¨ç”»
+    // ´´½¨Ïò×óÅÜ¶¯¶¯»­
     if (!leftRunFrames.empty()) {
         cocos2d::Animation* runLeftAnim = createAnimationFromFiles(leftRunFrames, GameConfig::Animation::RUN_FRAME_DELAY);
         if (runLeftAnim) {
@@ -282,7 +282,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // åˆ›å»ºå‘å³æ™®é€šæ”»å‡»åŠ¨ç”»
+    // ´´½¨ÏòÓÒÆÕÍ¨¹¥»÷¶¯»­
     if (!normalAttackRightFrames.empty()) {
         cocos2d::Animation* normalAttackRightAnim = createAnimationFromFiles(
             normalAttackRightFrames,
@@ -298,7 +298,7 @@ void Player::loadAnimations() {
         }
     }
 
-    // åˆ›å»ºè·³è·ƒåŠ¨ç”»
+    // ´´½¨ÌøÔ¾¶¯»­
     if (!jumpFrames.empty()) {
         cocos2d::Animation* jumpAnim = createAnimationFromFiles(jumpFrames, GameConfig::Animation::JUMP_FRAME_DELAY);
         if (jumpAnim) {
@@ -311,9 +311,9 @@ void Player::loadAnimations() {
         }
     }
 
-    // 7. åŠ è½½æŠ€èƒ½1åŠ¨ç”»
+    // 7. ¼ÓÔØ¼¼ÄÜ1¶¯»­
     std::vector<std::string> skill1Frames;
-    for (int i = 1; i <= 40; i++) { // æŠ€èƒ½1åŠ¨ç”»æœ‰40å¸§
+    for (int i = 1; i <= 40; i++) { // ¼¼ÄÜ1¶¯»­ÓĞ40Ö¡
         std::vector<std::string> possiblePaths = {
             StringUtils::format("images/characters/player/icey-skill1-%d.png", i),
             StringUtils::format("Resources/images/characters/player/icey-skill1-%d.png", i),
@@ -336,9 +336,9 @@ void Player::loadAnimations() {
         }
     }
 
-    // åˆ›å»ºæŠ€èƒ½1åŠ¨ç”»ï¼ˆä¸åŒºåˆ†å·¦å³æ–¹å‘ï¼‰
+    // ´´½¨¼¼ÄÜ1¶¯»­£¨²»Çø·Ö×óÓÒ·½Ïò£©
     if (!skill1Frames.empty()) {
-        cocos2d::Animation* skill1Anim = createAnimationFromFiles(skill1Frames, 0.05f); // ä½¿ç”¨è¾ƒå¿«çš„å¸§å»¶è¿Ÿ
+        cocos2d::Animation* skill1Anim = createAnimationFromFiles(skill1Frames, 0.05f); // Ê¹ÓÃ½Ï¿ìµÄÖ¡ÑÓ³Ù
         if (skill1Anim) {
             _animations["skill1"] = skill1Anim;
             skill1Anim->retain();
@@ -349,9 +349,9 @@ void Player::loadAnimations() {
         }
     }
 
-    // 8. åŠ è½½æŠ€èƒ½2åŠ¨ç”»
+    // 8. ¼ÓÔØ¼¼ÄÜ2¶¯»­
     std::vector<std::string> skill2Frames;
-    for (int i = 1; i <= 25; i++) { // æŠ€èƒ½2åŠ¨ç”»æœ‰25å¸§
+    for (int i = 1; i <= 25; i++) { // ¼¼ÄÜ2¶¯»­ÓĞ25Ö¡
         std::vector<std::string> possiblePaths = {
             StringUtils::format("images/characters/player/icey-skill2-%d.png", i),
             StringUtils::format("Resources/images/characters/player/icey-skill2-%d.png", i),
@@ -374,9 +374,9 @@ void Player::loadAnimations() {
         }
     }
 
-    // åˆ›å»ºæŠ€èƒ½2åŠ¨ç”»ï¼ˆä¸åŒºåˆ†å·¦å³æ–¹å‘ï¼‰
+    // ´´½¨¼¼ÄÜ2¶¯»­£¨²»Çø·Ö×óÓÒ·½Ïò£©
     if (!skill2Frames.empty()) {
-        cocos2d::Animation* skill2Anim = createAnimationFromFiles(skill2Frames, 0.05f); // ä½¿ç”¨è¾ƒå¿«çš„å¸§å»¶è¿Ÿ
+        cocos2d::Animation* skill2Anim = createAnimationFromFiles(skill2Frames, 0.05f); // Ê¹ÓÃ½Ï¿ìµÄÖ¡ÑÓ³Ù
         if (skill2Anim) {
             _animations["skill2"] = skill2Anim;
             skill2Anim->retain();
@@ -386,18 +386,18 @@ void Player::loadAnimations() {
             log("ERROR: Failed to create skill2 animation");
         }
     }
-    // åˆ›å»ºå‘å³å†²åˆºåŠ¨ç”»
+    // ´´½¨ÏòÓÒ³å´Ì¶¯»­
     if (!dashRightFrames.empty()) {
         cocos2d::Animation* dashRightAnim = createAnimationFromFiles(dashRightFrames, 0.03f);
         if (dashRightAnim) {
-            dashRightAnim->setRestoreOriginalFrame(false); // ä¸æ¢å¤åŸå§‹å¸§
+            dashRightAnim->setRestoreOriginalFrame(false); // ²»»Ö¸´Ô­Ê¼Ö¡
             _animations["dash_right"] = dashRightAnim;
             dashRightAnim->retain();
             log("Created dash right animation with %d frames", (int)dashRightFrames.size());
         }
     }
 
-    // åˆ›å»ºå—å‡»åŠ¨ç”»
+    // ´´½¨ÊÜ»÷¶¯»­
     if (!hurtFrames.empty()) {
         cocos2d::Animation* hurtAnim = createAnimationFromFiles(hurtFrames, 0.05f);
         if (hurtAnim) {
@@ -409,15 +409,15 @@ void Player::loadAnimations() {
 }
 
 void Player::jump() {
-    // è·å–å½“å‰æ—¶é—´
+    // »ñÈ¡µ±Ç°Ê±¼ä
     auto currentTime = cocos2d::utils::getTimeInMilliseconds() / 1000.0f;
 
-    // é‡ç½®è·³è·ƒè®¡æ•°çš„æ¡ä»¶ï¼šå¦‚æœåœ¨åœ°ä¸Šï¼Œæˆ–è€…è·ç¦»ä¸Šæ¬¡è·³è·ƒè¶…è¿‡0.5ç§’
+    // ÖØÖÃÌøÔ¾¼ÆÊıµÄÌõ¼ş£ºÈç¹ûÔÚµØÉÏ£¬»òÕß¾àÀëÉÏ´ÎÌøÔ¾³¬¹ı0.5Ãë
     if (_isGrounded || (currentTime - _lastJumpTime > 0.5f)) {
         _jumpCount = 0;
     }
 
-    // æ£€æŸ¥æ˜¯å¦å¯ä»¥è·³è·ƒï¼ˆæœªè¶…è¿‡æœ€å¤§è·³è·ƒæ¬¡æ•°ï¼‰
+    // ¼ì²éÊÇ·ñ¿ÉÒÔÌøÔ¾£¨Î´³¬¹ı×î´óÌøÔ¾´ÎÊı£©
     if (_jumpCount < _maxJumpCount) {
         _isGrounded = false;
         _velocity.y = _jumpForce;
@@ -440,30 +440,30 @@ cocos2d::Animation* Player::createAnimationFromFiles(const std::vector<std::stri
     int loadedFrames = 0;
 
     for (const auto& frameName : frames) {
-        // æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+        // ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
         if (!FileUtils::getInstance()->isFileExist(frameName)) {
             log("File not found: %s", frameName.c_str());
             continue;
         }
 
-        // ä½¿ç”¨ SpriteFrameCache åŠ è½½ç²¾çµå¸§
-        SpriteFrame* spriteFrame = nullptr; // åœ¨è¿™é‡Œå£°æ˜å˜é‡
+        // Ê¹ÓÃ SpriteFrameCache ¼ÓÔØ¾«ÁéÖ¡
+        SpriteFrame* spriteFrame = nullptr; // ÔÚÕâÀïÉùÃ÷±äÁ¿
 
-        // é¦–å…ˆå°è¯•ä»ç¼“å­˜è·å–
+        // Ê×ÏÈ³¢ÊÔ´Ó»º´æ»ñÈ¡
         spriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(frameName);
 
-        // å¦‚æœç¼“å­˜ä¸­æ²¡æœ‰ï¼Œåˆ™ä»æ–‡ä»¶åŠ è½½
+        // Èç¹û»º´æÖĞÃ»ÓĞ£¬Ôò´ÓÎÄ¼ş¼ÓÔØ
         if (!spriteFrame) {
-            // ä½¿ç”¨æ­£ç¡®çš„çº¹ç†åŠ è½½æ–¹å¼
+            // Ê¹ÓÃÕıÈ·µÄÎÆÀí¼ÓÔØ·½Ê½
             auto texture = Director::getInstance()->getTextureCache()->addImage(frameName);
             if (texture) {
-                // è·å–çº¹ç†çš„å®é™…å¤§å°
+                // »ñÈ¡ÎÆÀíµÄÊµ¼Ê´óĞ¡
                 auto textureSize = texture->getContentSize();
-                // åˆ›å»ºåŒ…å«æ•´ä¸ªçº¹ç†çš„ç²¾çµå¸§
+                // ´´½¨°üº¬Õû¸öÎÆÀíµÄ¾«ÁéÖ¡
                 spriteFrame = SpriteFrame::createWithTexture(texture,
                     Rect(0, 0, textureSize.width, textureSize.height));
 
-                // å°†ç²¾çµå¸§æ·»åŠ åˆ°ç¼“å­˜ä¸­
+                // ½«¾«ÁéÖ¡Ìí¼Óµ½»º´æÖĞ
                 if (spriteFrame) {
                     SpriteFrameCache::getInstance()->addSpriteFrame(spriteFrame, frameName);
                 }
@@ -490,7 +490,7 @@ cocos2d::Animation* Player::createAnimationFromFiles(const std::vector<std::stri
 
     log("Loaded %d frames for animation", loadedFrames);
     animation->setDelayPerUnit(delay);
-    animation->setRestoreOriginalFrame(false); // è®¾ç½®ä¸º falseï¼Œé¿å…åŠ¨ç”»ç»“æŸåæ¢å¤ç¬¬ä¸€å¸§
+    animation->setRestoreOriginalFrame(false); // ÉèÖÃÎª false£¬±ÜÃâ¶¯»­½áÊøºó»Ö¸´µÚÒ»Ö¡
 
     return animation;
 }
@@ -500,7 +500,7 @@ bool Player::init(const std::string& spriteFile) {
     log("=== Player init ===");
 
     _keyStates.clear();
-    // é¦–å…ˆåˆå§‹åŒ–æ‰€æœ‰æˆå‘˜å˜é‡
+    // Ê×ÏÈ³õÊ¼»¯ËùÓĞ³ÉÔ±±äÁ¿
     _currentState = PlayerState::IDLE;
     _velocity = Vec2::ZERO;
     _isMovingLeft = false;
@@ -510,83 +510,87 @@ bool Player::init(const std::string& spriteFile) {
     _currentAnimationKey = "";
     _worldPositionX = 0;
 
-    // åˆå§‹åŒ–è·³è·ƒç›¸å…³å˜é‡
+    // ³õÊ¼»¯ÌøÔ¾Ïà¹Ø±äÁ¿
     _isGrounded = true;
-    _jumpForce = 600.0f;      // å‡å°è·³è·ƒåŠ›é‡
-    _gravity = 800.0f;        // å‡å°é‡åŠ›åŠ é€Ÿåº¦
-    _worldPositionY = 0.0f;   // åˆå§‹Yä½ç½®
-    _jumpCount = 0;           // åˆå§‹åŒ–è·³è·ƒè®¡æ•°
-    _maxJumpCount = 2;        // æœ€å¤§äºŒè¿è·³
-    _lastJumpTime = 0.0f;     // åˆå§‹åŒ–ä¸Šæ¬¡è·³è·ƒæ—¶é—´
+    _jumpForce = 600.0f;      // ¼õĞ¡ÌøÔ¾Á¦Á¿
+    _gravity = 800.0f;        // ¼õĞ¡ÖØÁ¦¼ÓËÙ¶È
+    _worldPositionY = 0.0f;   // ³õÊ¼YÎ»ÖÃ
+    _jumpCount = 0;           // ³õÊ¼»¯ÌøÔ¾¼ÆÊı
+    _maxJumpCount = 2;        // ×î´ó¶şÁ¬Ìø
+    _lastJumpTime = 0.0f;     // ³õÊ¼»¯ÉÏ´ÎÌøÔ¾Ê±¼ä
 
-    // åˆå§‹åŒ–è¿å‡»ç›¸å…³å˜é‡
+    // ³õÊ¼»¯Á¬»÷Ïà¹Ø±äÁ¿
     _canCombo = false;
     _comboCount = 0;
     _comboTimer = 0.0f;
     
-    // åˆå§‹åŒ–ç”Ÿå‘½å€¼ç›¸å…³å˜é‡
+    // ³õÊ¼»¯¹¥»÷¼ä¸ôÏà¹Ø±äÁ¿
+    _attackCooldown = 0.5f; // ¹¥»÷¼ä¸ôÎª0.5Ãë
+    _currentAttackCooldown = 0.0f;
+    
+    // ³õÊ¼»¯ÉúÃüÖµÏà¹Ø±äÁ¿
     _maxHealth = 100.0f;
     _currentHealth = _maxHealth;
     
-    // åˆå§‹åŒ–æŠ¤ç›¾ç›¸å…³å˜é‡
+    // ³õÊ¼»¯»¤¶ÜÏà¹Ø±äÁ¿
     _maxShield = 3;
     _currentShield = _maxShield;
     
-    // åˆå§‹åŒ–MainGameSceneæŒ‡é’ˆ
+    // ³õÊ¼»¯MainGameSceneÖ¸Õë
     _mainGameScene = nullptr;
 
-    // åˆå§‹åŒ–å†²åˆºç›¸å…³å˜é‡
+    // ³õÊ¼»¯³å´ÌÏà¹Ø±äÁ¿
     _dashSpeed = 1500.0f;
     _dashDistance = 300.0f;
     _dashDuration = 0.2f;
-    // _dashCooldown = 0.0f; // åˆ é™¤è¿™è¡Œï¼Œæ”¹ä¸ºä½¿ç”¨DashBarç®¡ç†
+    // _dashCooldown = 0.0f; // É¾³ıÕâĞĞ£¬¸ÄÎªÊ¹ÓÃDashBar¹ÜÀí
     _currentDashDistance = 0.0f;
     _isDashLeft = false;
 
-    // å†²åˆºåŠ¨ç”»é”®
+    // ³å´Ì¶¯»­¼ü
     _dashLeftAnimKey = "dash_left";
     _dashRightAnimKey = "dash_right";
 
-    // åˆå§‹åŒ–DashBarå¼•ç”¨ä¸ºnullptr
+    // ³õÊ¼»¯DashBarÒıÓÃÎªnullptr
     _dashBar = nullptr;
 
-    // æ·»åŠ å—ä¼¤ç›¸å…³å˜é‡åˆå§‹åŒ–
-    _isInvincible = false;           // æ— æ•ŒçŠ¶æ€
-    _invincibleTime = 0.0f;          // æ— æ•Œæ—¶é—´
-    _hurtFlashCount = 0;             // å—ä¼¤é—ªçƒè®¡æ•°
+    // Ìí¼ÓÊÜÉËÏà¹Ø±äÁ¿³õÊ¼»¯
+    _isInvincible = false;           // ÎŞµĞ×´Ì¬
+    _invincibleTime = 0.0f;          // ÎŞµĞÊ±¼ä
+    _hurtFlashCount = 0;             // ÊÜÉËÉÁË¸¼ÆÊı
     
-    // åˆå§‹åŒ–æ ¼æŒ¡ç›¸å…³å˜é‡
+    // ³õÊ¼»¯¸ñµ²Ïà¹Ø±äÁ¿
     _isBlocking = false;
-    _blockDuration = 1.5f;           // æ ¼æŒ¡æŒç»­æ—¶é—´1.5ç§’
-    _blockCooldown = 0.5f;           // æ ¼æŒ¡å†·å´æ—¶é—´0.5ç§’
-    _blockReduction = 0.7f;          // æ ¼æŒ¡å‡ä¼¤70%
+    _blockDuration = 1.5f;           // ¸ñµ²³ÖĞøÊ±¼ä1.5Ãë
+    _blockCooldown = 0.5f;           // ¸ñµ²ÀäÈ´Ê±¼ä0.5Ãë
+    _blockReduction = 0.7f;          // ¸ñµ²¼õÉË70%
     _currentBlockDuration = 0.0f;
     
-    // åˆå§‹åŒ–é—ªé¿ç›¸å…³å˜é‡
+    // ³õÊ¼»¯ÉÁ±ÜÏà¹Ø±äÁ¿
     _isDodging = false;
-    _dodgeDuration = 0.3f;           // é—ªé¿æŒç»­æ—¶é—´0.3ç§’
-    _dodgeCooldown = 1.0f;           // é—ªé¿å†·å´æ—¶é—´1ç§’
-    _dodgeInvincibility = 0.3f;      // é—ªé¿æ— æ•Œæ—¶é—´0.3ç§’
+    _dodgeDuration = 0.3f;           // ÉÁ±Ü³ÖĞøÊ±¼ä0.3Ãë
+    _dodgeCooldown = 1.0f;           // ÉÁ±ÜÀäÈ´Ê±¼ä1Ãë
+    _dodgeInvincibility = 0.3f;      // ÉÁ±ÜÎŞµĞÊ±¼ä0.3Ãë
     _currentDodgeDuration = 0.0f;
 
-    // åˆå§‹åŒ–æŠ€èƒ½1ç›¸å…³å˜é‡
-    _skill1Damage = 50.0f;         // æŠ€èƒ½1ä¼¤å®³
-    _skill1Range = 100.0f;         // æŠ€èƒ½1èŒƒå›´
-    _skill1Cooldown = 2.0f;        // æŠ€èƒ½1å†·å´æ—¶é—´ï¼ˆç§’ï¼‰
-    _skill1CooldownTimer = 0.0f;   // æŠ€èƒ½1å†·å´è®¡æ—¶å™¨
+    // ³õÊ¼»¯¼¼ÄÜ1Ïà¹Ø±äÁ¿
+    _skill1Damage = 50.0f;         // ¼¼ÄÜ1ÉËº¦
+    _skill1Range = 100.0f;         // ¼¼ÄÜ1·¶Î§
+    _skill1Cooldown = 2.0f;        // ¼¼ÄÜ1ÀäÈ´Ê±¼ä£¨Ãë£©
+    _skill1CooldownTimer = 0.0f;   // ¼¼ÄÜ1ÀäÈ´¼ÆÊ±Æ÷
     
-    // åˆå§‹åŒ–æŠ€èƒ½2ç›¸å…³å˜é‡
-    _skill2Damage = 80.0f;         // æŠ€èƒ½2ä¼¤å®³
-    _skill2Range = 150.0f;         // æŠ€èƒ½2èŒƒå›´
-    _skill2Cooldown = 3.0f;        // æŠ€èƒ½2å†·å´æ—¶é—´ï¼ˆç§’ï¼‰
-    _skill2CooldownTimer = 0.0f;   // æŠ€èƒ½2å†·å´è®¡æ—¶å™¨
+    // ³õÊ¼»¯¼¼ÄÜ2Ïà¹Ø±äÁ¿
+    _skill2Damage = 80.0f;         // ¼¼ÄÜ2ÉËº¦
+    _skill2Range = 150.0f;         // ¼¼ÄÜ2·¶Î§
+    _skill2Cooldown = 3.0f;        // ¼¼ÄÜ2ÀäÈ´Ê±¼ä£¨Ãë£©
+    _skill2CooldownTimer = 0.0f;   // ¼¼ÄÜ2ÀäÈ´¼ÆÊ±Æ÷
     
-    // æŠ€èƒ½åŠ¨ç”»é”®
+    // ¼¼ÄÜ¶¯»­¼ü
     _skill1AnimKey = "skill1";
     _skill2AnimKey = "skill2";
 
     auto fileUtils = FileUtils::getInstance();
-    std::string playerFile = "icey-idle-1.png";  // ä½¿ç”¨å¾…æœºåŠ¨ç”»çš„ç¬¬ä¸€å¸§ä½œä¸ºåˆå§‹å›¾åƒ
+    std::string playerFile = "icey-idle-1.png";  // Ê¹ÓÃ´ı»ú¶¯»­µÄµÚÒ»Ö¡×÷Îª³õÊ¼Í¼Ïñ
 
     log("Checking for player file: %s", playerFile.c_str());
 
@@ -624,14 +628,14 @@ bool Player::init(const std::string& spriteFile) {
             this->setTextureRect(Rect(0, 0, 50, 100));
             this->setColor(Color3B::GREEN);
 
-            // æ·»åŠ ç‰©ç†ä½“
+            // Ìí¼ÓÎïÀíÌå
             auto physicsBody = PhysicsBody::createBox(this->getContentSize());
             if (physicsBody) {
                 physicsBody->setDynamic(true);
-                physicsBody->setGravityEnable(false); // ç¦ç”¨ç‰©ç†å¼•æ“é‡åŠ›
-                physicsBody->setCategoryBitmask(0x01); // ç©å®¶ç±»åˆ«
-                physicsBody->setCollisionBitmask(0x00); // ä¸ä¸ä»»ä½•ç‰©ä½“å‘ç”Ÿç‰©ç†ç¢°æ’
-                physicsBody->setContactTestBitmask(0x02 | 0x04); // æ£€æµ‹ä¸ç‰©å“å’Œæ•Œäººçš„ç¢°æ’
+                physicsBody->setGravityEnable(false); // ½ûÓÃÎïÀíÒıÇæÖØÁ¦
+                physicsBody->setCategoryBitmask(0x01); // Íæ¼ÒÀà±ğ
+                physicsBody->setCollisionBitmask(0x00); // ²»ÓëÈÎºÎÎïÌå·¢ÉúÎïÀíÅö×²
+                physicsBody->setContactTestBitmask(0x02 | 0x04); // ¼ì²âÓëÎïÆ·ºÍµĞÈËµÄÅö×²
                 this->setPhysicsBody(physicsBody);
             }
 
@@ -644,10 +648,10 @@ bool Player::init(const std::string& spriteFile) {
         }
     }
 
-    // å¦‚æœæ‰¾åˆ°äº†æ–‡ä»¶ï¼Œä½¿ç”¨æ–‡ä»¶åˆå§‹åŒ–
+    // Èç¹ûÕÒµ½ÁËÎÄ¼ş£¬Ê¹ÓÃÎÄ¼ş³õÊ¼»¯
     if (!Sprite::initWithFile(playerFile)) {
         log("ERROR: initWithFile failed for: %s", playerFile.c_str());
-        // åˆ›å»ºå ä½ç¬¦
+        // ´´½¨Õ¼Î»·û
         if (!Sprite::init()) {
             return false;
         }
@@ -658,14 +662,14 @@ bool Player::init(const std::string& spriteFile) {
     log("Player sprite loaded successfully, size: %f x %f",
         this->getContentSize().width, this->getContentSize().height);
 
-    // æ·»åŠ ç‰©ç†ä½“
+    // Ìí¼ÓÎïÀíÌå
     auto physicsBody = PhysicsBody::createBox(this->getContentSize());
     if (physicsBody) {
         physicsBody->setDynamic(true);
-        physicsBody->setGravityEnable(false); // ç¦ç”¨ç‰©ç†å¼•æ“é‡åŠ›
-        physicsBody->setCategoryBitmask(0x01); // ç©å®¶ç±»åˆ«
-        physicsBody->setCollisionBitmask(0x00); // ä¸ä¸ä»»ä½•ç‰©ä½“å‘ç”Ÿç‰©ç†ç¢°æ’
-        physicsBody->setContactTestBitmask(0x02 | 0x04); // æ£€æµ‹ä¸ç‰©å“å’Œæ•Œäººçš„ç¢°æ’
+        physicsBody->setGravityEnable(false); // ½ûÓÃÎïÀíÒıÇæÖØÁ¦
+        physicsBody->setCategoryBitmask(0x01); // Íæ¼ÒÀà±ğ
+        physicsBody->setCollisionBitmask(0x00); // ²»ÓëÈÎºÎÎïÌå·¢ÉúÎïÀíÅö×²
+        physicsBody->setContactTestBitmask(0x02 | 0x04); // ¼ì²âÓëÎïÆ·ºÍµĞÈËµÄÅö×²
         this->setPhysicsBody(physicsBody);
     }
 
@@ -677,7 +681,7 @@ bool Player::init(const std::string& spriteFile) {
     return true;
 }
 
-// Player.cpp - åœ¨ç±»å®šä¹‰ä¸­æ·»åŠ è¾…åŠ©æ–¹æ³•
+// Player.cpp - ÔÚÀà¶¨ÒåÖĞÌí¼Ó¸¨Öú·½·¨
 EnemyManager* Player::getSafeEnemyManager() {
     auto enemyManager = EnemyManager::getInstance();
     if (!enemyManager) {
@@ -690,9 +694,9 @@ EnemyManager* Player::getSafeEnemyManager() {
     return enemyManager;
 }
 
-// æŠ€èƒ½1å®ç°
+// ¼¼ÄÜ1ÊµÏÖ
 void Player::skill1() {
-    // åŸºç¡€å®‰å…¨æ£€æŸ¥
+    // »ù´¡°²È«¼ì²é
     if (!this || isDead()) {
         log("Skill1: Invalid player or player is dead");
         return;
@@ -706,49 +710,49 @@ void Player::skill1() {
 
     log("=== Player uses Skill1 ===");
 
-    // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œå’Œç§»åŠ¨
+    // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷ºÍÒÆ¶¯
     this->stopAllActions();
     stopMoving();
     _velocity.x = 0;
 
-    // è®¾ç½®æŠ€èƒ½çŠ¶æ€
+    // ÉèÖÃ¼¼ÄÜ×´Ì¬
     _currentState = PlayerState::SKILL1;
 
-    // æ’­æ”¾æŠ€èƒ½éŸ³æ•ˆ
+    // ²¥·Å¼¼ÄÜÒôĞ§
     auto audioManager = AudioManager::getInstance();
     if (audioManager) {
         audioManager->playEffect("sfx_skill1");
     }
 
-    // æ£€æŸ¥æ˜¯å¦æœ‰æŠ€èƒ½åŠ¨ç”»
+    // ¼ì²éÊÇ·ñÓĞ¼¼ÄÜ¶¯»­
     if (_animations.find("skill1") == _animations.end() ||
         !_animations["skill1"] ||
         _animations["skill1"]->getFrames().empty()) {
         log("ERROR: Skill1 animation not found or empty!");
 
-        // å¦‚æœæ²¡æœ‰åŠ¨ç”»ï¼Œç›´æ¥åº”ç”¨æŠ€èƒ½æ•ˆæœç„¶åè¿”å›
+        // Èç¹ûÃ»ÓĞ¶¯»­£¬Ö±½ÓÓ¦ÓÃ¼¼ÄÜĞ§¹ûÈ»ºó·µ»Ø
         applySkill1Effect();
         return;
     }
 
-    // è·å–æŠ€èƒ½åŠ¨ç”»
+    // »ñÈ¡¼¼ÄÜ¶¯»­
     auto skillAnim = _animations["skill1"];
     float totalDuration = skillAnim->getDelayPerUnit() * skillAnim->getFrames().size();
 
     log("Skill1 animation duration: %.2f seconds", totalDuration);
 
-    // æ’­æ”¾æŠ€èƒ½åŠ¨ç”»
+    // ²¥·Å¼¼ÄÜ¶¯»­
     auto animate = Animate::create(skillAnim);
 
-    // åœ¨åŠ¨ç”»ä¸­é—´å¸§åº”ç”¨æŠ€èƒ½æ•ˆæœ
+    // ÔÚ¶¯»­ÖĞ¼äÖ¡Ó¦ÓÃ¼¼ÄÜĞ§¹û
     float effectDelay = totalDuration * 0.5f;
 
-    // æŠ€èƒ½æ•ˆæœå›è°ƒ
+    // ¼¼ÄÜĞ§¹û»Øµ÷
     auto applyEffect = CallFunc::create([this]() {
         applySkill1Effect();
         });
 
-    // æŠ€èƒ½å®Œæˆå›è°ƒ
+    // ¼¼ÄÜÍê³É»Øµ÷
     auto skillComplete = CallFunc::create([this]() {
         if (!this || !this->getParent()) {
             log("Skill1 complete: Player node no longer exists");
@@ -757,7 +761,7 @@ void Player::skill1() {
 
         log("Skill1 animation complete, returning to appropriate state");
 
-        // æ¢å¤çŠ¶æ€
+        // »Ö¸´×´Ì¬
         if (_isGrounded) {
             if (_isMovingLeft || _isMovingRight) {
                 setCurrentState(PlayerState::RUNNING);
@@ -771,29 +775,29 @@ void Player::skill1() {
         }
         });
 
-    // åˆ›å»ºåŠ¨ç”»åºåˆ—
+    // ´´½¨¶¯»­ĞòÁĞ
     auto sequence = Sequence::create(
         animate,
         skillComplete,
         nullptr
     );
 
-    // åˆ›å»ºæ•ˆæœåºåˆ—
+    // ´´½¨Ğ§¹ûĞòÁĞ
     auto effectSequence = Sequence::create(
         DelayTime::create(effectDelay),
         applyEffect,
         nullptr
     );
 
-    // è¿è¡ŒåŠ¨ä½œ
+    // ÔËĞĞ¶¯×÷
     this->runAction(sequence);
     this->runAction(effectSequence);
 
-    // è®¾ç½®å†·å´æ—¶é—´
+    // ÉèÖÃÀäÈ´Ê±¼ä
     _skill1CooldownTimer = _skill1Cooldown;
 }
 
-// æŠ€èƒ½1æ•ˆæœåº”ç”¨å‡½æ•°
+// ¼¼ÄÜ1Ğ§¹ûÓ¦ÓÃº¯Êı
 void Player::applySkill1Effect() {
     log("Applying Skill1 effect");
 
@@ -830,7 +834,7 @@ void Player::applySkill1Effect() {
     log("Skill1 hit %d enemies", hitCount);
 }
 
-// æŠ€èƒ½2å®ç°
+// ¼¼ÄÜ2ÊµÏÖ
 void Player::skill2() {
     if (!this || isDead()) {
         log("Skill2: Invalid player or player is dead");
@@ -906,7 +910,7 @@ void Player::skill2() {
     _skill2CooldownTimer = _skill2Cooldown;
 }
 
-// æŠ€èƒ½2æ•ˆæœåº”ç”¨å‡½æ•°
+// ¼¼ÄÜ2Ğ§¹ûÓ¦ÓÃº¯Êı
 void Player::applySkill2Effect() {
     log("Applying Skill2 effect");
 
@@ -943,9 +947,9 @@ void Player::applySkill2Effect() {
     log("Skill2 hit %d enemies", hitCount);
 }
 
-// Player.cpp - ä¿®æ”¹updateå‡½æ•°
+// Player.cpp - ĞŞ¸Äupdateº¯Êı
 void Player::update(float delta) {
-    // æ›´æ–°è¿å‡»è®¡æ—¶å™¨
+    // ¸üĞÂÁ¬»÷¼ÆÊ±Æ÷
     if (_comboTimer > 0) {
         _comboTimer -= delta;
         if (_comboTimer <= 0) {
@@ -954,7 +958,7 @@ void Player::update(float delta) {
         }
     }
 
-    // æ›´æ–°æŠ€èƒ½å†·å´æ—¶é—´
+    // ¸üĞÂ¼¼ÄÜÀäÈ´Ê±¼ä
     if (_skill1CooldownTimer > 0) {
         _skill1CooldownTimer -= delta;
         if (_skill1CooldownTimer < 0) {
@@ -967,18 +971,26 @@ void Player::update(float delta) {
             _skill2CooldownTimer = 0;
         }
     }
+    
+    // ¸üĞÂ¹¥»÷¼ä¸ô
+    if (_currentAttackCooldown > 0) {
+        _currentAttackCooldown -= delta;
+        if (_currentAttackCooldown < 0) {
+            _currentAttackCooldown = 0;
+        }
+    }
 
-    // æ›´æ–°æ— æ•ŒçŠ¶æ€
+    // ¸üĞÂÎŞµĞ×´Ì¬
     if (_isInvincible) {
         _invincibleTime -= delta;
         if (_invincibleTime <= 0) {
             _isInvincible = false;
-            this->setVisible(true); // æ¢å¤å¯è§
-            this->stopAllActions(); // åœæ­¢é—ªçƒåŠ¨ä½œ
+            this->setVisible(true); // »Ö¸´¿É¼û
+            this->stopAllActions(); // Í£Ö¹ÉÁË¸¶¯×÷
         }
     }
 
-    // æ›´æ–°æ ¼æŒ¡çŠ¶æ€
+    // ¸üĞÂ¸ñµ²×´Ì¬
     if (_currentState == PlayerState::BLOCKING) {
         _currentBlockDuration -= delta;
         if (_currentBlockDuration <= 0) {
@@ -986,7 +998,7 @@ void Player::update(float delta) {
         }
     }
 
-    // æ›´æ–°é—ªé¿çŠ¶æ€
+    // ¸üĞÂÉÁ±Ü×´Ì¬
     if (_currentState == PlayerState::DODGING) {
         _currentDodgeDuration -= delta;
         if (_currentDodgeDuration <= 0) {
@@ -994,7 +1006,7 @@ void Player::update(float delta) {
         }
     }
 
-    // é˜²æ­¢æ— é™ä¸‹è½
+    // ·ÀÖ¹ÎŞÏŞÏÂÂä
     if (_worldPositionY < -1000.0f) {
         _worldPositionY = 0;
         _velocity.y = 0;
@@ -1002,32 +1014,32 @@ void Player::update(float delta) {
         log("WARNING: Player fell too far, resetting position!");
     }
 
-    // æ›´æ–°å†²åˆº
+    // ¸üĞÂ³å´Ì
     updateDash(delta);
 
-    // æ›´æ–°ç‰©ç†ï¼ˆåŒ…æ‹¬é‡åŠ›ï¼‰
+    // ¸üĞÂÎïÀí£¨°üÀ¨ÖØÁ¦£©
     updatePhysics(delta);
 
-    // æ›´æ–°ä¸–ç•Œä½ç½®
+    // ¸üĞÂÊÀ½çÎ»ÖÃ
     updateWorldPosition(delta);
 }
 
-// Player.cpp - ä¿®æ”¹ updatePhysics å‡½æ•°
+// Player.cpp - ĞŞ¸Ä updatePhysics º¯Êı
 void Player::updatePhysics(float delta) {
-    // åº”ç”¨é‡åŠ›
+    // Ó¦ÓÃÖØÁ¦
     _velocity.y -= _gravity * delta;
 
-    // æ›´æ–°Yæ–¹å‘çš„ä¸–ç•Œä½ç½®
+    // ¸üĞÂY·½ÏòµÄÊÀ½çÎ»ÖÃ
     float newWorldY = _worldPositionY + _velocity.y * delta;
 
-    // æ£€æŸ¥æ˜¯å¦è½åœ° - æ·»åŠ æ›´ä¸¥æ ¼çš„è¾¹ç•Œæ£€æŸ¥
+    // ¼ì²éÊÇ·ñÂäµØ - Ìí¼Ó¸üÑÏ¸ñµÄ±ß½ç¼ì²é
     if (newWorldY <= 0) {
         _worldPositionY = 0;
         _velocity.y = 0;
         _isGrounded = true;
-        _jumpCount = 0; // è½åœ°æ—¶é‡ç½®è·³è·ƒè®¡æ•°
+        _jumpCount = 0; // ÂäµØÊ±ÖØÖÃÌøÔ¾¼ÆÊı
 
-        // å¦‚æœä¹‹å‰æ˜¯è·³è·ƒçŠ¶æ€ï¼Œè½åœ°åæ¢å¤ä¹‹å‰çš„ç§»åŠ¨çŠ¶æ€
+        // Èç¹ûÖ®Ç°ÊÇÌøÔ¾×´Ì¬£¬ÂäµØºó»Ö¸´Ö®Ç°µÄÒÆ¶¯×´Ì¬
         if (_currentState == PlayerState::JUMPING) {
             if (_isMovingLeft || _isMovingRight) {
                 _currentState = PlayerState::RUNNING;
@@ -1045,9 +1057,9 @@ void Player::updatePhysics(float delta) {
     }
 }
 
-// Player.cpp - ä¿®æ”¹updateWorldPositionå‡½æ•°
+// Player.cpp - ĞŞ¸ÄupdateWorldPositionº¯Êı
 void Player::updateWorldPosition(float delta) {
-    // å¦‚æœæ­£åœ¨æ”»å‡»ã€å†²åˆºã€æ ¼æŒ¡æˆ–é—ªé¿ï¼Œä¸æ›´æ–°Xæ–¹å‘ä½ç½®
+    // Èç¹ûÕıÔÚ¹¥»÷¡¢³å´Ì¡¢¸ñµ²»òÉÁ±Ü£¬²»¸üĞÂX·½ÏòÎ»ÖÃ
     if (_currentState == PlayerState::ATTACKING || 
         _currentState == PlayerState::DASHING ||
         _currentState == PlayerState::BLOCKING ||
@@ -1055,15 +1067,15 @@ void Player::updateWorldPosition(float delta) {
         return;
     }
 
-    // è·³è·ƒæ—¶ç§»åŠ¨é€Ÿåº¦å‡åŠ
+    // ÌøÔ¾Ê±ÒÆ¶¯ËÙ¶È¼õ°ë
     float moveSpeedMultiplier = (_currentState == PlayerState::JUMPING) ? 0.5f : 1.0f;
 
-    // æ ¹æ®ç§»åŠ¨çŠ¶æ€æ›´æ–°ä¸–ç•Œä½ç½®
+    // ¸ù¾İÒÆ¶¯×´Ì¬¸üĞÂÊÀ½çÎ»ÖÃ
     if (_isMovingLeft) {
         _worldPositionX -= _moveSpeed * moveSpeedMultiplier * delta;
         _velocity.x = -_moveSpeed * moveSpeedMultiplier;
 
-        // é˜²æ­¢ç©å®¶ç§»åŠ¨åˆ°ä¸–ç•Œå·¦ä¾§è¾¹ç•Œä¹‹å¤–
+        // ·ÀÖ¹Íæ¼ÒÒÆ¶¯µ½ÊÀ½ç×ó²à±ß½çÖ®Íâ
         if (_worldPositionX < 0) {
             _worldPositionX = 0;
         }
@@ -1077,7 +1089,7 @@ void Player::updateWorldPosition(float delta) {
     }
 }
 
-// ä¿®æ”¹ç§»åŠ¨å‡½æ•°ï¼Œä¸å†è®¾ç½®ç²¾çµä½ç½®
+// ĞŞ¸ÄÒÆ¶¯º¯Êı£¬²»ÔÙÉèÖÃ¾«ÁéÎ»ÖÃ
 void Player::moveLeft(float delta) {
     _isMovingLeft = true;
     _isMovingRight = false;
@@ -1092,14 +1104,14 @@ void Player::stopMoving() {
     _isMovingLeft = false;
     _isMovingRight = false;
 }
-// Player.cpp - æ·»åŠ å¼ºåˆ¶é‡ç½®åŠ¨ç”»çŠ¶æ€çš„å‡½æ•°
+// Player.cpp - Ìí¼ÓÇ¿ÖÆÖØÖÃ¶¯»­×´Ì¬µÄº¯Êı
 void Player::resetAnimationState() {
     if (_currentState == PlayerState::DASHING) {
-        // å¦‚æœå½“å‰æ˜¯å†²åˆºçŠ¶æ€ï¼Œå¼ºåˆ¶ç»“æŸå†²åˆº
+        // Èç¹ûµ±Ç°ÊÇ³å´Ì×´Ì¬£¬Ç¿ÖÆ½áÊø³å´Ì
         endDash();
     }
     else if (_currentState == PlayerState::IDLE) {
-        // å¦‚æœæ˜¯å¾…æœºçŠ¶æ€ï¼Œç¡®ä¿æ­£åœ¨æ’­æ”¾å¾…æœºåŠ¨ç”»
+        // Èç¹ûÊÇ´ı»ú×´Ì¬£¬È·±£ÕıÔÚ²¥·Å´ı»ú¶¯»­
         if (_currentAnimationKey != "idle") {
             _currentAnimationKey = "idle";
             this->stopAllActions();
@@ -1115,30 +1127,30 @@ void Player::setCurrentState(PlayerState state) {
     bool stateChanged = (_currentState != state);
     bool needUpdateAnimation = false;
     
-    // è·³è·ƒæœŸé—´ä¸èƒ½åˆ‡æ¢åˆ°å…¶ä»–åŠ¨ç”»
+    // ÌøÔ¾ÆÚ¼ä²»ÄÜÇĞ»»µ½ÆäËû¶¯»­
     if (_currentState == PlayerState::JUMPING && state != PlayerState::JUMPING) {
-        // åªæœ‰åœ¨è½åœ°åæ‰èƒ½åˆ‡æ¢çŠ¶æ€
+        // Ö»ÓĞÔÚÂäµØºó²ÅÄÜÇĞ»»×´Ì¬
         if (_isGrounded) {
             stateChanged = true;
         }
         else {
-            return; // ç©ºä¸­ä¿æŒè·³è·ƒçŠ¶æ€
+            return; // ¿ÕÖĞ±£³ÖÌøÔ¾×´Ì¬
         }
     }
 
-    // å¦‚æœå½“å‰æ˜¯å†²åˆºçŠ¶æ€ï¼Œå…è®¸åˆ‡æ¢åˆ°å…¶ä»–çŠ¶æ€
+    // Èç¹ûµ±Ç°ÊÇ³å´Ì×´Ì¬£¬ÔÊĞíÇĞ»»µ½ÆäËû×´Ì¬
     if (_currentState == PlayerState::DASHING && state != PlayerState::DASHING) {
-        // é¦–å…ˆåœæ­¢å†²åˆºåŠ¨ç”»
+        // Ê×ÏÈÍ£Ö¹³å´Ì¶¯»­
         this->stopAllActions();
 
-        // é‡ç½®å†²åˆºå˜é‡
+        // ÖØÖÃ³å´Ì±äÁ¿
         _currentDashDistance = 0.0f;
         _isDashLeft = false;
 
-        // è®¾ç½®æ–°çŠ¶æ€
+        // ÉèÖÃĞÂ×´Ì¬
         _currentState = state;
 
-        // æ ¹æ®æ–°çŠ¶æ€è®¾ç½®åŠ¨ç”»
+        // ¸ù¾İĞÂ×´Ì¬ÉèÖÃ¶¯»­
         switch (state) {
         case PlayerState::IDLE:
             _currentAnimationKey = "idle";
@@ -1155,10 +1167,10 @@ void Player::setCurrentState(PlayerState state) {
             break;
         }
 
-        // æ’­æ”¾å¯¹åº”åŠ¨ç”»
+        // ²¥·Å¶ÔÓ¦¶¯»­
         auto it = _animations.find(_currentAnimationKey);
         if (it != _animations.end() && it->second->getFrames().size() > 0) {
-            // ç¡®ä¿é¢å‘æ­£ç¡®
+            // È·±£ÃæÏòÕıÈ·
             if (_currentAnimationKey == "run_left") {
                 this->setFlippedX(true);
             }
@@ -1174,14 +1186,14 @@ void Player::setCurrentState(PlayerState state) {
         return;
     }
 
-    // å¦‚æœå½“å‰æ­£åœ¨æ”»å‡»ï¼Œå¹¶ä¸”ä¸æ˜¯è¦åˆ‡æ¢åˆ°æ”»å‡»çŠ¶æ€ï¼Œéœ€è¦ç‰¹æ®Šå¤„ç†
+    // Èç¹ûµ±Ç°ÕıÔÚ¹¥»÷£¬²¢ÇÒ²»ÊÇÒªÇĞ»»µ½¹¥»÷×´Ì¬£¬ĞèÒªÌØÊâ´¦Àí
     if (_currentState == PlayerState::ATTACKING && state != PlayerState::ATTACKING) {
-        // åœæ­¢æ”»å‡»åŠ¨ç”»
+        // Í£Ö¹¹¥»÷¶¯»­
         this->stopAllActions();
         stateChanged = true;
     }
 
-    // ç¡®å®šéœ€è¦æ’­æ”¾çš„åŠ¨ç”»é”®
+    // È·¶¨ĞèÒª²¥·ÅµÄ¶¯»­¼ü
     std::string targetAnimationKey = "";
     if (state == PlayerState::RUNNING) {
         if (_velocity.x > 0 || _facingRight) {
@@ -1197,22 +1209,22 @@ void Player::setCurrentState(PlayerState state) {
         needUpdateAnimation = stateChanged || (_currentAnimationKey != targetAnimationKey);
     }
     else if (state == PlayerState::ATTACKING) {
-        // æ ¹æ®é¢å‘æ–¹å‘é€‰æ‹©æ”»å‡»åŠ¨ç”»
+        // ¸ù¾İÃæÏò·½ÏòÑ¡Ôñ¹¥»÷¶¯»­
         if (_facingRight) {
             targetAnimationKey = "normal_attack_right";
         }
         else {
-            // å¦‚æœè¿˜æ²¡æœ‰å‘å·¦æ”»å‡»åŠ¨ç”»ï¼Œæš‚æ—¶ä½¿ç”¨å‘å³æ”»å‡»åŠ¨ç”»ä½†ç¿»è½¬
+            // Èç¹û»¹Ã»ÓĞÏò×ó¹¥»÷¶¯»­£¬ÔİÊ±Ê¹ÓÃÏòÓÒ¹¥»÷¶¯»­µ«·­×ª
             targetAnimationKey = "normal_attack_right";
         }
-        needUpdateAnimation = true; // æ”»å‡»åŠ¨ç”»æ€»æ˜¯éœ€è¦æ›´æ–°
+        needUpdateAnimation = true; // ¹¥»÷¶¯»­×ÜÊÇĞèÒª¸üĞÂ
     }
     else if (state == PlayerState::JUMPING) {
         targetAnimationKey = "jump";
         needUpdateAnimation = true;
     }
     else if (state == PlayerState::DASHING) {
-        // å†²åˆºçŠ¶æ€å·²ç»åœ¨dashæ–¹æ³•ä¸­å¤„ç†ï¼Œè¿™é‡Œä¸éœ€è¦é‡å¤å¤„ç†
+        // ³å´Ì×´Ì¬ÒÑ¾­ÔÚdash·½·¨ÖĞ´¦Àí£¬ÕâÀï²»ĞèÒªÖØ¸´´¦Àí
         return;
     }
     else {
@@ -1222,14 +1234,14 @@ void Player::setCurrentState(PlayerState state) {
     if (needUpdateAnimation) {
         _currentState = state;
 
-        // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
+        // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
         this->stopAllActions();
 
-        // æ ¹æ®çŠ¶æ€æ’­æ”¾åŠ¨ç”»
+        // ¸ù¾İ×´Ì¬²¥·Å¶¯»­
         switch (_currentState) {
         case PlayerState::IDLE:
         {
-            // æ’­æ”¾å¾…æœºåŠ¨ç”»
+            // ²¥·Å´ı»ú¶¯»­
             _currentAnimationKey = "idle";
             auto it = _animations.find("idle");
             if (it != _animations.end() && it->second->getFrames().size() > 0) {
@@ -1256,7 +1268,7 @@ void Player::setCurrentState(PlayerState state) {
 
         case PlayerState::RUNNING:
         {
-            // æ’­æ”¾è·‘åŠ¨åŠ¨ç”»
+            // ²¥·ÅÅÜ¶¯¶¯»­
             std::string animationKey;
             if (_velocity.x > 0) {
                 animationKey = "run_right";
@@ -1296,7 +1308,7 @@ void Player::setCurrentState(PlayerState state) {
 
         case PlayerState::ATTACKING:
         {
-            // æ’­æ”¾æ”»å‡»åŠ¨ç”» - ä¸ä½¿ç”¨å¾ªç¯ï¼Œåªæ’­æ”¾ä¸€æ¬¡
+            // ²¥·Å¹¥»÷¶¯»­ - ²»Ê¹ÓÃÑ­»·£¬Ö»²¥·ÅÒ»´Î
             std::string animationKey;
             if (_facingRight) {
                 animationKey = "normal_attack_right";
@@ -1311,35 +1323,35 @@ void Player::setCurrentState(PlayerState state) {
 
             auto it = _animations.find(animationKey);
             if (it != _animations.end() && it->second->getFrames().size() > 0) {
-                // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
+                // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
                 this->stopAllActions();
 
-                // åˆ›å»ºæ”»å‡»åŠ¨ç”» - è®¾ç½®ä¸æ¢å¤åŸå§‹å¸§ï¼Œç«‹å³å¼€å§‹
+                // ´´½¨¹¥»÷¶¯»­ - ÉèÖÃ²»»Ö¸´Ô­Ê¼Ö¡£¬Á¢¼´¿ªÊ¼
                 auto animate = Animate::create(it->second);
                 float frameDelay = it->second->getDelayPerUnit();
                 int totalFrames = (int)it->second->getFrames().size();
                 float animationDuration = frameDelay * totalFrames;
                 
-                // åœ¨æ”»å‡»åŠ¨ç”»çš„ä¸­é—´å¸§ï¼ˆçº¦ç¬¬3/4å¤„ï¼‰è¿›è¡Œä¼¤å®³æ£€æµ‹
+                // ÔÚ¹¥»÷¶¯»­µÄÖĞ¼äÖ¡£¨Ô¼µÚ3/4´¦£©½øĞĞÉËº¦¼ì²â
                 int damageFrame = std::max(1, std::min(totalFrames - 2, totalFrames * 3 / 4));
                 float damageDelay = frameDelay * damageFrame;
                 
-                // åˆ›å»ºä¼¤å®³æ£€æµ‹å›è°ƒ
+                // ´´½¨ÉËº¦¼ì²â»Øµ÷
                 auto damageCallback = CallFunc::create([this]() {
                     if (_currentState == PlayerState::ATTACKING) {
-                        // æ£€æµ‹æ”»å‡»èŒƒå›´å†…çš„æ•Œäººå¹¶é€ æˆä¼¤å®³
+                        // ¼ì²â¹¥»÷·¶Î§ÄÚµÄµĞÈË²¢Ôì³ÉÉËº¦
                         detectAndDamageEnemies();
                     }
                 });
 
-                // æ”»å‡»åŠ¨ç”»å®Œæˆåç¡®ä¿çŠ¶æ€é‡ç½®çš„å›è°ƒ
+                // ¹¥»÷¶¯»­Íê³ÉºóÈ·±£×´Ì¬ÖØÖÃµÄ»Øµ÷
                 auto attackCompleteCallback = CallFunc::create([this]() {
-                    // ç¡®ä¿æ”»å‡»çŠ¶æ€è¢«é‡ç½®ï¼Œé˜²æ­¢ç©å®¶å¡ä½
+                    // È·±£¹¥»÷×´Ì¬±»ÖØÖÃ£¬·ÀÖ¹Íæ¼Ò¿¨×¡
                     if (_currentState == PlayerState::ATTACKING) {
-                        // ç«‹å³é‡ç½®ä¸ºIDLEçŠ¶æ€
+                        // Á¢¼´ÖØÖÃÎªIDLE×´Ì¬
                         _currentState = PlayerState::IDLE;
                         
-                        // æ’­æ”¾å¾…æœºåŠ¨ç”»
+                        // ²¥·Å´ı»ú¶¯»­
                         if (_animations.count("idle") > 0) {
                             this->stopAllActions();
                             auto idleAnim = _animations["idle"];
@@ -1350,20 +1362,20 @@ void Player::setCurrentState(PlayerState state) {
                     }
                 });
 
-                // æ”»å‡»å®Œæˆåçš„è¿å‡»å¤„ç†å›è°ƒ
+                // ¹¥»÷Íê³ÉºóµÄÁ¬»÷´¦Àí»Øµ÷
                 auto comboCallback = CallFunc::create([this]() {
-                    // å…è®¸è¿å‡»
+                    // ÔÊĞíÁ¬»÷
                     _canCombo = true;
 
-                    // å¦‚æœè¿˜æœ‰è¿å‡»æ—¶é—´çª—å£ï¼Œç­‰å¾…ä¸‹ä¸€å‡»
+                    // Èç¹û»¹ÓĞÁ¬»÷Ê±¼ä´°¿Ú£¬µÈ´ıÏÂÒ»»÷
                     if (_comboTimer > 0 && _comboCount < 3) {
-                        // ä¿æŒæ”»å‡»å§¿æ€ä¸€å°æ®µæ—¶é—´
+                        // ±£³Ö¹¥»÷×ËÌ¬Ò»Ğ¡¶ÎÊ±¼ä
                         auto delay = DelayTime::create(0.1f);
                         auto checkReset = CallFunc::create([this]() {
                             if (_currentState == PlayerState::ATTACKING) {
                                 _currentState = PlayerState::IDLE;
                                 
-                                // æ’­æ”¾å¾…æœºåŠ¨ç”»
+                                // ²¥·Å´ı»ú¶¯»­
                                 if (_animations.count("idle") > 0) {
                                     this->stopAllActions();
                                     auto idleAnim = _animations["idle"];
@@ -1377,10 +1389,10 @@ void Player::setCurrentState(PlayerState state) {
                         this->runAction(sequence);
                     }
                     else {
-                        // ç›´æ¥é‡ç½®ä¸ºIDLEçŠ¶æ€
+                        // Ö±½ÓÖØÖÃÎªIDLE×´Ì¬
                         _currentState = PlayerState::IDLE;
                         
-                        // æ’­æ”¾å¾…æœºåŠ¨ç”»
+                        // ²¥·Å´ı»ú¶¯»­
                         if (_animations.count("idle") > 0) {
                             this->stopAllActions();
                             auto idleAnim = _animations["idle"];
@@ -1391,7 +1403,7 @@ void Player::setCurrentState(PlayerState state) {
                     }
                 });
 
-                // åˆ›å»ºä¸»åºåˆ—ï¼šæ”»å‡»åŠ¨ç”» -> æ”»å‡»å®Œæˆå›è°ƒ -> è¿å‡»å¤„ç†
+                // ´´½¨Ö÷ĞòÁĞ£º¹¥»÷¶¯»­ -> ¹¥»÷Íê³É»Øµ÷ -> Á¬»÷´¦Àí
                 auto mainSequence = Sequence::create(
                     animate,
                     attackCompleteCallback,
@@ -1399,7 +1411,7 @@ void Player::setCurrentState(PlayerState state) {
                     nullptr);
                 this->runAction(mainSequence);
                 
-                // å•ç‹¬è¿è¡Œä¼¤å®³æ£€æµ‹åºåˆ—
+                // µ¥¶ÀÔËĞĞÉËº¦¼ì²âĞòÁĞ
                 auto damageSequence = Sequence::create(
                     DelayTime::create(damageDelay),
                     damageCallback,
@@ -1416,7 +1428,7 @@ void Player::setCurrentState(PlayerState state) {
 
         case PlayerState::JUMPING:
         {
-            // æ’­æ”¾è·³è·ƒåŠ¨ç”»
+            // ²¥·ÅÌøÔ¾¶¯»­
             _currentAnimationKey = "jump";
             auto it = _animations.find("jump");
             if (it != _animations.end() && it->second->getFrames().size() > 0) {
@@ -1429,7 +1441,7 @@ void Player::setCurrentState(PlayerState state) {
 
                 auto animate = Animate::create(it->second);
                 this->runAction(RepeatForever::create(animate));
-                AudioManager::getInstance()->playEffect("sfx_jump");//æ–°å¢
+                AudioManager::getInstance()->playEffect("sfx_jump");//ĞÂÔö
                 log("Playing jump animation with %d frames", (int)it->second->getFrames().size());
             }
             else {
@@ -1438,19 +1450,19 @@ void Player::setCurrentState(PlayerState state) {
         }
         break;
         
-        // Player.cpp - ä¿®æ”¹setCurrentStateå‡½æ•°ä¸­çš„æŠ€èƒ½çŠ¶æ€å¤„ç†
+        // Player.cpp - ĞŞ¸ÄsetCurrentStateº¯ÊıÖĞµÄ¼¼ÄÜ×´Ì¬´¦Àí
         case PlayerState::SKILL1:
         case PlayerState::SKILL2:
         {
-            // æŠ€èƒ½çŠ¶æ€å·²ç»åœ¨skill1()å’Œskill2()å‡½æ•°ä¸­å¤„ç†åŠ¨ç”»
-            // è¿™é‡Œåªè®¾ç½®çŠ¶æ€ï¼Œä¸æ’­æ”¾åŠ¨ç”»ï¼Œé¿å…é‡å¤æ’­æ”¾
+            // ¼¼ÄÜ×´Ì¬ÒÑ¾­ÔÚskill1()ºÍskill2()º¯ÊıÖĞ´¦Àí¶¯»­
+            // ÕâÀïÖ»ÉèÖÃ×´Ì¬£¬²»²¥·Å¶¯»­£¬±ÜÃâÖØ¸´²¥·Å
             log("Setting skill state %d", (int)state);
 
-            // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œï¼ˆä½†ä¿ç•™æŠ€èƒ½åŠ¨ä½œï¼‰
-            // æ³¨æ„ï¼šè¿™é‡Œä¸è¦è°ƒç”¨stopAllActions()ï¼Œä»¥å…ä¸­æ–­æ­£åœ¨æ’­æ”¾çš„æŠ€èƒ½åŠ¨ç”»
+            // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷£¨µ«±£Áô¼¼ÄÜ¶¯×÷£©
+            // ×¢Òâ£ºÕâÀï²»Òªµ÷ÓÃstopAllActions()£¬ÒÔÃâÖĞ¶ÏÕıÔÚ²¥·ÅµÄ¼¼ÄÜ¶¯»­
             _currentState = state;
 
-            // æ ¹æ®æŠ€èƒ½ç±»å‹è®¾ç½®åŠ¨ç”»é”®
+            // ¸ù¾İ¼¼ÄÜÀàĞÍÉèÖÃ¶¯»­¼ü
             if (state == PlayerState::SKILL1) {
                 _currentAnimationKey = "skill1";
             }
@@ -1464,26 +1476,26 @@ void Player::setCurrentState(PlayerState state) {
         {
             log("Player entering DEAD state");
             
-            // åœæ­¢æ‰€æœ‰åŠ¨ä½œ
+            // Í£Ö¹ËùÓĞ¶¯×÷
             this->stopAllActions();
             
-            // è®¾ç½®æ­»äº¡çŠ¶æ€
+            // ÉèÖÃËÀÍö×´Ì¬
             _currentState = PlayerState::DEAD;
             _currentAnimationKey = "dead";
             
-            // ç¦ç”¨å¹¶ç§»é™¤ç‰©ç†ç¢°æ’ä½“
+            // ½ûÓÃ²¢ÒÆ³ıÎïÀíÅö×²Ìå
             if (this->getPhysicsBody()) {
                 this->getPhysicsBody()->setEnabled(false);
                 this->removeComponent(this->getPhysicsBody());
             }
             
-            // æ¸…ç†åŠ¨ç”»èµ„æºï¼Œé¿å…å†…å­˜æ³„æ¼
+            // ÇåÀí¶¯»­×ÊÔ´£¬±ÜÃâÄÚ´æĞ¹Â©
             for (auto& pair : _animations) {
                 CC_SAFE_RELEASE(pair.second);
             }
             _animations.clear();
             
-            // é‡ç½®çŠ¶æ€å˜é‡
+            // ÖØÖÃ×´Ì¬±äÁ¿
             _isMovingLeft = false;
             _isMovingRight = false;
             _velocity = Vec2::ZERO;
@@ -1494,25 +1506,25 @@ void Player::setCurrentState(PlayerState state) {
         break;
         case PlayerState::HURT:
         {
-            // æ’­æ”¾å—å‡»åŠ¨ç”»
+            // ²¥·ÅÊÜ»÷¶¯»­
             _currentAnimationKey = "hurt";
             auto it = _animations.find("hurt");
             if (it != _animations.end() && it->second->getFrames().size() > 0) {
-                // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
+                // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
                 this->stopAllActions();
 
-                // è®¾ç½®æ— æ•ŒçŠ¶æ€
+                // ÉèÖÃÎŞµĞ×´Ì¬
                 _isInvincible = true;
-                _invincibleTime = 1.0f; // 1ç§’æ— æ•Œæ—¶é—´
+                _invincibleTime = 1.0f; // 1ÃëÎŞµĞÊ±¼ä
 
-                // åˆ›å»ºé—ªçƒåŠ¨ä½œ
-                auto blinkAction = Blink::create(1.0f, 10); // 1ç§’å†…é—ªçƒ10æ¬¡
+                // ´´½¨ÉÁË¸¶¯×÷
+                auto blinkAction = Blink::create(1.0f, 10); // 1ÃëÄÚÉÁË¸10´Î
                 this->runAction(blinkAction);
 
-                // æ’­æ”¾å—å‡»åŠ¨ç”»ï¼ˆä¸å¾ªç¯ï¼‰
+                // ²¥·ÅÊÜ»÷¶¯»­£¨²»Ñ­»·£©
                 auto animate = Animate::create(it->second);
                 auto callback = CallFunc::create([this]() {
-                    // å—å‡»åŠ¨ç”»ç»“æŸåï¼Œæ ¹æ®æƒ…å†µå›åˆ°åˆé€‚çš„çŠ¶æ€
+                    // ÊÜ»÷¶¯»­½áÊøºó£¬¸ù¾İÇé¿ö»Øµ½ºÏÊÊµÄ×´Ì¬
                     if (_currentHealth <= 0) {
                         _currentState = PlayerState::DEAD;
                         setCurrentState(PlayerState::DEAD);
@@ -1537,7 +1549,7 @@ void Player::setCurrentState(PlayerState state) {
             }
             else {
                 log("ERROR: Hurt animation not found or empty");
-                // å¦‚æœæ²¡æœ‰å—å‡»åŠ¨ç”»ï¼Œç›´æ¥è®¾ç½®å›IDLEçŠ¶æ€
+                // Èç¹ûÃ»ÓĞÊÜ»÷¶¯»­£¬Ö±½ÓÉèÖÃ»ØIDLE×´Ì¬
                 setCurrentState(PlayerState::IDLE);
             }
         }
@@ -1547,20 +1559,20 @@ void Player::setCurrentState(PlayerState state) {
         }
     }
 }
-// Player.cpp - ä¿®æ”¹canDashæ–¹æ³•
+// Player.cpp - ĞŞ¸ÄcanDash·½·¨
 bool Player::canDash() const {
-    // ä½¿ç”¨DashBarç®¡ç†å†²åˆºæ¬¡æ•°
+    // Ê¹ÓÃDashBar¹ÜÀí³å´Ì´ÎÊı
     if (_dashBar) {
         return _dashBar->canDash();
     }
 
-    // å¦‚æœæ²¡æœ‰DashBarï¼Œä½¿ç”¨åŸæ¥çš„é€»è¾‘ï¼ˆå‘åå…¼å®¹ï¼‰
+    // Èç¹ûÃ»ÓĞDashBar£¬Ê¹ÓÃÔ­À´µÄÂß¼­£¨Ïòºó¼æÈİ£©
     return (_dashCooldown <= 0.0f && _currentState != PlayerState::ATTACKING);
 }
 
-// æŠ€èƒ½1å¯ç”¨æ€§æ£€æŸ¥
+// ¼¼ÄÜ1¿ÉÓÃĞÔ¼ì²é
 bool Player::canUseSkill1() const {
-    // æŠ€èƒ½1å¯ç”¨æ¡ä»¶ï¼šä¸åœ¨å†·å´ä¸­ï¼Œä¸åœ¨æ”»å‡»ã€å†²åˆºã€å—ä¼¤ã€æ­»äº¡æˆ–å…¶ä»–æŠ€èƒ½çŠ¶æ€
+    // ¼¼ÄÜ1¿ÉÓÃÌõ¼ş£º²»ÔÚÀäÈ´ÖĞ£¬²»ÔÚ¹¥»÷¡¢³å´Ì¡¢ÊÜÉË¡¢ËÀÍö»òÆäËû¼¼ÄÜ×´Ì¬
     log("canUseSkill1: cooldown=%.2f, state=%d, grounded=%d", _skill1CooldownTimer, (int)_currentState, _isGrounded);
     return _skill1CooldownTimer <= 0.0f && 
            _currentState != PlayerState::ATTACKING && 
@@ -1571,9 +1583,9 @@ bool Player::canUseSkill1() const {
            _currentState != PlayerState::SKILL2;
 }
 
-// æŠ€èƒ½2å¯ç”¨æ€§æ£€æŸ¥
+// ¼¼ÄÜ2¿ÉÓÃĞÔ¼ì²é
 bool Player::canUseSkill2() const {
-    // æŠ€èƒ½2å¯ç”¨æ¡ä»¶ï¼šä¸åœ¨å†·å´ä¸­ï¼Œä¸åœ¨æ”»å‡»ã€å†²åˆºã€å—ä¼¤ã€æ­»äº¡æˆ–å…¶ä»–æŠ€èƒ½çŠ¶æ€
+    // ¼¼ÄÜ2¿ÉÓÃÌõ¼ş£º²»ÔÚÀäÈ´ÖĞ£¬²»ÔÚ¹¥»÷¡¢³å´Ì¡¢ÊÜÉË¡¢ËÀÍö»òÆäËû¼¼ÄÜ×´Ì¬
     log("canUseSkill2: cooldown=%.2f, state=%d, grounded=%d", _skill2CooldownTimer, (int)_currentState, _isGrounded);
     return _skill2CooldownTimer <= 0.0f && 
            _currentState != PlayerState::ATTACKING && 
@@ -1584,12 +1596,12 @@ bool Player::canUseSkill2() const {
            _currentState != PlayerState::SKILL2;
 }
 
-// Player.cpp - æ·»åŠ å†²åˆºæ–¹æ³•å®ç°
+// Player.cpp - Ìí¼Ó³å´Ì·½·¨ÊµÏÖ
 void Player::dash() {
-    // é»˜è®¤å‘å³å†²åˆº
+    // Ä¬ÈÏÏòÓÒ³å´Ì
     dashRight();
 }
-// Player.cpp - ç®€åŒ– dashLeft å’Œ dashRight å‡½æ•°
+// Player.cpp - ¼ò»¯ dashLeft ºÍ dashRight º¯Êı
 void Player::dashLeft() {
     if (!canDash() || _currentState == PlayerState::ATTACKING) {
         log("Cannot dash: canDash=%d, state=%d", canDash(), (int)_currentState);
@@ -1601,23 +1613,23 @@ void Player::dashLeft() {
         return;
     }
 
-    // è®¾ç½®å†²åˆºçŠ¶æ€
+    // ÉèÖÃ³å´Ì×´Ì¬
     _currentState = PlayerState::DASHING;
     _facingRight = false;
     _isDashLeft = true;
     _currentDashDistance = 0.0f;
 
-    // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
+    // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
     this->stopAllActions();
 
-    // æ’­æ”¾å†²åˆºåŠ¨ç”»
-    std::string dashKey = "dash_right"; // ä½¿ç”¨å‘å³å†²åˆºåŠ¨ç”»
+    // ²¥·Å³å´Ì¶¯»­
+    std::string dashKey = "dash_right"; // Ê¹ÓÃÏòÓÒ³å´Ì¶¯»­
     auto it = _animations.find(dashKey);
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
-        // å‘å·¦å†²åˆºæ—¶æ°´å¹³ç¿»è½¬åŠ¨ç”»
+        // Ïò×ó³å´ÌÊ±Ë®Æ½·­×ª¶¯»­
         this->setFlippedX(true);
 
-        // æ’­æ”¾å†²åˆºåŠ¨ç”»ï¼ˆä½¿ç”¨ Repeat::createï¼Œè¿™æ ·åŠ¨ç”»ç»“æŸåä¼šåœæ­¢è€Œä¸æ˜¯å¾ªç¯ï¼‰
+        // ²¥·Å³å´Ì¶¯»­£¨Ê¹ÓÃ Repeat::create£¬ÕâÑù¶¯»­½áÊøºó»áÍ£Ö¹¶ø²»ÊÇÑ­»·£©
         auto animate = Animate::create(it->second);
         this->runAction(Repeat::create(animate, 1));
 
@@ -1626,7 +1638,7 @@ void Player::dashLeft() {
     }
     else {
         log("ERROR: Dash animation not found");
-        // å³ä½¿æ²¡æœ‰åŠ¨ç”»ä¹Ÿè¦ä¿æŒå†²åˆºçŠ¶æ€
+        // ¼´Ê¹Ã»ÓĞ¶¯»­Ò²Òª±£³Ö³å´Ì×´Ì¬
     }
 }
 
@@ -1641,23 +1653,23 @@ void Player::dashRight() {
         return;
     }
 
-    // è®¾ç½®å†²åˆºçŠ¶æ€
+    // ÉèÖÃ³å´Ì×´Ì¬
     _currentState = PlayerState::DASHING;
     _facingRight = true;
     _isDashLeft = false;
     _currentDashDistance = 0.0f;
 
-    // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
+    // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
     this->stopAllActions();
 
-    // æ’­æ”¾å†²åˆºåŠ¨ç”»
+    // ²¥·Å³å´Ì¶¯»­
     std::string dashKey = "dash_right";
     auto it = _animations.find(dashKey);
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
-        // å‘å³å†²åˆºæ—¶ä¸ç¿»è½¬
+        // ÏòÓÒ³å´ÌÊ±²»·­×ª
         this->setFlippedX(false);
 
-        // æ’­æ”¾å†²åˆºåŠ¨ç”»ï¼ˆä½¿ç”¨ Repeat::createï¼Œè¿™æ ·åŠ¨ç”»ç»“æŸåä¼šåœæ­¢è€Œä¸æ˜¯å¾ªç¯ï¼‰
+        // ²¥·Å³å´Ì¶¯»­£¨Ê¹ÓÃ Repeat::create£¬ÕâÑù¶¯»­½áÊøºó»áÍ£Ö¹¶ø²»ÊÇÑ­»·£©
         auto animate = Animate::create(it->second);
         this->runAction(Repeat::create(animate, 1));
 
@@ -1666,41 +1678,41 @@ void Player::dashRight() {
     }
     else {
         log("ERROR: Dash animation not found");
-        // å³ä½¿æ²¡æœ‰åŠ¨ç”»ä¹Ÿè¦ä¿æŒå†²åˆºçŠ¶æ€
+        // ¼´Ê¹Ã»ÓĞ¶¯»­Ò²Òª±£³Ö³å´Ì×´Ì¬
     }
 }
-// æ·»åŠ å†²åˆºå®Œæˆå¤„ç†å‡½æ•°
+// Ìí¼Ó³å´ÌÍê³É´¦Àíº¯Êı
 void Player::onDashComplete() {
     log("Player::onDashComplete called");
 
-    // åœæ­¢æ‰€æœ‰åŠ¨ä½œ
+    // Í£Ö¹ËùÓĞ¶¯×÷
     this->stopAllActions();
 
-    // é‡ç½®å†²åˆºå˜é‡
+    // ÖØÖÃ³å´Ì±äÁ¿
     _currentDashDistance = 0.0f;
     _isDashLeft = false;
 
-    // æ ¹æ®å½“å‰è¾“å…¥çŠ¶æ€è®¾ç½®é€‚å½“çš„çŠ¶æ€
+    // ¸ù¾İµ±Ç°ÊäÈë×´Ì¬ÉèÖÃÊÊµ±µÄ×´Ì¬
     if (_isMovingLeft || _isMovingRight) {
-        // å¦‚æœæœ‰ç§»åŠ¨è¾“å…¥ï¼Œåˆ‡æ¢åˆ°è·‘æ­¥çŠ¶æ€
+        // Èç¹ûÓĞÒÆ¶¯ÊäÈë£¬ÇĞ»»µ½ÅÜ²½×´Ì¬
         setCurrentState(PlayerState::RUNNING);
     }
     else {
-        // æ²¡æœ‰ç§»åŠ¨è¾“å…¥ï¼Œåˆ‡æ¢åˆ°å¾…æœºçŠ¶æ€
+        // Ã»ÓĞÒÆ¶¯ÊäÈë£¬ÇĞ»»µ½´ı»ú×´Ì¬
         setCurrentState(PlayerState::IDLE);
     }
 }
-// Player.cpp - ä¿®æ”¹ updateDash å‡½æ•°
+// Player.cpp - ĞŞ¸Ä updateDash º¯Êı
 void Player::updateDash(float delta) {
     if (_currentState == PlayerState::DASHING) {
-        // è®¡ç®—å†²åˆºç§»åŠ¨
+        // ¼ÆËã³å´ÌÒÆ¶¯
         float dashMove = _dashSpeed * delta;
         _currentDashDistance += dashMove;
 
-        // æ ¹æ®å†²åˆºæ–¹å‘ç§»åŠ¨
+        // ¸ù¾İ³å´Ì·½ÏòÒÆ¶¯
         if (_isDashLeft) {
             _worldPositionX -= dashMove;
-            // é˜²æ­¢ç§»åŠ¨åˆ°ä¸–ç•Œå·¦ä¾§è¾¹ç•Œä¹‹å¤–
+            // ·ÀÖ¹ÒÆ¶¯µ½ÊÀ½ç×ó²à±ß½çÖ®Íâ
             if (_worldPositionX < 0) {
                 _worldPositionX = 0;
             }
@@ -1709,22 +1721,22 @@ void Player::updateDash(float delta) {
             _worldPositionX += dashMove;
         }
 
-        // æ£€æŸ¥æ˜¯å¦è¾¾åˆ°æœ€å¤§å†²åˆºè·ç¦» OR åŠ¨ç”»æ˜¯å¦å·²ç»ç»“æŸ
+        // ¼ì²éÊÇ·ñ´ïµ½×î´ó³å´Ì¾àÀë OR ¶¯»­ÊÇ·ñÒÑ¾­½áÊø
         if (_currentDashDistance >= _dashDistance) {
-            // å†²åˆºè·ç¦»è¾¾åˆ°ï¼Œç»“æŸå†²åˆº
+            // ³å´Ì¾àÀë´ïµ½£¬½áÊø³å´Ì
             endDash();
         }
         else {
-            // æ£€æŸ¥åŠ¨ç”»æ˜¯å¦å·²ç»è‡ªç„¶ç»“æŸï¼ˆé€šè¿‡åˆ¤æ–­æ˜¯å¦è¿˜æœ‰è¿è¡ŒåŠ¨ä½œï¼‰
+            // ¼ì²é¶¯»­ÊÇ·ñÒÑ¾­×ÔÈ»½áÊø£¨Í¨¹ıÅĞ¶ÏÊÇ·ñ»¹ÓĞÔËĞĞ¶¯×÷£©
             if (this->getNumberOfRunningActions() == 0) {
-                // å¦‚æœæ²¡æœ‰è¿è¡ŒåŠ¨ä½œï¼Œè¯´æ˜åŠ¨ç”»å·²ç»ç»“æŸï¼Œå¼ºåˆ¶ç»“æŸå†²åˆº
+                // Èç¹ûÃ»ÓĞÔËĞĞ¶¯×÷£¬ËµÃ÷¶¯»­ÒÑ¾­½áÊø£¬Ç¿ÖÆ½áÊø³å´Ì
                 log("No running actions detected, forcing dash end");
                 endDash();
             }
         }
     }
 }
-// ä¿®æ”¹ endDash å‡½æ•°
+// ĞŞ¸Ä endDash º¯Êı
 void Player::endDash() {
     if (_currentState != PlayerState::DASHING) {
         return;
@@ -1732,20 +1744,20 @@ void Player::endDash() {
 
     log("Dash ended, resetting state");
 
-    // åœæ­¢æ‰€æœ‰åŠ¨ä½œ
+    // Í£Ö¹ËùÓĞ¶¯×÷
     this->stopAllActions();
 
-    // é‡ç½®å†²åˆºå˜é‡
+    // ÖØÖÃ³å´Ì±äÁ¿
     _currentDashDistance = 0.0f;
     _isDashLeft = false;
 
-    // å¼ºåˆ¶è®¾ç½®å›å¾…æœºçŠ¶æ€
+    // Ç¿ÖÆÉèÖÃ»Ø´ı»ú×´Ì¬
     _currentState = PlayerState::IDLE;
 
-    // æ’­æ”¾å¾…æœºåŠ¨ç”»
+    // ²¥·Å´ı»ú¶¯»­
     auto it = _animations.find("idle");
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
-        // ç¡®ä¿é¢å‘æ­£ç¡®æ–¹å‘
+        // È·±£ÃæÏòÕıÈ··½Ïò
         if (_facingRight) {
             this->setFlippedX(false);
         }
@@ -1753,7 +1765,7 @@ void Player::endDash() {
             this->setFlippedX(true);
         }
 
-        // æ’­æ”¾å¾…æœºåŠ¨ç”»
+        // ²¥·Å´ı»ú¶¯»­
         auto animate = Animate::create(it->second);
         this->runAction(RepeatForever::create(animate));
 
@@ -1763,17 +1775,17 @@ void Player::endDash() {
         log("ERROR: Idle animation not found after dash");
     }
 }
-// Player.cpp - ä¿®æ”¹onKeyPressedå‡½æ•°ä¸­çš„å†²åˆºéƒ¨åˆ†
+// Player.cpp - ĞŞ¸ÄonKeyPressedº¯ÊıÖĞµÄ³å´Ì²¿·Ö
 void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
-    // è®°å½•æŒ‰é”®çŠ¶æ€
+    // ¼ÇÂ¼°´¼ü×´Ì¬
     _keyStates[keyCode] = true;
     if (keyCode == EventKeyboard::KeyCode::KEY_A) {
         _isMovingLeft = true;
         _facingRight = false;
 
-        // å¦‚æœä¸æ˜¯æ­£åœ¨æ”»å‡»æˆ–å†²åˆºï¼Œå¯ä»¥ç§»åŠ¨
+        // Èç¹û²»ÊÇÕıÔÚ¹¥»÷»ò³å´Ì£¬¿ÉÒÔÒÆ¶¯
         if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING) {
-            // å¦‚æœå·²ç»åœ¨è·³è·ƒä¸­ï¼Œä¿æŒè·³è·ƒçŠ¶æ€
+            // Èç¹ûÒÑ¾­ÔÚÌøÔ¾ÖĞ£¬±£³ÖÌøÔ¾×´Ì¬
             if (_currentState != PlayerState::JUMPING) {
                 _currentState = PlayerState::RUNNING;
                 setCurrentState(PlayerState::RUNNING);
@@ -1784,9 +1796,9 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
         _isMovingRight = true;
         _facingRight = true;
 
-        // å¦‚æœä¸æ˜¯æ­£åœ¨æ”»å‡»æˆ–å†²åˆºï¼Œå¯ä»¥ç§»åŠ¨
+        // Èç¹û²»ÊÇÕıÔÚ¹¥»÷»ò³å´Ì£¬¿ÉÒÔÒÆ¶¯
         if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING) {
-            // å¦‚æœå·²ç»åœ¨è·³è·ƒä¸­ï¼Œä¿æŒè·³è·ƒçŠ¶æ€
+            // Èç¹ûÒÑ¾­ÔÚÌøÔ¾ÖĞ£¬±£³ÖÌøÔ¾×´Ì¬
             if (_currentState != PlayerState::JUMPING) {
                 _currentState = PlayerState::RUNNING;
                 setCurrentState(PlayerState::RUNNING);
@@ -1794,56 +1806,59 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
         }
     }
     else if (keyCode == EventKeyboard::KeyCode::KEY_K) {
-        // Ké”®ï¼šæ™®é€šæ”»å‡»
-        // åªæœ‰åœ¨éæ”»å‡»çŠ¶æ€ä¸”åœ¨åœ°é¢æ—¶æ‰èƒ½è§¦å‘æ”»å‡»
-        if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING && _isGrounded) {
+        // K¼ü£ºÆÕÍ¨¹¥»÷
+        // Ö»ÓĞÔÚ·Ç¹¥»÷×´Ì¬¡¢ÔÚµØÃæÇÒ¹¥»÷¼ä¸ôÒÑ½áÊøÊ±²ÅÄÜ´¥·¢¹¥»÷
+        if (_currentState != PlayerState::ATTACKING && _currentState != PlayerState::DASHING && _isGrounded && _currentAttackCooldown <= 0) {
             _currentState = PlayerState::ATTACKING;
             setCurrentState(PlayerState::ATTACKING);
-            AudioManager::getInstance()->playEffect("sfx_attack");//æ–°å¢éŸ³æ•ˆ
-            // æ”»å‡»æ—¶åœæ­¢ç§»åŠ¨
+            AudioManager::getInstance()->playEffect("sfx_attack");//ĞÂÔöÒôĞ§
+            // ¹¥»÷Ê±Í£Ö¹ÒÆ¶¯
             _isMovingLeft = false;
             _isMovingRight = false;
             _velocity.x = 0;
+            
+            // ÖØÖÃ¹¥»÷¼ä¸ô
+            _currentAttackCooldown = _attackCooldown;
 
             log("Player performs normal attack");
         }
     }
     else if (keyCode == EventKeyboard::KeyCode::KEY_W) {
-        // Wé”®ï¼šè·³è·ƒ - å¯ä»¥ä¸ç§»åŠ¨åŒæ—¶è¿›è¡Œ
+        // W¼ü£ºÌøÔ¾ - ¿ÉÒÔÓëÒÆ¶¯Í¬Ê±½øĞĞ
         jump();
     }
-    // Player.cpp - ä¿®æ”¹ onKeyPressed å‡½æ•°ä¸­çš„å†²åˆºéƒ¨åˆ†
+    // Player.cpp - ĞŞ¸Ä onKeyPressed º¯ÊıÖĞµÄ³å´Ì²¿·Ö
     else if (keyCode == EventKeyboard::KeyCode::KEY_Q) {
-        // Qé”®ï¼šæŠ€èƒ½1
+        // Q¼ü£º¼¼ÄÜ1
         skill1();
     }
     else if (keyCode == EventKeyboard::KeyCode::KEY_E) {
-        // Eé”®ï¼šæŠ€èƒ½2
+        // E¼ü£º¼¼ÄÜ2
         skill2();
     }
     else if (keyCode == EventKeyboard::KeyCode::KEY_SPACE) {
-        // ç©ºæ ¼é”®ï¼šå†²åˆº
+        // ¿Õ¸ñ¼ü£º³å´Ì
         if (canDash()) {
-            AudioManager::getInstance()->playEffect("sfx_dash");//æ–°å¢
-            // ä½¿ç”¨æŒ‰é”®çŠ¶æ€è¡¨æ¥åˆ¤æ–­æ–¹å‘
+            AudioManager::getInstance()->playEffect("sfx_dash");//ĞÂÔö
+            // Ê¹ÓÃ°´¼ü×´Ì¬±íÀ´ÅĞ¶Ï·½Ïò
             bool aPressed = (_keyStates.find(EventKeyboard::KeyCode::KEY_A) != _keyStates.end() &&
                 _keyStates[EventKeyboard::KeyCode::KEY_A]);
             bool dPressed = (_keyStates.find(EventKeyboard::KeyCode::KEY_D) != _keyStates.end() &&
                 _keyStates[EventKeyboard::KeyCode::KEY_D]);
 
-            // æ˜ç¡®çš„æ–¹å‘ä¼˜å…ˆçº§
+            // Ã÷È·µÄ·½ÏòÓÅÏÈ¼¶
             if (aPressed && !dPressed) {
-                // Aé”®æŒ‰ä¸‹ï¼šå‘å·¦å†²åˆº
+                // A¼ü°´ÏÂ£ºÏò×ó³å´Ì
                 dashLeft();
                 log("Player dashes left (A pressed)");
             }
             else if (dPressed && !aPressed) {
-                // Dé”®æŒ‰ä¸‹ï¼šå‘å³å†²åˆº
+                // D¼ü°´ÏÂ£ºÏòÓÒ³å´Ì
                 dashRight();
                 log("Player dashes right (D pressed)");
             }
             else if (aPressed && dPressed) {
-                // Aå’ŒDåŒæ—¶æŒ‰ä¸‹ï¼šæ ¹æ®å½“å‰é¢å‘æ–¹å‘å†²åˆº
+                // AºÍDÍ¬Ê±°´ÏÂ£º¸ù¾İµ±Ç°ÃæÏò·½Ïò³å´Ì
                 if (_facingRight) {
                     dashRight();
                     log("Player dashes right (A+D, facing right)");
@@ -1854,7 +1869,7 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
                 }
             }
             else {
-                // åªæŒ‰ç©ºæ ¼ï¼šæ ¹æ®å½“å‰é¢å‘æ–¹å‘å†²åˆº
+                // Ö»°´¿Õ¸ñ£º¸ù¾İµ±Ç°ÃæÏò·½Ïò³å´Ì
                 if (_facingRight) {
                     dashRight();
                     log("Player dashes right (space only, default)");
@@ -1870,16 +1885,16 @@ void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
         }
     }
 
-    // å¤„ç†åŒæ—¶æŒ‰ä¸‹çš„æƒ…å†µ
+    // ´¦ÀíÍ¬Ê±°´ÏÂµÄÇé¿ö
     if (_currentState == PlayerState::JUMPING && (_isMovingLeft || _isMovingRight)) {
-        // ä¿æŒè·³è·ƒçŠ¶æ€ï¼Œä½†å…è®¸æ°´å¹³ç§»åŠ¨
-        // è¿™å·²ç»åœ¨ updateWorldPosition ä¸­å¤„ç†äº†
+        // ±£³ÖÌøÔ¾×´Ì¬£¬µ«ÔÊĞíË®Æ½ÒÆ¶¯
+        // ÕâÒÑ¾­ÔÚ updateWorldPosition ÖĞ´¦ÀíÁË
     }
 }
 
-// Player.cpp - ä¿®æ”¹ onKeyReleased å‡½æ•°
+// Player.cpp - ĞŞ¸Ä onKeyReleased º¯Êı
 void Player::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode) {
-    // æ›´æ–°æŒ‰é”®çŠ¶æ€
+    // ¸üĞÂ°´¼ü×´Ì¬
     _keyStates[keyCode] = false;
     if (keyCode == EventKeyboard::KeyCode::KEY_A) {
         _isMovingLeft = false;
@@ -1888,16 +1903,16 @@ void Player::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode) {
         _isMovingRight = false;
     }
 
-    // å¦‚æœä¸¤ä¸ªç§»åŠ¨é”®éƒ½é‡Šæ”¾äº†
+    // Èç¹ûÁ½¸öÒÆ¶¯¼ü¶¼ÊÍ·ÅÁË
     if (!_isMovingLeft && !_isMovingRight) {
-        // è·³è·ƒä¸­ä¿æŒè·³è·ƒçŠ¶æ€
+        // ÌøÔ¾ÖĞ±£³ÖÌøÔ¾×´Ì¬
         if (_currentState != PlayerState::JUMPING && _currentState != PlayerState::ATTACKING) {
             _currentState = PlayerState::IDLE;
             setCurrentState(PlayerState::IDLE);
         }
     }
     else {
-        // å¦‚æœè¿˜æœ‰ä¸€ä¸ªç§»åŠ¨é”®æŒ‰ä¸‹ï¼Œä¸”ä¸åœ¨è·³è·ƒæˆ–æ”»å‡»çŠ¶æ€
+        // Èç¹û»¹ÓĞÒ»¸öÒÆ¶¯¼ü°´ÏÂ£¬ÇÒ²»ÔÚÌøÔ¾»ò¹¥»÷×´Ì¬
         if (_currentState != PlayerState::JUMPING && _currentState != PlayerState::ATTACKING) {
             _currentState = PlayerState::RUNNING;
             setCurrentState(PlayerState::RUNNING);
@@ -1920,66 +1935,70 @@ std::string Player::getDebugInfo() const {
 }
 
 void Player::setupAnimations() {
-    // æ­¤å‡½æ•°æš‚æ—¶ç•™ç©ºï¼ŒåŠ¨ç”»åœ¨loadAnimationsä¸­åŠ è½½
+    // ´Ëº¯ÊıÔİÊ±Áô¿Õ£¬¶¯»­ÔÚloadAnimationsÖĞ¼ÓÔØ
 }
 
-// Player.cpp - ä¿®æ”¹takeDamageå‡½æ•°
+// Player.cpp - ĞŞ¸ÄtakeDamageº¯Êı
 void Player::takeDamage(float damage) {
+    if (_invincibleModeEnabled) {
+        log("ÎŞµĞÄ£Ê½¿ªÆô£¬ÃâÒßËùÓĞÉËº¦");
+        return;
+    }
     if (isDead() || _isInvincible) {
-        return; // å¦‚æœå·²ç»æ­»äº¡æˆ–å¤„äºæ— æ•ŒçŠ¶æ€ï¼Œä¸å¤„ç†ä¼¤å®³
+        return; // Èç¹ûÒÑ¾­ËÀÍö»ò´¦ÓÚÎŞµĞ×´Ì¬£¬²»´¦ÀíÉËº¦
     }
 
-    // æ£€æŸ¥æ˜¯å¦åœ¨æ ¼æŒ¡çŠ¶æ€
+    // ¼ì²éÊÇ·ñÔÚ¸ñµ²×´Ì¬
     if (_isBlocking) {
-        // æ ¼æŒ¡å‡å°‘70%ä¼¤å®³
+        // ¸ñµ²¼õÉÙ70%ÉËº¦
         float reducedDamage = damage * (1.0f - _blockReduction);
         log("Player blocked attack, reduced damage from %.2f to %.2f", damage, reducedDamage);
         damage = reducedDamage;
     }
 
-    // é¦–å…ˆæ¶ˆè€—æŠ¤ç›¾
+    // Ê×ÏÈÏûºÄ»¤¶Ü
     if (_currentShield > 0) {
         _currentShield -= 1;
         log("Player shield reduced by 1. Shield: %d", _currentShield);
 
-        // æ›´æ–°HUDæ˜¾ç¤º
+        // ¸üĞÂHUDÏÔÊ¾
         if (_mainGameScene && _mainGameScene->getHudLayer()) {
             _mainGameScene->getHudLayer()->updateSheld(_currentShield);
         }
 
-        // æ’­æ”¾æŠ¤ç›¾å—å‡»æ•ˆæœ
+        // ²¥·Å»¤¶ÜÊÜ»÷Ğ§¹û
         _currentState = PlayerState::HURT;
         setCurrentState(PlayerState::HURT);
 
-        // æ’­æ”¾æŠ¤ç›¾å—å‡»éŸ³æ•ˆ
+        // ²¥·Å»¤¶ÜÊÜ»÷ÒôĞ§
         AudioManager::getInstance()->playEffect("sfx_shield_hit");
 
     }
     else {
-        // æŠ¤ç›¾è€—å°½åæ¶ˆè€—ç”Ÿå‘½å€¼
+        // »¤¶ÜºÄ¾¡ºóÏûºÄÉúÃüÖµ
         _currentHealth -= damage;
 
-        // ç¡®ä¿ç”Ÿå‘½å€¼ä¸ä¼šå°äº0
+        // È·±£ÉúÃüÖµ²»»áĞ¡ÓÚ0
         if (_currentHealth < 0) {
             _currentHealth = 0;
         }
 
-        // æ›´æ–°HUDæ˜¾ç¤º
+        // ¸üĞÂHUDÏÔÊ¾
         if (_mainGameScene && _mainGameScene->getHudLayer()) {
             _mainGameScene->getHudLayer()->updateHealth(_currentHealth);
         }
 
-        // è®¾ç½®å—ä¼¤çŠ¶æ€
+        // ÉèÖÃÊÜÉË×´Ì¬
         _currentState = PlayerState::HURT;
         setCurrentState(PlayerState::HURT);
 
-        // æ’­æ”¾å—ä¼¤éŸ³æ•ˆ
+        // ²¥·ÅÊÜÉËÒôĞ§
         AudioManager::getInstance()->playEffect("sfx_hurt");
 
-        // å¦‚æœç”Ÿå‘½å€¼ä¸º0ï¼Œè®¾ç½®æ­»äº¡çŠ¶æ€
+        // Èç¹ûÉúÃüÖµÎª0£¬ÉèÖÃËÀÍö×´Ì¬
         if (_currentHealth == 0) {
             log("Player died! Health: %.0f", _currentHealth);
-            // æ­»äº¡çŠ¶æ€ä¼šåœ¨å—ä¼¤åŠ¨ç”»ç»“æŸåè‡ªåŠ¨è§¦å‘
+            // ËÀÍö×´Ì¬»áÔÚÊÜÉË¶¯»­½áÊøºó×Ô¶¯´¥·¢
         }
         else {
             log("Player took %.0f damage. Health: %.0f", damage, _currentHealth);
@@ -1987,7 +2006,7 @@ void Player::takeDamage(float damage) {
     }
 }
 
-// Player.cpp - å®ç°ç²¾ç¡®æ”»å‡»æ£€æµ‹ç³»ç»Ÿ
+// Player.cpp - ÊµÏÖ¾«È·¹¥»÷¼ì²âÏµÍ³
 void Player::detectAndDamageEnemies() {
     auto enemyManager = EnemyManager::getInstance();
     if (!enemyManager) {
@@ -2001,14 +2020,14 @@ void Player::detectAndDamageEnemies() {
         return;
     }
 
-    // æ ¹æ®è¿å‡»æ•°è°ƒæ•´ä¼¤å®³
+    // ¸ù¾İÁ¬»÷Êıµ÷ÕûÉËº¦
     float baseDamage = 30.0f;
-    float comboMultiplier = 1.0f + (_comboCount * 0.2f); // æ¯è¿å‡»å¢åŠ 20%ä¼¤å®³
+    float comboMultiplier = 1.0f + (_comboCount * 0.2f); // Ã¿Á¬»÷Ôö¼Ó20%ÉËº¦
     float damage = baseDamage * comboMultiplier;
     
-    // æ ¹æ®ç©å®¶æœå‘è®¾ç½®æ”»å‡»èŒƒå›´å’Œæ–¹å‘
-    float attackRangeX = 80.0f;  // æ°´å¹³æ”»å‡»èŒƒå›´
-    float attackRangeY = 40.0f;  // å‚ç›´æ”»å‡»èŒƒå›´
+    // ¸ù¾İÍæ¼Ò³¯ÏòÉèÖÃ¹¥»÷·¶Î§ºÍ·½Ïò
+    float attackRangeX = 80.0f;  // Ë®Æ½¹¥»÷·¶Î§
+    float attackRangeY = 40.0f;  // ´¹Ö±¹¥»÷·¶Î§
     float playerX = this->getWorldPositionX();
     float playerY = this->getWorldPositionY();
 
@@ -2017,45 +2036,45 @@ void Player::detectAndDamageEnemies() {
             float enemyX = enemy->getWorldPositionX();
             float enemyY = enemy->getWorldPositionY();
             
-            // 1. æ£€æŸ¥å‚ç›´èŒƒå›´ï¼ˆYè½´ï¼‰
+            // 1. ¼ì²é´¹Ö±·¶Î§£¨YÖá£©
             float yDistance = std::abs(enemyY - playerY);
             if (yDistance > attackRangeY) {
-                continue;  // ä¸åœ¨å‚ç›´æ”»å‡»èŒƒå›´å†…
+                continue;  // ²»ÔÚ´¹Ö±¹¥»÷·¶Î§ÄÚ
             }
             
-            // 2. æ ¹æ®ç©å®¶æœå‘æ£€æŸ¥æ°´å¹³èŒƒå›´ï¼ˆXè½´ï¼‰
+            // 2. ¸ù¾İÍæ¼Ò³¯Ïò¼ì²éË®Æ½·¶Î§£¨XÖá£©
             if (_facingRight) {
-                // å‘å³æ”»å‡»ï¼Œåªæ£€æµ‹ç©å®¶å³ä¾§çš„æ•Œäºº
+                // ÏòÓÒ¹¥»÷£¬Ö»¼ì²âÍæ¼ÒÓÒ²àµÄµĞÈË
                 if (enemyX < playerX || (enemyX - playerX) > attackRangeX) {
                     continue;
                 }
             } else {
-                // å‘å·¦æ”»å‡»ï¼Œåªæ£€æµ‹ç©å®¶å·¦ä¾§çš„æ•Œäºº
+                // Ïò×ó¹¥»÷£¬Ö»¼ì²âÍæ¼Ò×ó²àµÄµĞÈË
                 if (enemyX > playerX || (playerX - enemyX) > attackRangeX) {
                     continue;
                 }
             }
             
-            // 3. ç²¾ç¡®çš„æ”»å‡»ç¢°æ’æ£€æµ‹ï¼ˆè€ƒè™‘æ•Œäººçš„å®é™…å°ºå¯¸ï¼‰
+            // 3. ¾«È·µÄ¹¥»÷Åö×²¼ì²â£¨¿¼ÂÇµĞÈËµÄÊµ¼Ê³ß´ç£©
             float playerHalfWidth = this->getContentSize().width / 2;
             float enemyHalfWidth = enemy->getContentSize().width / 2;
             float actualDistanceX = std::abs(enemyX - playerX) - playerHalfWidth - enemyHalfWidth;
             
             if (actualDistanceX <= 0) {
-                // æ”»å‡»å‘½ä¸­æ•Œäºº
+                // ¹¥»÷ÃüÖĞµĞÈË
                 enemy->takeDamage(damage);
                 log("Player attacks enemy! Damage: %.0f (combo: x%.1f), Enemy health: %.0f",
                     damage, comboMultiplier, enemy->getCurrentHealth());
                 
-                // å¢åŠ è¿å‡»æ•°
+                // Ôö¼ÓÁ¬»÷Êı
                 _comboCount++;
-                _comboTimer = COMBO_WINDOW;  // é‡ç½®è¿å‡»æ—¶é—´çª—å£
+                _comboTimer = COMBO_WINDOW;  // ÖØÖÃÁ¬»÷Ê±¼ä´°¿Ú
             }
         }
     }
 }
 
-// æ ¼æŒ¡ç›¸å…³æ–¹æ³•å®ç°
+// ¸ñµ²Ïà¹Ø·½·¨ÊµÏÖ
 bool Player::canBlock() const {
     return _currentState != PlayerState::ATTACKING && 
            _currentState != PlayerState::DASHING &&
@@ -2071,16 +2090,16 @@ void Player::startBlocking() {
         return;
     }
 
-    // è®¾ç½®æ ¼æŒ¡çŠ¶æ€
+    // ÉèÖÃ¸ñµ²×´Ì¬
     _currentState = PlayerState::BLOCKING;
     _isBlocking = true;
     _currentBlockDuration = _blockDuration;
 
-    // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
+    // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
     this->stopAllActions();
 
-    // æ’­æ”¾æ ¼æŒ¡åŠ¨ç”»
-    std::string blockKey = "block"; // å‡è®¾å·²ç»æœ‰æ ¼æŒ¡åŠ¨ç”»
+    // ²¥·Å¸ñµ²¶¯»­
+    std::string blockKey = "block"; // ¼ÙÉèÒÑ¾­ÓĞ¸ñµ²¶¯»­
     auto it = _animations.find(blockKey);
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
         auto animate = Animate::create(it->second);
@@ -2089,7 +2108,7 @@ void Player::startBlocking() {
     }
     else {
         log("WARNING: Block animation not found, using default blocking state");
-        // å³ä½¿æ²¡æœ‰åŠ¨ç”»ä¹Ÿè¦ä¿æŒæ ¼æŒ¡çŠ¶æ€
+        // ¼´Ê¹Ã»ÓĞ¶¯»­Ò²Òª±£³Ö¸ñµ²×´Ì¬
     }
 }
 
@@ -2098,13 +2117,13 @@ void Player::endBlocking() {
         return;
     }
 
-    // é‡ç½®æ ¼æŒ¡çŠ¶æ€
+    // ÖØÖÃ¸ñµ²×´Ì¬
     _isBlocking = false;
     _currentBlockDuration = 0.0f;
 
     this->stopAllActions();
 
-    // æ ¹æ®å½“å‰è¾“å…¥çŠ¶æ€è®¾ç½®é€‚å½“çš„çŠ¶æ€
+    // ¸ù¾İµ±Ç°ÊäÈë×´Ì¬ÉèÖÃÊÊµ±µÄ×´Ì¬
     if (_isMovingLeft || _isMovingRight) {
         setCurrentState(PlayerState::RUNNING);
     }
@@ -2115,7 +2134,7 @@ void Player::endBlocking() {
     log("Player ends blocking");
 }
 
-// é—ªé¿ç›¸å…³æ–¹æ³•å®ç°
+// ÉÁ±ÜÏà¹Ø·½·¨ÊµÏÖ
 bool Player::canDodge() const {
     return _currentState != PlayerState::ATTACKING && 
            _currentState != PlayerState::DASHING &&
@@ -2131,19 +2150,19 @@ void Player::startDodging(float direction) {
         return;
     }
 
-    // è®¾ç½®é—ªé¿çŠ¶æ€
+    // ÉèÖÃÉÁ±Ü×´Ì¬
     _currentState = PlayerState::DODGING;
     _isDodging = true;
     _currentDodgeDuration = _dodgeDuration;
     
-    // è®¾ç½®æ— æ•ŒçŠ¶æ€
+    // ÉèÖÃÎŞµĞ×´Ì¬
     _isInvincible = true;
     _invincibleTime = _dodgeInvincibility;
 
-    // åœæ­¢å½“å‰æ‰€æœ‰åŠ¨ä½œ
+    // Í£Ö¹µ±Ç°ËùÓĞ¶¯×÷
     this->stopAllActions();
 
-    // æ’­æ”¾é—ªé¿åŠ¨ç”»
+    // ²¥·ÅÉÁ±Ü¶¯»­
     std::string dodgeKey = "dodge";
     auto it = _animations.find(dodgeKey);
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
@@ -2153,10 +2172,10 @@ void Player::startDodging(float direction) {
     }
     else {
         log("WARNING: Dodge animation not found, using default dodging state");
-        // å³ä½¿æ²¡æœ‰åŠ¨ç”»ä¹Ÿè¦ä¿æŒé—ªé¿çŠ¶æ€
+        // ¼´Ê¹Ã»ÓĞ¶¯»­Ò²Òª±£³ÖÉÁ±Ü×´Ì¬
     }
     
-    // æ ¹æ®æ–¹å‘è®¾ç½®æœå‘
+    // ¸ù¾İ·½ÏòÉèÖÃ³¯Ïò
     if (direction < 0) {
         _facingRight = false;
     } else {
@@ -2169,13 +2188,13 @@ void Player::endDodging() {
         return;
     }
 
-    // é‡ç½®é—ªé¿çŠ¶æ€
+    // ÖØÖÃÉÁ±Ü×´Ì¬
     _isDodging = false;
     _currentDodgeDuration = 0.0f;
 
     this->stopAllActions();
 
-    // æ ¹æ®å½“å‰è¾“å…¥çŠ¶æ€è®¾ç½®é€‚å½“çš„çŠ¶æ€
+    // ¸ù¾İµ±Ç°ÊäÈë×´Ì¬ÉèÖÃÊÊµ±µÄ×´Ì¬
     if (_isMovingLeft || _isMovingRight) {
         setCurrentState(PlayerState::RUNNING);
     }
@@ -2187,14 +2206,97 @@ void Player::endDodging() {
 }
 
 Player::~Player() {
-    // é‡Šæ”¾æ‰€æœ‰ç¼“å­˜çš„åŠ¨ç”»
+    // ÊÍ·ÅËùÓĞ»º´æµÄ¶¯»­
     for (auto& pair : _animations) {
         CC_SAFE_RELEASE(pair.second);
     }
     _animations.clear();
     
-    // æ¸…é™¤å•ä¾‹å®ä¾‹
+    // Çå³ıµ¥ÀıÊµÀı
     if (_instance == this) {
         _instance = nullptr;
     }
+}
+// ÎŞµĞÄ£Ê½×´Ì¬¼ì²é·½·¨
+bool Player::isInvincibleModeEnabled() const {//initializeInvincibleModeSupport
+    return _invincibleModeEnabled;
+}
+
+// ÇĞ»»ÎŞµĞÄ£Ê½·½·¨
+void Player::toggleInvincibleMode() {
+    _invincibleModeEnabled = !_invincibleModeEnabled;
+
+    // ±£´æ»ò»Ö¸´Ô­Ê¼×î´óÉúÃüÖµ
+    if (_invincibleModeEnabled) {
+        // ÆôÓÃÎŞµĞÄ£Ê½£º±£´æÔ­Ê¼ÉúÃüÖµ£¬²¢½«µ±Ç°ÉúÃüÖµÉèÎª¼«´óÖµ
+        _originalMaxHealth = _maxHealth;
+        _originalCurrentHealth = _currentHealth;
+        _displayHealth = _originalCurrentHealth; // ±£³ÖÏÔÊ¾ÉúÃüÖµ²»±ä
+        _maxHealth = 999999; // ÉèÖÃÒ»¸ö¼«´óÖµ×÷ÎªÎŞµĞ×´Ì¬µÄÉúÃüÖµ
+        _currentHealth = _maxHealth;
+        log("ÎŞµĞÄ£Ê½ÒÑÆôÓÃ");
+    }
+    else {
+        // ½ûÓÃÎŞµĞÄ£Ê½£º»Ö¸´Ô­Ê¼ÉúÃüÖµ
+        _maxHealth = _originalMaxHealth;
+        _currentHealth = _originalCurrentHealth;
+        _displayHealth = _currentHealth;
+        log("ÎŞµĞÄ£Ê½ÒÑ½ûÓÃ");
+    }
+
+    // ÉèÖÃÊÓ¾õ·´À¡
+    setInvincibleModeVisualFeedback(_invincibleModeEnabled);
+}
+
+// »ñÈ¡ÏÔÊ¾ÉúÃüÖµ·½·¨£¨ÓÃÓÚUIÏÔÊ¾£©
+float Player::getDisplayHealth() const {
+    // Èç¹û´¦ÓÚÎŞµĞÄ£Ê½£¬·µ»ØÔ­Ê¼ÉúÃüÖµÓÃÓÚÏÔÊ¾
+    if (_invincibleModeEnabled) {
+        return _displayHealth;
+    }
+    return _currentHealth;
+}
+
+// ÉèÖÃÎŞµĞÄ£Ê½ÊÓ¾õ·´À¡Ğ§¹û
+void Player::setInvincibleModeVisualFeedback(bool isInvincible) {
+    // ÏÈÒÆ³ıÒÑÓĞµÄÎŞµĞÊÓ¾õ¶¯×÷
+    this->stopActionByTag(9999);
+    if (isInvincible) {
+        // ÎŞµĞ×´Ì¬ÏÂÉèÖÃÇàÉ«ÉÁË¸Ğ§¹û
+        auto blink = cocos2d::Blink::create(0.5f, 1);
+        auto repeat = cocos2d::RepeatForever::create(blink);
+        runAction(repeat);
+
+        // Replace the line causing the error with the following:
+        setColor(cocos2d::Color3B(0, 255, 255)); // CYAN color represented as RGB (0, 255, 255)
+    }
+    else {
+        // ¹Ø±ÕÎŞµĞ×´Ì¬£¬Çå³ıËùÓĞ¶¯×÷²¢»Ö¸´Ô­É«
+        stopAllActions();
+        setColor(cocos2d::Color3B::WHITE);
+    }
+}
+
+// »ñÈ¡ÉúÃüÖµ°Ù·Ö±È£¨ÓÃÓÚUIÏÔÊ¾£©
+float Player::getHealthPercentage() const {
+    // ÎŞµĞÄ£Ê½ÏÂÊ¹ÓÃ_displayHealthºÍ_originalMaxHealth¼ÆËã°Ù·Ö±È
+    if (_invincibleModeEnabled) {
+        if (_originalMaxHealth > 0) {
+            return _displayHealth / _originalMaxHealth;
+        }
+    }
+
+    // ·ÇÎŞµĞÄ£Ê½ÏÂÊ¹ÓÃÕı³£ÉúÃüÖµ¼ÆËã°Ù·Ö±È
+    if (_maxHealth > 0) {
+        return _currentHealth / _maxHealth;
+    }
+    return 0.0f;
+}
+
+// ÎŞµĞÄ£Ê½²âÊÔ·½·¨£¨¿ª·¢½×¶ÎÊ¹ÓÃ£©
+void Player::testInvincibleMode() {
+    toggleInvincibleMode();
+    log("ÎŞµĞÄ£Ê½²âÊÔ: %s", _invincibleModeEnabled ? "ÒÑ¿ªÆô" : "ÒÑ¹Ø±Õ");
+    log("µ±Ç°ÉúÃüÖµ: %.0f, ×î´óÉúÃüÖµ: %.0f", getCurrentHealth(), getMaxHealth());
+    log("ÏÔÊ¾ÉúÃüÖµ: %.0f, ÉúÃüÖµ°Ù·Ö±È: %.2f%%", getDisplayHealth(), getHealthPercentage() * 100);
 }

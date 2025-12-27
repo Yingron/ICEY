@@ -3,54 +3,75 @@
 #ifndef GAMECONFIG_H
 #define GAMECONFIG_H
 
-// ÓÎÏ·ÅäÖÃ
+// ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½
 namespace GameConfig {
-    // ´°¿ÚÉèÖÃ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     const int WINDOW_WIDTH = 2560;
     const int WINDOW_HEIGHT = 1440;
 
-    // ½ÇÉ«ÉèÖÃ
+    // ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½
     const float PLAYER_SPEED = 400.0f;
     const float GRAVITY = 1500.0f;
-    const float JUMP_FORCE = 600.0f;      // ÌøÔ¾Á¦Á¿
-    const float PLAYER_GROUND_Y = 0.0f;   // µØÃæ¸ß¶È
-    // Íæ¼ÒµØÃæÎ»ÖÃ£¨ÔÚÆÁÄ»ÉÏµÄY×ø±ê°Ù·Ö±È£©
-    const float PLAYER_GROUND_Y_PERCENT = 0.3f; // ´Ó 0.2f ¸ÄÎª 0.3f
+    const float JUMP_FORCE = 600.0f;      // ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½
+    const float PLAYER_GROUND_Y = 0.0f;   // ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
+    // ï¿½ï¿½Òµï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½Ïµï¿½Yï¿½ï¿½ï¿½ï¿½Ù·Ö±È£ï¿½
+    const float PLAYER_GROUND_Y_PERCENT = 0.3f; // ï¿½ï¿½ 0.2f ï¿½ï¿½Îª 0.3f
 
-     // ¶¯»­ÉèÖÃ
+     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     namespace Animation {
-        const float RUN_FRAME_DELAY = 0.05f;   // ÅÜ¶¯¶¯»­Ö¡ÑÓ³Ù
-        const float IDLE_FRAME_DELAY = 0.06f;  // ´ı»ú¶¯»­Ö¡ÑÓ³Ù
-        const float ATTACK_FRAME_DELAY = 0.01f; // ¹¥»÷¶¯»­Ö¡ÑÓ³Ù
-        const float JUMP_FRAME_DELAY = 0.06f;  // ÌøÔ¾¶¯»­Ö¡ÑÓ³Ù - ĞÂÔö
+        const float RUN_FRAME_DELAY = 0.05f;   // ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½Ó³ï¿½
+        const float IDLE_FRAME_DELAY = 0.06f;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½Ó³ï¿½
+        const float ATTACK_FRAME_DELAY = 0.01f; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½Ó³ï¿½
+        const float JUMP_FRAME_DELAY = 0.06f;  // ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½Ó³ï¿½ - ï¿½ï¿½ï¿½ï¿½
     }
 
-    // ÊäÈëÉèÖÃ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     namespace Input {
         const char MOVE_LEFT = 'A';
         const char MOVE_RIGHT = 'D';
-        const char JUMP = 'W';           // ÌøÔ¾¼ü - ĞÂÔö
-        const char ATTACK = 'J';
-        const char NORMAL_ATTACK = 'K';
+        const char JUMP = 'W';
+        const char ATTACK = 'K';
+        const char DASH = ' ';
         const char SKILL1 = 'Q';
         const char SKILL2 = 'E';
-        const char DASH = ' ';
+        const char INVINCIBLE_MODE = 'B'; // æ–°å¢æ— æ•Œæ¨¡å¼æŒ‰é”®å®šä¹‰
+        
+        const cocos2d::EventKeyboard::KeyCode KEY_MOVE_LEFT = cocos2d::EventKeyboard::KeyCode::KEY_A;
+        const cocos2d::EventKeyboard::KeyCode KEY_MOVE_RIGHT = cocos2d::EventKeyboard::KeyCode::KEY_D;
+        const cocos2d::EventKeyboard::KeyCode KEY_JUMP = cocos2d::EventKeyboard::KeyCode::KEY_W;
+        const cocos2d::EventKeyboard::KeyCode KEY_ATTACK = cocos2d::EventKeyboard::KeyCode::KEY_K;
+        const cocos2d::EventKeyboard::KeyCode KEY_DASH = cocos2d::EventKeyboard::KeyCode::KEY_SPACE;
+        const cocos2d::EventKeyboard::KeyCode KEY_SKILL1 = cocos2d::EventKeyboard::KeyCode::KEY_Q;
+        const cocos2d::EventKeyboard::KeyCode KEY_SKILL2 = cocos2d::EventKeyboard::KeyCode::KEY_E;
+        const cocos2d::EventKeyboard::KeyCode KEY_INVINCIBLE_MODE = cocos2d::EventKeyboard::KeyCode::KEY_B; // æ–°å¢æ— æ•Œæ¨¡å¼æŒ‰é”®çš„KeyCodeå®šä¹‰
     }
 
-    // ³å´ÌÉèÖÃ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     namespace Dash {
-        const float DASH_SPEED = 1500.0f;      // ³å´ÌËÙ¶È
-        const float DASH_DISTANCE = 300.0f;    // ³å´Ì¾àÀë
-        const float DASH_DURATION = 0.2f;      // ³å´Ì³ÖĞøÊ±¼ä
-        const float DASH_COOLDOWN = 0.5f;      // ³å´ÌÀäÈ´Ê±¼ä
-        const float DASH_FRAME_DELAY = 0.03f;  // ³å´Ì¶¯»­Ö¡ÑÓ³Ù
+        const float DASH_SPEED = 1500.0f;      // ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+        const float DASH_DISTANCE = 300.0f;    // ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½
+        const float DASH_DURATION = 0.2f;      // ï¿½ï¿½Ì³ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
+        const float DASH_COOLDOWN = 0.5f;      // ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½
+        const float DASH_FRAME_DELAY = 0.03f;  // ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½Ö¡ï¿½Ó³ï¿½
     }
 
-    // Á¬»÷ÉèÖÃ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     namespace Combo {
-        const float COMBO_WINDOW = 0.3f;       // Á¬»÷Ê±¼ä´°¿Ú
-        const int MAX_COMBO = 3;               // ×î´óÁ¬»÷Êı
+        const float COMBO_WINDOW = 0.3f;       // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä´°ï¿½ï¿½
+        const int MAX_COMBO = 3;               // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     }
-}
 
+    // ï¿½ï¿½ï¿½É¼ï¿½ï¿½ã¼¯ï¿½ï¿½
+    namespace ZOrder {
+        const int BACKGROUND = -100;      // ï¿½ï¿½æ™¯å±‚çº§
+        const int PLATFORM = 0;           // ï¿½ï¿½ï¿½Ì³ï¿½ï¿½ã¼¯ï¿½ï¿½
+        const int ENEMY = 50;             // ï¿½ï¿½Í¶ï¿½ï¿½ã¼¯ï¿½ï¿½
+        const int Z_ORDER_BOSS_ENEMY = 100; // BOSSï¿½ï¿½Í¶ï¿½ï¿½ã¼¯ï¿½ï¿½
+        const int PLAYER = 150;           // ï¿½ï¿½Ï·ï¿½ï¿½Ô±ï¿½ï¿½ã¼¯ï¿½ï¿½
+        const int ITEM = 200;             // ï¿½ï¿½ï¿½Ó¶ï¿½ï¿½ï¿½
+        const int EFFECT = 250;           // ï¿½ï¿½Ğ§ï¿½ï¿½
+        const int HUD = 1000;             // HUDï¿½ï¿½ï¿½ã¼¯ï¿½ï¿½
+    }
+
+}
 #endif // GAMECONFIG_H

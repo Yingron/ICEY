@@ -110,6 +110,22 @@ public:
     // 游戏结束相关方法
     void setMainGameScene(MainGameScene* scene) { _mainGameScene = scene; }
     MainGameScene* getMainGameScene() const { return _mainGameScene; }
+    
+    // 无敌模式相关方法
+    // 无敌状态相关
+    bool _invincibleModeEnabled = false;      // 无敌模式开关
+    void toggleInvincibleMode();
+    float getDisplayHealth() const; // 修复函数声明语法错误
+    bool isInvincibleModeEnabled() const; // 修复函数声明语法错误
+    cocos2d::ParticleSystem* _invincibleParticle = nullptr; // 无敌状态粒子效果
+    float _originalMaxHealth = 100.0f;  // 存储原始最大生命值
+    float _originalCurrentHealth = 100.0f; // 存储原始当前生命值
+    float _displayHealth = 100.0f;      // 显示用的生命值
+    void setInvincibleModeVisualFeedback(bool enabled); // 设置无敌模式视觉反馈
+    
+    // 测试无敌模式功能（可选，用于调试）
+    float getHealthPercentage() const;
+    void testInvincibleMode(); // 测试方法，开发阶段使用
 
 private:
     static Player* _instance;
@@ -138,6 +154,10 @@ private:
     int _comboCount;
     float _comboTimer;
     const float COMBO_WINDOW = 1.0f; // 连击时间窗口（1秒）
+    
+    // 攻击间隔相关变量
+    float _attackCooldown;
+    float _currentAttackCooldown;
     
     // 生命值相关变量
     float _maxHealth;
@@ -208,12 +228,12 @@ private:
     // 指向MainGameScene的指针，用于触发游戏结束
     MainGameScene* _mainGameScene;
     // 技能辅助方法
-   // 修改声明，确保返回类型为 EnemyManager*
     EnemyManager* getSafeEnemyManager();
 
     // 无敌相关变量
     float _invincibleTime;    // 无敌时间
     bool _isInvincible;       // 无敌状态
     int _hurtFlashCount;      // 受伤闪烁计数
+
 };
 #endif // PLAYER_H

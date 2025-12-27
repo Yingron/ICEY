@@ -105,7 +105,7 @@ void MeleeEnemy::initEnemyData() {
     // 近战兵的基本属性
     _maxHealth = 100.0f;
     _currentHealth = _maxHealth;
-    _attackDamage = 20.0f;
+    _attackDamage = 3.0f;
     _moveSpeed = 80.0f; // 增加移动速度，使敌人更容易追上玩家
     _attackRange = 50.0f; // 增加攻击范围，使敌人更容易进入攻击范围
     _detectionRange = 150.0f;

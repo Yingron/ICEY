@@ -11,24 +11,15 @@
 #include "HudLayer.h"
 #include "EnemyManager.h"
 #include "Enemy.h"
+#include "ItemBagLayer.h"
+#include "PostLevel4Handler.h"
 
 // Forward declaration
 class Player;
 
-class MainGameScene : public cocos2d::Layer
-{
-public:
-    static cocos2d::Scene* createScene();
-    virtual bool init();
-    void update(float delta);
-    CREATE_FUNC(MainGameScene);
-
-public:
-    void showGameOver();
-    HudLayer* getHudLayer() const { return _hudLayer; }
-    int getEnemyCount() const;
-
+class MainGameScene : public cocos2d::Layer {
 private:
+    ItemBagLayer* _itemBagLayer;
     // 敌人相关方法
     void initEnemies();
     void updateEnemies(float delta);
@@ -109,6 +100,31 @@ private:
     
     void removeEnemy(Enemy* enemy);
     void cleanupDeadEnemies();
+    
+    // ���ڵ���ʽ��ʾ��ǩ
+    cocos2d::Label* _gameModeLabel;
+    
+    // ���ڵ���ʽ��ʾ���ǵ�ʱ��
+    float _gameModeLabelTimer;
+    
+    // ��ʾ���ڵ���ʽ��ʾ��
+    void showGameModeMessage(const std::string& modeName);
+public:
+    static cocos2d::Scene* createScene();
+    virtual bool init();
+    void update(float delta);
+    CREATE_FUNC(MainGameScene);
+    void initItemBag();
+    
+    // ���ڵ���ʽ��Ԥ��ķ���
+    void testGameModeSwitching();
+
+public:
+    void showGameOver();
+    HudLayer* getHudLayer() const { return _hudLayer; }
+    int getEnemyCount() const;
+    // Level4 completion handler
+    PostLevel4Handler* _postLevel4Handler;
 };
 
 #endif // MAINGAMESCENE_H

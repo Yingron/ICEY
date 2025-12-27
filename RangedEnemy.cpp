@@ -59,7 +59,7 @@ void RangedEnemy::attack() {
         if (!_target) return;
         
         // Create projectile
-        auto projectile = Sprite::create("enemy_projectile.png");
+        auto projectile = Sprite::create("images/characters/enemies/Remote combat enemy/Remote combat enemy-attack1_resized.png");
         if (!projectile) {
             // If image not found, use a simple red square instead
             projectile = Sprite::create();
@@ -124,7 +124,7 @@ void RangedEnemy::initEnemyData() {
     // Ranged enemy basic properties
     _maxHealth = 60.0f;
     _currentHealth = _maxHealth;
-    _attackDamage = 15.0f;
+    _attackDamage = 3.0f;
     _moveSpeed = 40.0f;
     _attackRange = 100.0f;
     _detectionRange = 200.0f;
