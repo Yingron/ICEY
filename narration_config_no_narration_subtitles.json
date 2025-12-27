@@ -1,431 +1,81 @@
 {
-  "version": "1.0",
-  "author": "Game Narrator System",
-  "last_updated": "2024-07-26",
-  
   "narrative_entries": [
     {
-      "id": "level_1_start",
-      "title": "开始的旅程",
-      "description": "游戏开场旁白",
-      "text": "欢迎来到这个神秘的世界，勇敢的冒险者。你的旅程将充满挑战与机遇...",
-      "audio_file": "Resources/audio/narrator/level_1_start.mp3",
-      "duration": 5.0,
-      "priority": 10,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "LEVEL_START",
-      "trigger_target_id": "level_1",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 1.0,
-      "fade_out_time": 1.0,
-      "volume": 0.8
-    },
-    
-    {
       "id": "level_1_tutorial",
-      "title": "基础指引",
-      "description": "基础操作指引",
-      "text": "使用方向键移动，空格键跳跃，点击鼠标进行攻击。记住，收集途中的能量水晶，它们将帮助你变得更加强大。",
-      "audio_file": "Resources/audio/narrator/level_1_tutorial.mp3",
+      "audio_file": "Resources\\audio\\narrator\\level_1_tutorial.mp3",
+      "subtitle_text": "新手教学之移动——A键左跑，D键右跑，W键向上跳跃；新手教学之攻击——K键普攻，L键重击；还有skill技能！",
       "duration": 8.0,
-      "priority": 8,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "TIME_ELAPSED",
-      "trigger_target_id": "level_1",
-      "time_delay": 10.0,
-      "is_looping": false,
-      "skipable": true,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.7
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "LEVEL_START",
+        "target_id": "level_1"
+      }
     },
-    
-    {
-      "id": "level_1_first_enemy",
-      "title": "初次交锋",
-      "description": "首次遇到敌人",
-      "text": "小心！你遇到了这片土地上的第一批守护者。它们虽然不强，但也不容小觑。",
-      "audio_file": "Resources/audio/narrator/level_1_first_enemy.mp3",
-      "duration": 4.0,
-      "priority": 7,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "ENEMY_APPEAR",
-      "trigger_target_id": "enemy_group_1",
-      "is_looping": false,
-      "skipable": true,
-      "fade_in_time": 0.3,
-      "fade_out_time": 0.3,
-      "volume": 0.8
-    },
-    
-    {
-      "id": "level_1_mid_point",
-      "title": "路途过半",
-      "description": "到达关卡中点",
-      "text": "你已经走过了一半的路程。前方的道路将更加艰难，但也会有更多的奖励在等着你。",
-      "audio_file": "Resources/audio/narrator/level_1_mid_point.mp3",
-      "duration": 5.0,
-      "priority": 6,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "LOCATION",
-      "trigger_target_id": "checkpoint_mid_1",
-      "location_x": 1500.0,
-      "location_y": 0.0,
-      "location_z": 0.0,
-      "radius": 50.0,
-      "is_looping": false,
-      "skipable": true,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.7
-    },
-    
-    {
-      "id": "level_1_boss_approaching",
-      "title": "强大的挑战",
-      "description": "Boss战即将开始",
-      "text": "你感觉到空气中弥漫着一股强大的力量。看来，这片区域的守护者已经察觉到了你的到来...",
-      "audio_file": "Resources/audio/narrator/level_1_boss_approaching.mp3",
-      "duration": 6.0,
-      "priority": 9,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "BOSS_APPEAR",
-      "trigger_target_id": "boss_1",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.9
-    },
-    
-    {
-      "id": "level_1_boss_defeated",
-      "title": "初战告捷",
-      "description": "击败第一个Boss",
-      "text": "精彩的战斗！你成功击败了第一个守护者。这只是你旅程中的第一步，但它证明了你有着不平凡的力量。",
-      "audio_file": "Resources/audio/narrator/level_1_boss_defeated.mp3",
-      "duration": 5.0,
-      "priority": 8,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "BOSS_DEFEATED",
-      "trigger_target_id": "boss_1",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 1.0,
-      "fade_out_time": 1.0,
-      "volume": 0.8
-    },
-    
-    {
-      "id": "level_1_complete",
-      "title": "第一站的终点",
-      "description": "完成第一关",
-      "text": "恭喜你完成了第一站的挑战！你的力量正在成长，但前方的道路仍充满未知。准备好迎接下一个挑战了吗？",
-      "audio_file": "Resources/audio/narrator/level_1_complete.mp3",
-      "duration": 6.0,
-      "priority": 10,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "LEVEL_COMPLETE",
-      "trigger_target_id": "level_1",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 1.0,
-      "fade_out_time": 1.0,
-      "volume": 0.8
-    },
-    
-    {
-      "id": "level_2_start",
-      "title": "新的征程",
-      "description": "第二关开始",
-      "text": "欢迎来到下一个挑战。这里的环境与之前大不相同，你需要适应新的战斗方式和策略。",
-      "audio_file": "Resources/audio/narrator/level_2_start.mp3",
-      "duration": 5.0,
-      "priority": 10,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "LEVEL_START",
-      "trigger_target_id": "level_2",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 1.0,
-      "fade_out_time": 1.0,
-      "volume": 0.8
-    },
-    
-    {
-      "id": "level_3_start",
-      "title": "深入未知",
-      "description": "第三关开始",
-      "text": "你已经进入了这片世界的核心区域。古老的秘密即将揭晓，但危险也随之增加。记住，勇气和智慧将是你最有力的武器。",
-      "audio_file": "Resources/audio/narrator/level_3_start.mp3",
-      "duration": 6.0,
-      "priority": 10,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "LEVEL_START",
-      "trigger_target_id": "level_3",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 1.0,
-      "fade_out_time": 1.0,
-      "volume": 0.8
-    },
-    
-    {
-      "id": "final_boss_approach",
-      "title": "最终的试炼",
-      "description": "接近最终Boss",
-      "text": "你已经走了这么远，现在是面对最终试炼的时候了。前方等待你的是这个世界上最强大的存在。只有真正的勇者才能通过这个考验。",
-      "audio_file": "Resources/audio/narrator/final_boss_approach.mp3",
-      "duration": 7.0,
-      "priority": 10,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "BOSS_APPEAR",
-      "trigger_target_id": "final_boss",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 1.5,
-      "fade_out_time": 1.5,
-      "volume": 0.9
-    },
-    
-    {
-      "id": "final_boss_defeated",
-      "title": "胜利的喜悦",
-      "description": "击败最终Boss",
-      "text": "令人难以置信的战斗！你成功击败了最终的守护者。你的旅程即将到达终点，但新的故事才刚刚开始...",
-      "audio_file": "Resources/audio/narrator/final_boss_defeated.mp3",
-      "duration": 6.0,
-      "priority": 10,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "BOSS_DEFEATED",
-      "trigger_target_id": "final_boss",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 1.5,
-      "fade_out_time": 1.5,
-      "volume": 0.9
-    },
-    
-    {
-      "id": "game_complete",
-      "title": "旅途结束",
-      "description": "游戏通关",
-      "text": "恭喜你！你成功完成了这段冒险。你的勇气和智慧将被永远铭记在这片土地上。虽然这次旅程结束了，但在某个地方，新的冒险正在等待着你...",
-      "audio_file": "Resources/audio/narrator/game_complete.mp3",
-      "duration": 8.0,
-      "priority": 10,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "GAME_COMPLETE",
-      "trigger_target_id": "main_game",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 2.0,
-      "fade_out_time": 2.0,
-      "volume": 1.0
-    },
-    
     {
       "id": "player_health_critical",
-      "title": "危险警示",
-      "description": "玩家生命值低",
-      "text": "小心！你的生命值已经很低了。寻找治疗物品，或者避开敌人，给自己恢复的时间。",
-      "audio_file": "Resources/audio/narrator/player_health_critical.mp3",
-      "duration": 4.0,
-      "priority": 9,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "PLAYER_HEALTH",
-      "trigger_target_id": "player",
-      "health_threshold": 20.0,
-      "cooldown": 30.0,
-      "is_looping": false,
-      "skipable": true,
-      "fade_in_time": 0.3,
-      "fade_out_time": 0.3,
-      "volume": 0.8
+      "audio_file": "Resources\\audio\\narrator\\player_health_critical.mp3",
+      "subtitle_text": "注意注意，你的生命值不高了，请注意躲避攻击！",
+      "duration": 3.0,
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "CUSTOM_EVENT",
+        "custom_event_name": "PLAYER_HEALTH_CRITICAL"
+      }
     },
-    
-    {
-      "id": "collect_power_up",
-      "title": "力量提升",
-      "description": "收集强大物品",
-      "text": "太棒了！你发现了一件强大的宝物。它将增强你的能力，帮助你面对更大的挑战。",
-      "audio_file": "Resources/audio/narrator/collect_power_up.mp3",
-      "duration": 4.0,
-      "priority": 7,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "ITEM_COLLECTED",
-      "trigger_target_id": "power_up",
-      "cooldown": 10.0,
-      "is_looping": false,
-      "skipable": true,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.7
-    },
-    
-    {
-      "id": "secret_area_found",
-      "title": "神秘之地",
-      "description": "发现隐藏区域",
-      "text": "你发现了一个隐藏的区域！探索这里，你可能会找到一些意想不到的宝藏或秘密...",
-      "audio_file": "Resources/audio/narrator/secret_area_found.mp3",
-      "duration": 4.0,
-      "priority": 8,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "LOCATION",
-      "trigger_target_id": "secret_area",
-      "location_x": 0.0,
-      "location_y": 0.0,
-      "location_z": 0.0,
-      "radius": 30.0,
-      "is_looping": false,
-      "skipable": true,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.7
-    },
-    
-    // 新增：boss1 (caixukun) 旁白配置
     {
       "id": "boss1_ready",
-      "title": "Boss1准备就绪",
-      "description": "caixukun出现时的旁白",
-      "text": "小心！caixukun出现了！",
-      "audio_file": "Resources/audio/narrator/boss1_ready.mp3",
-      "duration": 3.0,
-      "priority": 9,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "CUSTOM_EVENT",
-      "trigger_target_id": "BOSS_READY_caixukun",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.9
+      "audio_file": "Resources\\audio\\narrator\\boss1_ready.mp3",
+      "subtitle_text": "caixukun准备就绪！",
+      "duration": 2.0,
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "CUSTOM_EVENT",
+        "custom_event_name": "BOSS_READY_caixukun"
+      }
     },
-    
     {
       "id": "boss1_hit",
-      "title": "Boss1被击败",
-      "description": "caixukun被击败后的旁白",
-      "text": "太棒了！caixukun被击败了！",
-      "audio_file": "Resources/audio/narrator/boss1_hit.mp3",
-      "duration": 3.0,
-      "priority": 9,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "CUSTOM_EVENT",
-      "trigger_target_id": "BOSS_DEFEATED_caixukun",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.9
+      "audio_file": "Resources\\audio\\narrator\\boss1_hit.mp3",
+      "subtitle_text": "caixukun被击败！",
+      "duration": 2.0,
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "CUSTOM_EVENT",
+        "custom_event_name": "BOSS_DEFEATED_caixukun"
+      }
     },
-    
-    // 新增：boss2 (nailong) 旁白配置
     {
       "id": "boss2_ready",
-      "title": "Boss2准备就绪",
-      "description": "nailong出现时的旁白",
-      "text": "小心！nailong出现了！",
-      "audio_file": "Resources/audio/narrator/boss2_ready.mp3",
-      "duration": 3.0,
-      "priority": 9,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "CUSTOM_EVENT",
-      "trigger_target_id": "BOSS_READY_nailong",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.9
+      "audio_file": "Resources\\audio\\narrator\\boss2_ready.mp3",
+      "subtitle_text": "nailong准备就绪！",
+      "duration": 2.0,
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "CUSTOM_EVENT",
+        "custom_event_name": "BOSS_READY_nailong"
+      }
     },
-    
-    // 新增：boss3 (maodie) 旁白配置
     {
       "id": "boss3_ready",
-      "title": "Boss3准备就绪",
-      "description": "maodie出现时的旁白",
-      "text": "小心！maodie出现了！",
-      "audio_file": "Resources/audio/narrator/boss3_ready.mp3",
-      "duration": 3.0,
-      "priority": 9,
-      "subtitle_text": "",
-      "subtitle_duration": 0,
-      "trigger_type": "CUSTOM_EVENT",
-      "trigger_target_id": "BOSS_READY_maodie",
-      "is_looping": false,
-      "skipable": false,
-      "fade_in_time": 0.5,
-      "fade_out_time": 0.5,
-      "volume": 0.9
-    }
-  ],
-  
-  "narrative_sequences": [
-    {
-      "id": "intro_sequence",
-      "title": "游戏开场序列",
-      "description": "游戏开始时播放的完整旁白序列",
-      "entries": ["level_1_start", "level_1_tutorial"],
-      "sequence_type": "sequential",
-      "wait_between_entries": 2.0,
-      "restart_on_complete": false,
-      "trigger_type": "GAME_START"
+      "audio_file": "Resources\\audio\\narrator\\boss3_ready.mp3",
+      "subtitle_text": "maodie准备就绪！",
+      "duration": 2.0,
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "CUSTOM_EVENT",
+        "custom_event_name": "BOSS_READY_maodie"
+      }
     },
-    
     {
-      "id": "level_1_sequence",
-      "title": "第一关旁白序列",
-      "description": "第一关的完整旁白序列",
-      "entries": ["level_1_start", "level_1_tutorial", "level_1_first_enemy", "level_1_mid_point", "level_1_boss_approaching", "level_1_boss_defeated", "level_1_complete"],
-      "sequence_type": "event_based",
-      "restart_on_complete": false,
-      "trigger_type": "LEVEL_START",
-      "trigger_target_id": "level_1"
-    },
-    
-    {
-      "id": "final_boss_sequence",
-      "title": "最终Boss战序列",
-      "description": "最终Boss战的完整旁白序列",
-      "entries": ["final_boss_approach", "final_boss_defeated", "game_complete"],
-      "sequence_type": "event_based",
-      "wait_between_entries": 1.0,
-      "restart_on_complete": false,
-      "trigger_type": "BOSS_APPEAR",
-      "trigger_target_id": "final_boss"
-    },
-    
-    // 新增：boss战斗序列
-    {
-      "id": "boss1_sequence",
-      "title": "Boss1战斗序列",
-      "description": "caixukun战斗相关的旁白序列",
-      "entries": ["boss1_ready", "boss1_hit"],
-      "sequence_type": "event_based",
-      "restart_on_complete": false,
-      "trigger_type": "BOSS_APPEAR",
-      "trigger_target_id": "caixukun"
+      "id": "game_complete",
+      "audio_file": "Resources\\audio\\narrator\\game_complete.mp3",
+      "subtitle_text": "恭喜你成功通关！感谢游玩！",
+      "duration": 5.0,
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "CUSTOM_EVENT",
+        "custom_event_name": "GAME_COMPLETE"
+      }
     }
   ]
 }

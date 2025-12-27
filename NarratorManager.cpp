@@ -53,101 +53,23 @@ void NarratorManager::loadNarrativesFromJson(const std::string& jsonFile) {
     _sequences.clear();
     _triggers.clear();
     
-    // 只保留需要的11个旁白音频
-    std::set<std::string> requiredAudioFiles = {
-        "level_1_start.mp3",
-        "level_1_tutorial.mp3",
-        "level_1_first_enemy.mp3",
-        "level_1_boss_approaching.mp3",
-        "level_1_complete.mp3",
-        "level_2_start.mp3",
-        "level_3_start.mp3",
-        "final_boss_approach.mp3",
-        "final_boss_defeated.mp3",
-        "game_complete.mp3",
-        "player_health_critical.mp3"
-    };
-    
-    // 硬编码添加必要的旁白条目
+    // 只保留需要的6个旁白音频
     NarrativeEntry entry;
-    
-    // level_1_start.mp3 - 游戏开场旁白
-    entry.id = "level_1_start";
-    entry.audioFile = "Resources\\audio\\narrator\\level_1_start.mp3";
-    entry.subtitleText = "欢迎来到第一关！";
-    entry.duration = 3.0f;
-    entry.isSkippable = true;
-    entry.volume = 1.0f;
-    _narrativeEntries[entry.id] = entry;
     
     // level_1_tutorial.mp3 - 基础操作指引
     entry.id = "level_1_tutorial";
     entry.audioFile = "Resources\\audio\\narrator\\level_1_tutorial.mp3";
-    entry.subtitleText = "使用方向键移动，空格键跳跃，Ctrl键攻击！";
-    entry.duration = 4.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // level_1_first_enemy.mp3 - 首次遇到敌人提示
-    entry.id = "level_1_first_enemy";
-    entry.audioFile = "Resources\\audio\\narrator\\level_1_first_enemy.mp3";
-    entry.subtitleText = "小心！敌人出现了！";
-    entry.duration = 2.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // level_1_boss_approaching.mp3 - Boss战即将开始提示
-    entry.id = "level_1_boss_approaching";
-    entry.audioFile = "Resources\\audio\\narrator\\level_1_boss_approaching.mp3";
-    entry.subtitleText = "注意！Boss即将出现！";
-    entry.duration = 3.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // level_1_complete.mp3 - 完成第一关提示
-    entry.id = "level_1_complete";
-    entry.audioFile = "Resources\\audio\\narrator\\level_1_complete.mp3";
-    entry.subtitleText = "恭喜完成第一关！";
-    entry.duration = 3.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // level_2_start.mp3 - 第二关开始旁白
-    entry.id = "level_2_start";
-    entry.audioFile = "Resources\\audio\\narrator\\level_2_start.mp3";
-    entry.subtitleText = "欢迎来到第二关！";
-    entry.duration = 3.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // level_3_start.mp3 - 第三关开始旁白
-    entry.id = "level_3_start";
-    entry.audioFile = "Resources\\audio\\narrator\\level_3_start.mp3";
-    entry.subtitleText = "欢迎来到最终关卡！";
-    entry.duration = 3.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // final_boss_approach.mp3 - 接近最终Boss提示
-    entry.id = "final_boss_approach";
-    entry.audioFile = "Resources\\audio\\narrator\\final_boss_approach.mp3";
-    entry.subtitleText = "最终Boss就在前方！准备战斗！";
-    entry.duration = 4.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // final_boss_defeated.mp3 - 击败最终Boss提示
-    entry.id = "final_boss_defeated";
-    entry.audioFile = "Resources\\audio\\narrator\\final_boss_defeated.mp3";
-    entry.subtitleText = "太棒了！你击败了最终Boss！";
-    entry.duration = 3.0f;
-    _narrativeEntries[entry.id] = entry;
-    
-    // game_complete.mp3 - 游戏通关旁白
-    entry.id = "game_complete";
-    entry.audioFile = "Resources\\audio\\narrator\\game_complete.mp3";
-    entry.subtitleText = "恭喜你通关了游戏！";
-    entry.duration = 4.0f;
+    entry.subtitleText = "新手教学之移动——A键左跑，D键右跑，W键向上跳跃；新手教学之攻击——K键普攻，L键重击；还有skill技能！";
+    entry.duration = 8.0f;
+    entry.isSkippable = true;
     _narrativeEntries[entry.id] = entry;
     
     // player_health_critical.mp3 - 玩家生命值低提示
     entry.id = "player_health_critical";
     entry.audioFile = "Resources\\audio\\narrator\\player_health_critical.mp3";
-    entry.subtitleText = "你的生命值很低！小心！";
-    entry.duration = 2.0f;
+    entry.subtitleText = "注意注意，你的生命值不高了，请注意躲避攻击！";
+    entry.duration = 3.0f;
+    entry.isSkippable = true;
     _narrativeEntries[entry.id] = entry;
     
     // Boss专属旁白条目 - caixukun
@@ -155,12 +77,14 @@ void NarratorManager::loadNarrativesFromJson(const std::string& jsonFile) {
     entry.audioFile = "Resources\\audio\\narrator\\boss1_ready.mp3";
     entry.subtitleText = "caixukun准备就绪！";
     entry.duration = 2.0f;
+    entry.isSkippable = true;
     _narrativeEntries[entry.id] = entry;
     
     entry.id = "boss1_hit";
     entry.audioFile = "Resources\\audio\\narrator\\boss1_hit.mp3";
     entry.subtitleText = "caixukun被击败！";
     entry.duration = 2.0f;
+    entry.isSkippable = true;
     _narrativeEntries[entry.id] = entry;
     
     // Boss专属旁白条目 - nailong
@@ -168,6 +92,7 @@ void NarratorManager::loadNarrativesFromJson(const std::string& jsonFile) {
     entry.audioFile = "Resources\\audio\\narrator\\boss2_ready.mp3";
     entry.subtitleText = "nailong准备就绪！";
     entry.duration = 2.0f;
+    entry.isSkippable = true;
     _narrativeEntries[entry.id] = entry;
     
     // Boss专属旁白条目 - maodie
@@ -175,43 +100,31 @@ void NarratorManager::loadNarrativesFromJson(const std::string& jsonFile) {
     entry.audioFile = "Resources\\audio\\narrator\\boss3_ready.mp3";
     entry.subtitleText = "maodie准备就绪！";
     entry.duration = 2.0f;
+    entry.isSkippable = true;
     _narrativeEntries[entry.id] = entry;
     
-    // 添加默认的触发条件
+    // 游戏通关旁白
+    entry.id = "game_complete";
+    entry.audioFile = "Resources\\audio\\narrator\\game_complete.mp3";
+    entry.subtitleText = "恭喜你成功通关！感谢游玩！";
+    entry.duration = 5.0f;
+    entry.isSkippable = true;
+    _narrativeEntries[entry.id] = entry;
+    
+    // 添加必要的触发器
     TriggerCondition condition;
     
-    // 关卡开始触发器
+    // 新手教程触发器
     condition.type = TriggerType::LEVEL_START;
     condition.targetId = "level_1";
-    _triggers.emplace_back(condition, "level_1_start");
+    _triggers.emplace_back(condition, "level_1_tutorial");
     
-    condition.targetId = "level_2";
-    _triggers.emplace_back(condition, "level_2_start");
-    
-    condition.targetId = "level_3";
-    _triggers.emplace_back(condition, "level_3_start");
-    
-    // 关卡完成触发器
-    condition.type = TriggerType::LEVEL_END;
-    condition.targetId = "level_1";
-    _triggers.emplace_back(condition, "level_1_complete");
-    
-    // Boss相关触发器
-    condition.type = TriggerType::BOSS_APPEAR;
-    condition.targetId = "final_boss";
-    _triggers.emplace_back(condition, "final_boss_approach");
-    
-    condition.type = TriggerType::BOSS_DEFEATED;
-    condition.targetId = "final_boss";
-    _triggers.emplace_back(condition, "final_boss_defeated");
-    
-    // 游戏完成触发器
+    // 生命值低触发器
     condition.type = TriggerType::CUSTOM_EVENT;
-    condition.customEventName = "GAME_COMPLETE";
-    _triggers.emplace_back(condition, "game_complete");
+    condition.customEventName = "PLAYER_HEALTH_CRITICAL";
+    _triggers.emplace_back(condition, "player_health_critical");
     
     // Boss模式变化触发器
-    condition.type = TriggerType::CUSTOM_EVENT;
     condition.customEventName = "BOSS_READY_caixukun";
     _triggers.emplace_back(condition, "boss1_ready");
     
@@ -224,7 +137,11 @@ void NarratorManager::loadNarrativesFromJson(const std::string& jsonFile) {
     condition.customEventName = "BOSS_READY_maodie";
     _triggers.emplace_back(condition, "boss3_ready");
     
-    CCLOG("NarratorManager: Loaded %zu required narratives", _narrativeEntries.size());
+    // 游戏通关触发器
+    condition.customEventName = "GAME_COMPLETE";
+    _triggers.emplace_back(condition, "game_complete");
+    
+    CCLOG("NarratorManager: 已加载 %zu 个必要旁白", _narrativeEntries.size());
 }
 
 // 播放指定ID的旁白
@@ -232,13 +149,13 @@ void NarratorManager::playNarrative(const std::string& id, bool forcePlay) {
     // 检查是否存在该旁白
     auto it = _narrativeEntries.find(id);
     if (it == _narrativeEntries.end()) {
-        CCLOG("NarratorManager: Narrative with ID '%s' not found", id.c_str());
+        CCLOG("NarratorManager: 找不到ID为 '%s' 的旁白", id.c_str());
         return;
     }
     
     // 如果当前正在播放且不强制播放，则不执行
     if (isPlaying() && !forcePlay) {
-        CCLOG("NarratorManager: Already playing a narrative, skipping request");
+        CCLOG("NarratorManager: 正在播放其他旁白，跳过请求");
         return;
     }
     
@@ -267,7 +184,7 @@ void NarratorManager::playNarrativeInternal(const std::string& id, bool forcePla
             DelayTime::create(entry.delay),
             CallFunc::create([this, id, entry]() {
                 // 这里应该实现实际的音频播放逻辑
-                CCLOG("NarratorManager: Playing audio: %s", entry.audioFile.c_str());
+                CCLOG("NarratorManager: 播放音频: %s", entry.audioFile.c_str());
                 
                 // 显示字幕
                 if (_isSubtitlesEnabled && !entry.subtitleText.empty()) {
@@ -286,7 +203,7 @@ void NarratorManager::playNarrativeInternal(const std::string& id, bool forcePla
         ));
     } else {
         // 直接播放音频
-        CCLOG("NarratorManager: Playing audio: %s", entry.audioFile.c_str());
+        CCLOG("NarratorManager: 播放音频: %s", entry.audioFile.c_str());
         
         // 显示字幕
         if (_isSubtitlesEnabled && !entry.subtitleText.empty()) {
@@ -300,35 +217,6 @@ void NarratorManager::playNarrativeInternal(const std::string& id, bool forcePla
         scheduleOnce([this, id](float dt) {
             onNarrativeComplete(id);
         }, entry.duration, "narrative_complete");
-    }
-}
-
-// 播放指定ID的旁白序列
-void NarratorManager::playSequence(const std::string& sequenceId, bool forcePlay) {
-    // 检查序列是否存在
-    auto it = _sequences.find(sequenceId);
-    if (it == _sequences.end()) {
-        CCLOG("NarratorManager: Sequence with ID '%s' not found", sequenceId.c_str());
-        return;
-    }
-    
-    // 如果当前正在播放且不强制播放，则不执行
-    if (isPlaying() && !forcePlay) {
-        CCLOG("NarratorManager: Already playing a narrative, skipping sequence request");
-        return;
-    }
-    
-    // 停止当前播放
-    stopCurrentNarrative();
-    
-    // 设置序列播放状态
-    _currentSequence = sequenceId;
-    _currentSequenceIndex = 0;
-    
-    // 开始播放序列中的第一个旁白
-    const auto& entryIds = it->second.entryIds;
-    if (!entryIds.empty()) {
-        playNarrativeInternal(entryIds[0], forcePlay);
     }
 }
 
@@ -404,22 +292,6 @@ void NarratorManager::checkTriggers() {
     // 这里可以添加自定义触发器检查逻辑
 }
 
-// 预加载旁白
-void NarratorManager::preloadNarratives(const std::vector<std::string>& narrativeIds) {
-    // 预加载音频资源
-    for (const auto& id : narrativeIds) {
-        auto it = _narrativeEntries.find(id);
-        if (it != _narrativeEntries.end()) {
-            CCLOG("NarratorManager: Preloading narrative: %s", it->second.audioFile.c_str());
-        }
-    }
-}
-
-// 卸载未使用的旁白
-void NarratorManager::unloadUnusedNarratives() {
-    // 可以在这里实现资源卸载逻辑
-}
-
 // 重置已播放的旁白状态
 void NarratorManager::resetPlayedNarratives() {
     _playedNarratives.clear();
@@ -444,27 +316,6 @@ void NarratorManager::onGameEvent(const std::string& eventName, const ValueMap& 
                 playNarrative(narrativeId);
             }
         }
-        else if (eventName == "LEVEL_END" && condition.type == TriggerType::LEVEL_END) {
-            if (params.find("levelId") != params.end() && 
-                params.at("levelId").asString() == condition.targetId) {
-                condition.hasBeenTriggered = true;
-                playNarrative(narrativeId);
-            }
-        }
-        else if (eventName == "BOSS_APPEAR" && condition.type == TriggerType::BOSS_APPEAR) {
-            if (params.find("bossId") != params.end() && 
-                params.at("bossId").asString() == condition.targetId) {
-                condition.hasBeenTriggered = true;
-                playNarrative(narrativeId);
-            }
-        }
-        else if (eventName == "BOSS_DEFEATED" && condition.type == TriggerType::BOSS_DEFEATED) {
-            if (params.find("bossId") != params.end() && 
-                params.at("bossId").asString() == condition.targetId) {
-                condition.hasBeenTriggered = true;
-                playNarrative(narrativeId);
-            }
-        }
         else if (eventName == condition.customEventName && condition.type == TriggerType::CUSTOM_EVENT) {
             condition.hasBeenTriggered = true;
             playNarrative(narrativeId);
@@ -474,62 +325,11 @@ void NarratorManager::onGameEvent(const std::string& eventName, const ValueMap& 
 
 // 旁白完成回调
 void NarratorManager::onNarrativeComplete(const std::string& id) {
-    // 如果是序列的一部分，播放下一个
-    if (!_currentSequence.empty()) {
-        onSequenceEntryComplete();
-    } else {
-        // 清除当前播放状态
-        _currentPlayingNarrative = "";
-        
-        // 隐藏字幕
-        NotificationCenter::getInstance()->postNotification("HIDE_SUBTITLE");
-    }
-}
-
-// 序列条目完成回调
-void NarratorManager::onSequenceEntryComplete() {
-    if (_currentSequence.empty() || _currentSequenceIndex < 0) {
-        return;
-    }
+    // 清除当前播放状态
+    _currentPlayingNarrative = "";
     
-    // 查找当前序列
-    auto it = _sequences.find(_currentSequence);
-    if (it == _sequences.end()) {
-        _currentSequence = "";
-        _currentSequenceIndex = -1;
-        _currentPlayingNarrative = "";
-        return;
-    }
-    
-    const auto& sequence = it->second;
-    const auto& entryIds = sequence.entryIds;
-    
-    // 更新索引
-    _currentSequenceIndex++;
-    
-    // 检查是否还有更多条目
-    if (_currentSequenceIndex < entryIds.size()) {
-        // 如果是顺序播放，添加延迟
-        if (sequence.isSequential && sequence.betweenDelay > 0.0f) {
-            runAction(Sequence::create(
-                DelayTime::create(sequence.betweenDelay),
-                CallFunc::create([this, entryIds]() {
-                    playNarrativeInternal(entryIds[_currentSequenceIndex]);
-                }),
-                nullptr
-            ));
-        } else {
-            playNarrativeInternal(entryIds[_currentSequenceIndex]);
-        }
-    } else {
-        // 序列播放完成
-        _currentSequence = "";
-        _currentSequenceIndex = -1;
-        _currentPlayingNarrative = "";
-        
-        // 隐藏字幕
-        NotificationCenter::getInstance()->postNotification("HIDE_SUBTITLE");
-    }
+    // 隐藏字幕
+    NotificationCenter::getInstance()->postNotification("HIDE_SUBTITLE");
 }
 
 // 更新方法
@@ -555,17 +355,23 @@ bool NarratorManager::testNarrationTriggers() {
     
     bool allTestsPassed = true;
     
-    // 测试Boss旁白配置
-    std::vector<std::string> testBossEvents = {
-        "BOSS_READY_caixukun",  // caixukun出现
-        "BOSS_DEFEATED_caixukun", // caixukun被击败
-        "BOSS_READY_nailong",    // nailong出现
-        "BOSS_READY_maodie"      // maodie出现
+    // 测试所有必要的旁白触发
+    std::vector<std::string> testEvents = {
+        "LEVEL_START",             // 新手教程
+        "PLAYER_HEALTH_CRITICAL",  // 生命值低提示
+        "BOSS_READY_caixukun",     // caixukun出现
+        "BOSS_DEFEATED_caixukun",  // caixukun被击败
+        "BOSS_READY_nailong",      // nailong出现
+        "BOSS_READY_maodie",       // maodie出现
+        "GAME_COMPLETE"            // 游戏通关
     };
     
-    for (const auto& eventName : testBossEvents) {
+    for (const auto& eventName : testEvents) {
         CCLOG("测试事件: %s", eventName.c_str());
         ValueMap params;
+        if (eventName == "LEVEL_START") {
+            params["levelId"] = "level_1";
+        }
         onGameEvent(eventName, params);
         CCLOG("事件处理完成: %s", eventName.c_str());
     }
@@ -582,3 +388,4 @@ void NarratorManager::resetAllTriggers() {
     _playedNarratives.clear();
     CCLOG("所有触发器状态已重置");
 }
+

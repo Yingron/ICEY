@@ -3,133 +3,131 @@
 
 #include "cocos2d.h"
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <map>
 #include <set>
+#include <utility>
 
 USING_NS_CC;
 
-// 旁白条目结构体
-struct NarrativeEntry {
-    std::string id;                 // 唯一标识符
-    std::string audioFile;          // 音频文件路径
-    std::string subtitleText;       // 字幕文本
-    float duration;                 // 持续时间(秒)
-    std::vector<std::string> tags;  // 标签列表(用于过滤)
-    bool isSkippable;               // 是否可跳过
-    float volume;                   // 音量(0.0-1.0)
-    float delay;                    // 延迟播放时间(秒)
-    
-    NarrativeEntry() : duration(0.0f), isSkippable(true), volume(1.0f), delay(0.0f) {}
-};
-
-// 旁白序列结构体
-struct NarrativeSequence {
-    std::string sequenceId;         // 序列ID
-    std::vector<std::string> entryIds; // 条目ID列表
-    bool isSequential;              // 是否顺序播放
-    float betweenDelay;             // 条目间延迟(秒)
-    
-    NarrativeSequence() : isSequential(true), betweenDelay(0.0f) {}
-};
-
-// 触发器条件枚举
-enum class TriggerType {
-    LEVEL_START,
-    LEVEL_END,
-    BOSS_APPEAR,
-    BOSS_DEFEATED,
-    PLAYER_POSITION,
-    TIME_ELAPSED,
-    CUSTOM_EVENT
-};
-
-// 触发器条件结构体
-struct TriggerCondition {
-    TriggerType type;               // 触发类型
-    std::string targetId;           // 目标ID(关卡/Boss等)
-    Vec2 position;                  // 玩家位置条件
-    float distance;                 // 距离阈值
-    float timeInSeconds;            // 时间阈值
-    std::string customEventName;    // 自定义事件名称
-    bool hasBeenTriggered;          // 是否已触发
-    
-    TriggerCondition() : type(TriggerType::CUSTOM_EVENT), distance(100.0f), 
-                        timeInSeconds(0.0f), hasBeenTriggered(false) {}
-};
-
-// 旁白系统核心管理类
+// 旁白系统管理器类 - 精简版
 class NarratorManager : public Node {
 private:
+    // 单例模式
     static NarratorManager* _instance;
     
-    // 旁白数据存储
-    std::map<std::string, NarrativeEntry> _narrativeEntries;
-    std::map<std::string, NarrativeSequence> _sequences;
-    std::vector<pair<TriggerCondition, std::string>> _triggers;
-    
-    // 状态管理
-    std::set<std::string> _playedNarratives;  // 已播放的旁白ID集合
-    std::string _currentPlayingNarrative;         // 当前播放中的旁白ID
-    std::string _currentSequence;                 // 当前播放中的序列ID
-    int _currentSequenceIndex;                    // 当前序列中的索引
-    
-    // 配置选项
-    bool _isMuted;
-    float _volume;
-    bool _isSubtitlesEnabled;
-    
-    // 私有构造函数
+    // 构造函数
     NarratorManager();
     
+    // 存储旁白条目
+    struct NarrativeEntry {
+        std::string id;                    // 唯一标识符
+        std::string audioFile;             // 音频文件路径
+        std::string subtitleText;          // 字幕文本
+        float duration = 0.0f;             // 持续时间（秒）
+        bool isSkippable = true;           // 是否可跳过
+        float delay = 0.0f;                // 延迟播放时间
+    };
+    
+    // 触发器条件
+    struct TriggerCondition {
+        // 触发器类型枚举
+        enum class Type {
+            LEVEL_START,   // 关卡开始时触发
+            CUSTOM_EVENT   // 自定义事件触发
+        };  
+        
+        Type type;                       // 触发器类型
+        std::string targetId;            // 目标ID（如关卡ID）
+        std::string customEventName;     // 自定义事件名称
+        bool hasBeenTriggered = false;   // 是否已触发
+    };
+    
+    // 成员变量
+    std::unordered_map<std::string, NarrativeEntry> _narrativeEntries;  // 旁白条目映射
+    std::vector<std::pair<TriggerCondition, std::string>> _triggers; // 触发器与旁白ID的映射
+    std::set<std::string> _playedNarratives;       // 已播放过的旁白ID集合
+    std::unordered_map<std::string, std::vector<std::string>> _sequences; // 序列映射
+    
+    std::string _currentPlayingNarrative;  // 当前播放的旁白ID
+    std::string _currentSequence;          // 当前播放序列ID
+    int _currentSequenceIndex;             // 当前序列索引
+    bool _isMuted;                         // 是否静音
+    float _volume;                         // 音量（0.0-1.0）
+    bool _isSubtitlesEnabled;              // 是否启用字幕
+    
     // 内部方法
-    void loadNarrativesFromJson(const std::string& jsonFile);
-    void playNarrativeInternal(const std::string& id, bool forcePlay = false);
-    void onNarrativeComplete(const std::string& id);
-    void onSequenceEntryComplete();
+    void playNarrativeInternal(const std::string& id, bool forcePlay);
     
 public:
     // 获取单例实例
     static NarratorManager* getInstance();
     
     // 初始化方法
-    bool init();
+    virtual bool init() override;
     
-    // 旁白播放控制
+    // 从JSON配置文件加载旁白数据
+    void loadNarrativesFromJson(const std::string& jsonFile = "config/narratives.json");
+    
+    // 播放指定ID的旁白
     void playNarrative(const std::string& id, bool forcePlay = false);
-    void playSequence(const std::string& sequenceId, bool forcePlay = false);
+    
+    // 停止当前播放的旁白
     void stopCurrentNarrative();
+    
+    // 停止所有旁白
     void stopAllNarratives();
     
-    // 状态查询
+    // 检查是否正在播放
     bool isPlaying() const;
+    
+    // 检查旁白是否已经播放过
     bool hasPlayedNarrative(const std::string& id) const;
     
-    // 配置方法
+    // 设置静音状态
     void setMuted(bool muted);
+    
+    // 获取静音状态
     bool isMuted() const;
+    
+    // 设置音量
     void setVolume(float volume);
+    
+    // 获取音量
     float getVolume() const;
+    
+    // 设置字幕是否启用
     void setSubtitlesEnabled(bool enabled);
+    
+    // 获取字幕是否启用
     bool isSubtitlesEnabled() const;
     
-    // 触发器管理
+    // 添加触发器
     void addTrigger(const TriggerCondition& condition, const std::string& narrativeId);
-    void checkTriggers();  // 检查所有触发器条件
     
-    // 资源管理
-    void preloadNarratives(const std::vector<std::string>& narrativeIds);
-    void unloadUnusedNarratives();
+    // 检查触发器
+    void checkTriggers();
     
-    // 重置方法
-    void resetPlayedNarratives();  // 重置已播放状态
+    // 重置已播放的旁白状态
+    void resetPlayedNarratives();
     
-    // 事件回调
+    // 处理游戏事件
     void onGameEvent(const std::string& eventName, const ValueMap& params = ValueMap());
     
-    // 生命周期管理
-    void update(float delta) override;
+    // 旁白完成回调
+    void onNarrativeComplete(const std::string& id);
+    
+    // 更新方法
+    virtual void update(float delta) override;
+    
+    // 析构函数
     virtual ~NarratorManager();
+    
+    // 测试功能：测试所有旁白触发
+    bool testNarrationTriggers();
+    
+    // 重置所有触发器状态（用于测试）
+    void resetAllTriggers();
 };
 
 #endif // NARRATOR_MANAGER_H
