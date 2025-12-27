@@ -31,6 +31,7 @@ public:
 
     // 状态获取
     PlayerState getCurrentState() const { return _currentState; }
+    void resetAnimationState();
     void setCurrentState(PlayerState state);
 
     // 输入处理
@@ -152,6 +153,9 @@ private:
 
     // 冲刺更新方法
     void updateDash(float delta);
+    // 冲刺完成处理函数
+    void onDashComplete();
+    void endDash();
     
     // 技能相关变量
     float _skill1Damage;         // 技能1伤害
@@ -173,5 +177,10 @@ private:
     // 技能辅助方法
    // 修改声明，确保返回类型为 EnemyManager*
     EnemyManager* getSafeEnemyManager();
+
+    // 无敌相关变量
+    float _invincibleTime;    // 无敌时间
+    bool _isInvincible;       // 无敌状态
+    int _hurtFlashCount;      // 受伤闪烁计数
 };
 #endif // PLAYER_H

@@ -177,76 +177,57 @@ void Player::loadAnimations() {
             log("WARNING: Could not find jump frame %d", i);
         }
     }
-    // 6. 加载冲刺动画
-     // 向右冲刺动画（使用向右跑动动画的帧）
+    // 8. 加载向右冲刺动画（1-20帧）- 使用专门的冲刺动画
     std::vector<std::string> dashRightFrames;
-    for (int i = 1; i <= 18; i++) {
+    for (int i = 1; i <= 20; i++) {
         std::vector<std::string> possiblePaths = {
-            StringUtils::format("images/characters/player/icey-run-to-right-%d.png", i),
-            StringUtils::format("Resources/images/characters/player/icey-run-to-right-%d.png", i),
-            StringUtils::format("icey-run-to-right-%d.png", i),
-            StringUtils::format("characters/player/icey-run-to-right-%d.png", i),
+            StringUtils::format("images/characters/player/icey-dash-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-dash-%d.png", i),
+            StringUtils::format("C:/test3/Resources/images/characters/player/icey-dash-%d.png", i),
+            StringUtils::format("icey-dash-%d.png", i),
+            StringUtils::format("characters/player/icey-dash-%d.png", i),
         };
 
         bool found = false;
         for (const auto& path : possiblePaths) {
             if (fileUtils->isFileExist(path)) {
                 dashRightFrames.push_back(path);
-                log("Found dash right frame %d at: %s", i, path.c_str());
+                log("Found dash frame %d at: %s", i, path.c_str());
                 found = true;
                 break;
             }
         }
 
         if (!found) {
-            log("WARNING: Could not find dash right frame %d", i);
+            log("WARNING: Could not find dash frame %d", i);
         }
     }
 
-    // 向左冲刺动画（使用向左跑动动画的帧）
-    std::vector<std::string> dashLeftFrames;
-    for (int i = 1; i <= 19; i++) {
+    // 9. 加载受击动画（1-30帧）- 不区分左右
+    std::vector<std::string> hurtFrames;
+    for (int i = 1; i <= 30; i++) {
         std::vector<std::string> possiblePaths = {
-            StringUtils::format("images/characters/player/icey-run-to-left-%d.png", i),
-            StringUtils::format("Resources/images/characters/player/icey-run-to-left-%d.png", i),
-            StringUtils::format("icey-run-to-left-%d.png", i),
-            StringUtils::format("characters/player/icey-run-to-left-%d.png", i),
+            StringUtils::format("images/characters/player/icey-hurt-%d.png", i),
+            StringUtils::format("Resources/images/characters/player/icey-hurt-%d.png", i),
+            StringUtils::format("C:/test3/Resources/images/characters/player/icey-hurt-%d.png", i),
+            StringUtils::format("icey-hurt-%d.png", i),
+            StringUtils::format("characters/player/icey-hurt-%d.png", i),
         };
 
         bool found = false;
         for (const auto& path : possiblePaths) {
             if (fileUtils->isFileExist(path)) {
-                dashLeftFrames.push_back(path);
-                log("Found dash left frame %d at: %s", i, path.c_str());
+                hurtFrames.push_back(path);
+                log("Found hurt frame %d at: %s", i, path.c_str());
                 found = true;
                 break;
             }
         }
 
         if (!found) {
-            log("WARNING: Could not find dash left frame %d", i);
+            log("WARNING: Could not find hurt frame %d", i);
         }
     }
-    // 创建向右冲刺动画（使用更快的帧延迟）
-    if (!dashRightFrames.empty()) {
-        cocos2d::Animation* dashRightAnim = createAnimationFromFiles(dashRightFrames, 0.03f); // 比跑步快
-        if (dashRightAnim) {
-            _animations["dash_right"] = dashRightAnim;
-            dashRightAnim->retain();
-            log("Created dash right animation with %d frames", (int)dashRightFrames.size());
-        }
-    }
-
-    // 创建向左冲刺动画（使用更快的帧延迟）
-    if (!dashLeftFrames.empty()) {
-        cocos2d::Animation* dashLeftAnim = createAnimationFromFiles(dashLeftFrames, 0.03f); // 比跑步快
-        if (dashLeftAnim) {
-            _animations["dash_left"] = dashLeftAnim;
-            dashLeftAnim->retain();
-            log("Created dash left animation with %d frames", (int)dashLeftFrames.size());
-        }
-    }
-
     // 检查是否有动画帧
     if (idleFrames.empty() && rightRunFrames.empty() && leftRunFrames.empty() &&
         normalAttackRightFrames.empty() && jumpFrames.empty()) {
@@ -397,6 +378,26 @@ void Player::loadAnimations() {
             log("ERROR: Failed to create skill2 animation");
         }
     }
+    // 创建向右冲刺动画
+    if (!dashRightFrames.empty()) {
+        cocos2d::Animation* dashRightAnim = createAnimationFromFiles(dashRightFrames, 0.03f);
+        if (dashRightAnim) {
+            dashRightAnim->setRestoreOriginalFrame(false); // 不恢复原始帧
+            _animations["dash_right"] = dashRightAnim;
+            dashRightAnim->retain();
+            log("Created dash right animation with %d frames", (int)dashRightFrames.size());
+        }
+    }
+
+    // 创建受击动画
+    if (!hurtFrames.empty()) {
+        cocos2d::Animation* hurtAnim = createAnimationFromFiles(hurtFrames, 0.05f);
+        if (hurtAnim) {
+            _animations["hurt"] = hurtAnim;
+            hurtAnim->retain();
+            log("Created hurt animation with %d frames", (int)hurtFrames.size());
+        }
+    }
 }
 
 void Player::jump() {
@@ -420,6 +421,7 @@ void Player::jump() {
         log("Player jumps (count: %d) with force: %.0f", _jumpCount, _jumpForce);
     }
 }
+
 cocos2d::Animation* Player::createAnimationFromFiles(const std::vector<std::string>& frames, float delay) {
     if (frames.empty()) {
         log("Warning: No frames provided for animation");
@@ -437,7 +439,7 @@ cocos2d::Animation* Player::createAnimationFromFiles(const std::vector<std::stri
         }
 
         // 使用 SpriteFrameCache 加载精灵帧
-        SpriteFrame* spriteFrame = nullptr;
+        SpriteFrame* spriteFrame = nullptr; // 在这里声明变量
 
         // 首先尝试从缓存获取
         spriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(frameName);
@@ -539,7 +541,12 @@ bool Player::init(const std::string& spriteFile) {
 
     // 初始化DashBar引用为nullptr
     _dashBar = nullptr;
-    
+
+    // 添加受伤相关变量初始化
+    _isInvincible = false;           // 无敌状态
+    _invincibleTime = 0.0f;          // 无敌时间
+    _hurtFlashCount = 0;             // 受伤闪烁计数
+
     // 初始化技能1相关变量
     _skill1Damage = 50.0f;         // 技能1伤害
     _skill1Range = 100.0f;         // 技能1范围
@@ -914,7 +921,7 @@ void Player::applySkill2Effect() {
     log("Skill2 hit %d enemies", hitCount);
 }
 
-// Player.cpp - 修改 update 函数
+// Player.cpp - 修改update函数
 void Player::update(float delta) {
     // 更新连击计时器
     if (_comboTimer > 0) {
@@ -924,7 +931,7 @@ void Player::update(float delta) {
             _canCombo = false;
         }
     }
-    
+
     // 更新技能冷却时间
     if (_skill1CooldownTimer > 0) {
         _skill1CooldownTimer -= delta;
@@ -938,16 +945,28 @@ void Player::update(float delta) {
             _skill2CooldownTimer = 0;
         }
     }
-    
-    // 防止无限下落 - 添加最大下落限制
+
+    // 更新无敌状态
+    if (_isInvincible) {
+        _invincibleTime -= delta;
+        if (_invincibleTime <= 0) {
+            _isInvincible = false;
+            this->setVisible(true); // 恢复可见
+            this->stopAllActions(); // 停止闪烁动作
+        }
+    }
+
+    // 防止无限下落
     if (_worldPositionY < -1000.0f) {
         _worldPositionY = 0;
         _velocity.y = 0;
         _isGrounded = true;
         log("WARNING: Player fell too far, resetting position!");
     }
+
     // 更新冲刺
     updateDash(delta);
+
     // 更新物理（包括重力）
     updatePhysics(delta);
 
@@ -1032,10 +1051,29 @@ void Player::stopMoving() {
     _isMovingLeft = false;
     _isMovingRight = false;
 }
-
+// Player.cpp - 添加强制重置动画状态的函数
+void Player::resetAnimationState() {
+    if (_currentState == PlayerState::DASHING) {
+        // 如果当前是冲刺状态，强制结束冲刺
+        endDash();
+    }
+    else if (_currentState == PlayerState::IDLE) {
+        // 如果是待机状态，确保正在播放待机动画
+        if (_currentAnimationKey != "idle") {
+            _currentAnimationKey = "idle";
+            this->stopAllActions();
+            auto it = _animations.find("idle");
+            if (it != _animations.end() && it->second->getFrames().size() > 0) {
+                auto animate = Animate::create(it->second);
+                this->runAction(RepeatForever::create(animate));
+            }
+        }
+    }
+}
 void Player::setCurrentState(PlayerState state) {
     bool stateChanged = (_currentState != state);
     bool needUpdateAnimation = false;
+    
     // 跳跃期间不能切换到其他动画
     if (_currentState == PlayerState::JUMPING && state != PlayerState::JUMPING) {
         // 只有在落地后才能切换状态
@@ -1047,13 +1085,17 @@ void Player::setCurrentState(PlayerState state) {
         }
     }
 
-    // 如果正在冲刺，允许切换到其他状态（特别是结束冲刺时）
+    // 如果当前是冲刺状态，允许切换到其他状态
     if (_currentState == PlayerState::DASHING && state != PlayerState::DASHING) {
-        // 允许从冲刺状态切换到其他状态
-        _currentState = state;
-
-        // 停止所有动作
+        // 首先停止冲刺动画
         this->stopAllActions();
+
+        // 重置冲刺变量
+        _currentDashDistance = 0.0f;
+        _isDashLeft = false;
+
+        // 设置新状态
+        _currentState = state;
 
         // 根据新状态设置动画
         switch (state) {
@@ -1075,10 +1117,19 @@ void Player::setCurrentState(PlayerState state) {
         // 播放对应动画
         auto it = _animations.find(_currentAnimationKey);
         if (it != _animations.end() && it->second->getFrames().size() > 0) {
+            // 确保面向正确
+            if (_currentAnimationKey == "run_left") {
+                this->setFlippedX(true);
+            }
+            else if (_currentAnimationKey == "run_right") {
+                this->setFlippedX(false);
+            }
+
             auto animate = Animate::create(it->second);
             this->runAction(RepeatForever::create(animate));
         }
 
+        log("Switched from DASHING to state %d", (int)state);
         return;
     }
 
@@ -1400,7 +1451,56 @@ void Player::setCurrentState(PlayerState state) {
             log("Player DEAD state processed: animations cleared, physics disabled");
         }
         break;
+        case PlayerState::HURT:
+        {
+            // 播放受击动画
+            _currentAnimationKey = "hurt";
+            auto it = _animations.find("hurt");
+            if (it != _animations.end() && it->second->getFrames().size() > 0) {
+                // 停止当前所有动作
+                this->stopAllActions();
 
+                // 设置无敌状态
+                _isInvincible = true;
+                _invincibleTime = 1.0f; // 1秒无敌时间
+
+                // 创建闪烁动作
+                auto blinkAction = Blink::create(1.0f, 10); // 1秒内闪烁10次
+                this->runAction(blinkAction);
+
+                // 播放受击动画（不循环）
+                auto animate = Animate::create(it->second);
+                auto callback = CallFunc::create([this]() {
+                    // 受击动画结束后，根据情况回到合适的状态
+                    if (_currentHealth <= 0) {
+                        _currentState = PlayerState::DEAD;
+                        setCurrentState(PlayerState::DEAD);
+                    }
+                    else if (_isGrounded) {
+                        if (_isMovingLeft || _isMovingRight) {
+                            setCurrentState(PlayerState::RUNNING);
+                        }
+                        else {
+                            setCurrentState(PlayerState::IDLE);
+                        }
+                    }
+                    else {
+                        setCurrentState(PlayerState::JUMPING);
+                    }
+                    });
+
+                auto sequence = Sequence::create(animate, callback, nullptr);
+                this->runAction(sequence);
+
+                log("Playing hurt animation with %d frames", (int)it->second->getFrames().size());
+            }
+            else {
+                log("ERROR: Hurt animation not found or empty");
+                // 如果没有受击动画，直接设置回IDLE状态
+                setCurrentState(PlayerState::IDLE);
+            }
+        }
+        break;
         default:
             break;
         }
@@ -1448,8 +1548,7 @@ void Player::dash() {
     // 默认向右冲刺
     dashRight();
 }
-
-// Player.cpp - 修改 dashLeft 函数中的动画设置
+// Player.cpp - 简化 dashLeft 和 dashRight 函数
 void Player::dashLeft() {
     if (!canDash() || _currentState == PlayerState::ATTACKING) {
         log("Cannot dash: canDash=%d, state=%d", canDash(), (int)_currentState);
@@ -1463,7 +1562,7 @@ void Player::dashLeft() {
 
     // 设置冲刺状态
     _currentState = PlayerState::DASHING;
-    _facingRight = false;  // 面向左
+    _facingRight = false;
     _isDashLeft = true;
     _currentDashDistance = 0.0f;
 
@@ -1471,46 +1570,25 @@ void Player::dashLeft() {
     this->stopAllActions();
 
     // 播放冲刺动画
-    std::string dashKey = "dash_left";
+    std::string dashKey = "dash_right"; // 使用向右冲刺动画
     auto it = _animations.find(dashKey);
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
-        // 关键修复：向左冲刺时，如果使用向右的动画，需要水平翻转
-        if (dashKey == "dash_right") {
-            this->setFlippedX(true);  // 水平翻转，使其面向左
-        }
-        else {
-            this->setFlippedX(false); // 如果已经是向左动画，不需要翻转
-        }
+        // 向左冲刺时水平翻转动画
+        this->setFlippedX(true);
 
-        // 播放冲刺动画（不循环）
+        // 播放冲刺动画（使用 Repeat::create，这样动画结束后会停止而不是循环）
         auto animate = Animate::create(it->second);
-        auto callback = CallFunc::create([this]() {
-            // 冲刺动画结束后，根据情况回到跑步或待机状态
-            if (_isMovingLeft || _isMovingRight) {
-                setCurrentState(PlayerState::RUNNING);
-            }
-            else {
-                setCurrentState(PlayerState::IDLE);
-            }
-            });
-
-        auto sequence = Sequence::create(animate, callback, nullptr);
-        this->runAction(sequence);
+        this->runAction(Repeat::create(animate, 1));
 
         log("Playing dash left animation, remaining dashes: %d",
             _dashBar ? _dashBar->getAvailableDashes() : 0);
     }
     else {
-        // 如果没有冲刺动画，使用跑步动画但更快，并设置翻转
-        _currentState = PlayerState::RUNNING;
-        this->setFlippedX(true);  // 面向左时水平翻转
-        setCurrentState(PlayerState::RUNNING);
-        // 设置一个标志表示正在冲刺
-        _currentState = PlayerState::DASHING;
+        log("ERROR: Dash animation not found");
+        // 即使没有动画也要保持冲刺状态
     }
 }
 
-// Player.cpp - 修改 dashRight 函数中的动画设置
 void Player::dashRight() {
     if (!canDash() || _currentState == PlayerState::ATTACKING) {
         log("Cannot dash: canDash=%d, state=%d", canDash(), (int)_currentState);
@@ -1524,7 +1602,7 @@ void Player::dashRight() {
 
     // 设置冲刺状态
     _currentState = PlayerState::DASHING;
-    _facingRight = true;   // 面向右
+    _facingRight = true;
     _isDashLeft = false;
     _currentDashDistance = 0.0f;
 
@@ -1535,37 +1613,42 @@ void Player::dashRight() {
     std::string dashKey = "dash_right";
     auto it = _animations.find(dashKey);
     if (it != _animations.end() && it->second->getFrames().size() > 0) {
-        // 关键修复：确保面向右时不翻转
+        // 向右冲刺时不翻转
         this->setFlippedX(false);
 
-        // 播放冲刺动画（不循环）
+        // 播放冲刺动画（使用 Repeat::create，这样动画结束后会停止而不是循环）
         auto animate = Animate::create(it->second);
-        auto callback = CallFunc::create([this]() {
-            // 冲刺动画结束后，根据情况回到跑步或待机状态
-            if (_isMovingLeft || _isMovingRight) {
-                setCurrentState(PlayerState::RUNNING);
-            }
-            else {
-                setCurrentState(PlayerState::IDLE);
-            }
-            });
-
-        auto sequence = Sequence::create(animate, callback, nullptr);
-        this->runAction(sequence);
+        this->runAction(Repeat::create(animate, 1));
 
         log("Playing dash right animation, remaining dashes: %d",
             _dashBar ? _dashBar->getAvailableDashes() : 0);
     }
     else {
-        // 如果没有冲刺动画，使用跑步动画但更快
-        _currentState = PlayerState::RUNNING;
-        this->setFlippedX(false);  // 面向右时不翻转
-        setCurrentState(PlayerState::RUNNING);
-        // 设置一个标志表示正在冲刺
-        _currentState = PlayerState::DASHING;
+        log("ERROR: Dash animation not found");
+        // 即使没有动画也要保持冲刺状态
     }
 }
+// 添加冲刺完成处理函数
+void Player::onDashComplete() {
+    log("Player::onDashComplete called");
 
+    // 停止所有动作
+    this->stopAllActions();
+
+    // 重置冲刺变量
+    _currentDashDistance = 0.0f;
+    _isDashLeft = false;
+
+    // 根据当前输入状态设置适当的状态
+    if (_isMovingLeft || _isMovingRight) {
+        // 如果有移动输入，切换到跑步状态
+        setCurrentState(PlayerState::RUNNING);
+    }
+    else {
+        // 没有移动输入，切换到待机状态
+        setCurrentState(PlayerState::IDLE);
+    }
+}
 // Player.cpp - 修改 updateDash 函数
 void Player::updateDash(float delta) {
     if (_currentState == PlayerState::DASHING) {
@@ -1579,37 +1662,66 @@ void Player::updateDash(float delta) {
             // 防止移动到世界左侧边界之外
             if (_worldPositionX < 0) {
                 _worldPositionX = 0;
-                // 碰到边界则结束冲刺
-                setCurrentState(PlayerState::IDLE);
             }
         }
         else {
             _worldPositionX += dashMove;
         }
 
-        // 检查是否达到最大冲刺距离
+        // 检查是否达到最大冲刺距离 OR 动画是否已经结束
         if (_currentDashDistance >= _dashDistance) {
-            // 冲刺结束，根据情况回到跑步或待机状态
-            if (_isMovingLeft || _isMovingRight) {
-                // 先停止所有动作
-                this->stopAllActions();
-                _currentState = PlayerState::RUNNING;
-                setCurrentState(PlayerState::RUNNING);
+            // 冲刺距离达到，结束冲刺
+            endDash();
+        }
+        else {
+            // 检查动画是否已经自然结束（通过判断是否还有运行动作）
+            if (this->getNumberOfRunningActions() == 0) {
+                // 如果没有运行动作，说明动画已经结束，强制结束冲刺
+                log("No running actions detected, forcing dash end");
+                endDash();
             }
-            else {
-                // 先停止所有动作
-                this->stopAllActions();
-                _currentState = PlayerState::IDLE;
-                setCurrentState(PlayerState::IDLE);
-            }
-
-            // 重置冲刺变量
-            _currentDashDistance = 0.0f;
-            _isDashLeft = false;
         }
     }
 }
+// 修改 endDash 函数
+void Player::endDash() {
+    if (_currentState != PlayerState::DASHING) {
+        return;
+    }
 
+    log("Dash ended, resetting state");
+
+    // 停止所有动作
+    this->stopAllActions();
+
+    // 重置冲刺变量
+    _currentDashDistance = 0.0f;
+    _isDashLeft = false;
+
+    // 强制设置回待机状态
+    _currentState = PlayerState::IDLE;
+
+    // 播放待机动画
+    auto it = _animations.find("idle");
+    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+        // 确保面向正确方向
+        if (_facingRight) {
+            this->setFlippedX(false);
+        }
+        else {
+            this->setFlippedX(true);
+        }
+
+        // 播放待机动画
+        auto animate = Animate::create(it->second);
+        this->runAction(RepeatForever::create(animate));
+
+        log("Player returned to idle state after dash");
+    }
+    else {
+        log("ERROR: Idle animation not found after dash");
+    }
+}
 // Player.cpp - 修改onKeyPressed函数中的冲刺部分
 void Player::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode) {
     // 记录按键状态
@@ -1770,45 +1882,57 @@ void Player::setupAnimations() {
     // 此函数暂时留空，动画在loadAnimations中加载
 }
 
+// Player.cpp - 修改takeDamage函数
 void Player::takeDamage(float damage) {
-    if (isDead()) {
-        return;
+    if (isDead() || _isInvincible) {
+        return; // 如果已经死亡或处于无敌状态，不处理伤害
     }
-    
+
     // 首先消耗护盾
     if (_currentShield > 0) {
         _currentShield -= 1;
         log("Player shield reduced by 1. Shield: %d", _currentShield);
-        
+
         // 更新HUD显示
         if (_mainGameScene && _mainGameScene->getHudLayer()) {
             _mainGameScene->getHudLayer()->updateSheld(_currentShield);
         }
-    } else {
+
+        // 播放护盾受击效果
+        _currentState = PlayerState::HURT;
+        setCurrentState(PlayerState::HURT);
+
+        // 播放护盾受击音效
+        AudioManager::getInstance()->playEffect("sfx_shield_hit");
+
+    }
+    else {
         // 护盾耗尽后消耗生命值
         _currentHealth -= damage;
-        
+
         // 确保生命值不会小于0
         if (_currentHealth < 0) {
             _currentHealth = 0;
         }
-        
+
         // 更新HUD显示
         if (_mainGameScene && _mainGameScene->getHudLayer()) {
             _mainGameScene->getHudLayer()->updateHealth(_currentHealth);
         }
-        
+
+        // 设置受伤状态
+        _currentState = PlayerState::HURT;
+        setCurrentState(PlayerState::HURT);
+
+        // 播放受伤音效
+        AudioManager::getInstance()->playEffect("sfx_hurt");
+
         // 如果生命值为0，设置死亡状态
         if (_currentHealth == 0) {
-            setCurrentState(PlayerState::DEAD);
             log("Player died! Health: %.0f", _currentHealth);
-            // 触发游戏结束
-            if (_mainGameScene) {
-                _mainGameScene->showGameOver();
-            }
-        } else {
-            // 否则设置受伤状态
-            setCurrentState(PlayerState::HURT);
+            // 死亡状态会在受伤动画结束后自动触发
+        }
+        else {
             log("Player took %.0f damage. Health: %.0f", damage, _currentHealth);
         }
     }

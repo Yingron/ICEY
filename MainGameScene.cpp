@@ -637,25 +637,22 @@ void MainGameScene::checkLevelTransition(float delta) {
 }
 
 void MainGameScene::update(float delta) {
-    // ������ң���������ҵ�����λ�ã�
+    // 更新玩家
     if (_player) {
         _player->update(delta);
+      
+        // 定期检查玩家动画状态是否正常
+        static float stateCheckTimer = 0.0f;
+        stateCheckTimer += delta;
+        if (stateCheckTimer > 0.5f) {
+            stateCheckTimer = 0.0f;
 
-        // ���ڴ�ӡ���λ�ã����ڵ��ԣ�
-        static float debugTimer = 0.0f;
-        debugTimer += delta;
-        if (debugTimer > 1.0f) {
-            debugTimer = 0.0f;
-            float playerWorldX = _player->getWorldPositionX();
-            float playerWorldY = _player->getWorldPositionY();
-            auto currentLevel = _levelManager->getCurrentLevel();
-
-            log("[DEBUG] Level: %d, Player Pos: (%.0f, %.0f)/%.0f, At boundary: %s",
-                (int)currentLevel, playerWorldX, playerWorldY, _worldWidth,
-                isPlayerAtRightBoundary() ? "YES" : "NO");
+            // 如果玩家在冲刺状态但冲刺已经结束，强制重置状态
+            if (_player->isDashing()) {
+                // 这里可以添加检查冲刺是否应该结束的逻辑
+            }
         }
     }
-
 
     // ���ؿ��л�
     checkLevelTransition(delta);
@@ -752,6 +749,18 @@ void MainGameScene::showGameOver() {
 void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (_player) {
         _player->onKeyPressed(keyCode);
+    }
+    // 添加测试热键 T 来强制重置玩家状态
+    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_T) {
+        if (_player) {
+            log("Forcing player to idle state");
+
+            // 停止所有动作
+            _player->stopAllActions();
+
+            // 强制设置为待机状态
+            _player->setCurrentState(PlayerState::IDLE);
+        }
     }
 
     if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//��esc��ͣ     hy
@@ -1101,6 +1110,7 @@ void MainGameScene::initEnemies() {
     _enemyManager = EnemyManager::getInstance();
     if (!_enemyManager) {
         log("ERROR: EnemyManager not initialized!");
+        return;
     }
     // 设置敌人的目标为玩家
     _enemyManager->setPlayer(_player);
@@ -1109,80 +1119,70 @@ void MainGameScene::initEnemies() {
     auto currentLevel = _levelManager->getCurrentLevel();
     log("Initializing enemies for level: %d", (int)currentLevel);
 
-    // 定义可能的敌人类型
-    const std::vector<std::string> enemyTypes = { "melee", "ranged", "shield" };
+    // Level1作为新手教学关卡，不生成敌人
+    if (currentLevel == LevelManager::LevelState::LEVEL1) {
+        log("Level 1: Tutorial level, no enemies generated");
+        return;
+    }
+
+    // 定义普通/精英敌人类型
+    const std::vector<std::string> regularEnemyTypes = { "close_combat1", "close_combat2", "elite_enemy", "remote_enemy" };
 
     // 设置随机种子
     srand(time(nullptr));
 
-    // 根据关卡类型生成不同配置的敌人
-    if (currentLevel == LevelManager::LevelState::LEVEL1) {
-        // Level1：生成2-5个普通敌人（没有BOSS）
-        int enemyCount = MIN_ENEMY_COUNT + rand() % (MAX_ENEMY_COUNT - MIN_ENEMY_COUNT + 1);
-        log("Generating %d enemies for Level 1", enemyCount);
+    // 生成BOSS（根据指定关卡）
+    std::string bossType;
+    bool hasBoss = false;
+    float playerX = _player->getWorldPositionX();
+    float worldY = _player->getWorldPositionY();
+    
+    if (currentLevel == LevelManager::LevelState::LEVEL2_6) {
+        // BOSS1-CAIXUNKUN生成在level2-6
+        bossType = "boss1";
+        hasBoss = true;
+        log("Generating BOSS1-CAIXUNKUN");
+    } else if (currentLevel == LevelManager::LevelState::LEVEL3_6) {
+        // BOSS2-MAODIE生成在level3-6
+        bossType = "boss2";
+        hasBoss = true;
+        log("Generating BOSS2-MAODIE");
+    } else if (currentLevel == LevelManager::LevelState::LEVEL4_6) {
+        // BOSS3-NAILONG生成在level4-6
+        bossType = "boss3";
+        hasBoss = true;
+        log("Generating BOSS3-NAILONG");
+    }
+    
+    if (hasBoss) {
+        // 在玩家前方较远位置生成BOSS
+        float worldX = playerX + 1000;
+        createEnemyAt(bossType, worldX, worldY);
+    }
 
+    // Levels 2-4随机生成3-5个普通/精英敌人
+    if ((currentLevel >= LevelManager::LevelState::LEVEL2_1 && currentLevel <= LevelManager::LevelState::LEVEL2_5) ||
+        (currentLevel >= LevelManager::LevelState::LEVEL3_1 && currentLevel <= LevelManager::LevelState::LEVEL3_5) ||
+        (currentLevel >= LevelManager::LevelState::LEVEL4_1 && currentLevel <= LevelManager::LevelState::LEVEL4_5)) {
+        
+        // 随机生成3-5个敌人
+        int enemyCount = 3 + rand() % 3; // 3-5个敌人
+        log("Generating %d regular/elite enemies", enemyCount);
+        
         for (int i = 0; i < enemyCount; i++) {
             // 随机选择敌人类型
-            int typeIndex = rand() % enemyTypes.size();
-            std::string enemyType = enemyTypes[typeIndex];
-
-            // 计算敌人位置（在玩家前方一定距离）
-            float playerX = _player->getWorldPositionX();
-            float worldX = playerX + 100 + rand() % 700; // 玩家前方100-800单位
-            float worldY = _player->getWorldPositionY() + (rand() % 100) - 50; // 小范围垂直随机
-
-            createEnemyAt(enemyType, worldX, worldY);
+            int typeIndex = rand() % regularEnemyTypes.size();
+            std::string enemyType = regularEnemyTypes[typeIndex];
+            
+            // 在玩家前方随机位置生成敌人
+            float worldX = playerX + 200 + rand() % 800; // 玩家前方200-1000单位
+            float enemyY = worldY + (rand() % 100) - 50; // 小范围垂直随机
+            
+            createEnemyAt(enemyType, worldX, enemyY);
         }
     }
-    else if (currentLevel >= LevelManager::LevelState::LEVEL2_1 &&
-        currentLevel <= LevelManager::LevelState::LEVEL4_6) {
-
-        // 检查当前关卡是否有BOSS
-        bool hasBoss = false;
-        if ((currentLevel >= LevelManager::LevelState::LEVEL2_1 && currentLevel <= LevelManager::LevelState::LEVEL2_6) ||
-            (currentLevel >= LevelManager::LevelState::LEVEL3_1 && currentLevel <= LevelManager::LevelState::LEVEL3_5) ||
-            (currentLevel == LevelManager::LevelState::LEVEL4_4)) {
-            hasBoss = true;
-        }
-
-        // 总敌人数：2-5个
-        int totalEnemyCount = MIN_ENEMY_COUNT + rand() % (MAX_ENEMY_COUNT - MIN_ENEMY_COUNT + 1);
-
-        // 普通敌人数 = 总敌人数 - BOSS数（如果有）
-        int regularEnemyCount = hasBoss ? (totalEnemyCount - 1) : totalEnemyCount;
-
-        log("Generating %d enemies total (including boss: %s)",
-            totalEnemyCount, hasBoss ? "YES" : "NO");
-        log("Generating %d regular enemies", regularEnemyCount);
-
-        // 生成普通敌人
-        for (int i = 0; i < regularEnemyCount; i++) {
-            // 随机选择敌人类型
-            int typeIndex = rand() % enemyTypes.size();
-            std::string enemyType = enemyTypes[typeIndex];
-
-            // 获取玩家当前位置
-            float playerX = _player->getWorldPositionX();
-
-            // 在玩家前方随机位置生成敌人
-            // X坐标在玩家前方200-1000单位之间，Y坐标与玩家相近
-            float worldX = playerX + 200 + rand() % 800;
-            float worldY = _player->getWorldPositionY() + (rand() % 100) - 50;
-
-            // 创建敌人
-            createEnemyAt(enemyType, worldX, worldY);
-        }
-
-        // 生成BOSS（如果有）
-        if (hasBoss) {
-            // 获取玩家当前位置
-            float playerX = _player->getWorldPositionX();
-            float worldX = playerX + 800; // BOSS在更远的位置
-            float worldY = _player->getWorldPositionY();
-
-            // 根据关卡确定BOSS类型
-            std::string bossType = "melee"; // 默认
-            std::string bossName = "";
+    
+    log("Enemy initialization completed");
 
             // level2-6生成BOSS1-CAIXUNKUN
             if (currentLevel >= LevelManager::LevelState::LEVEL2_1 &&
