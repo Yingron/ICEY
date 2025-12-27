@@ -92,6 +92,9 @@ private:
     cocos2d::EventListenerKeyboard* _keyboardListener;
     cocos2d::Label* _debugLabel;
     cocos2d::Label* _levelLabel;
+    
+    // Physics related
+    cocos2d::EventListenerPhysicsContact* _contactListener;
 
     // Keyboard event callbacks
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);

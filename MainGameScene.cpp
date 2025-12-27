@@ -9,6 +9,7 @@
 #include"AudioManager.h"
 #include "EnemyManager.h"
 #include "Player.h"
+#include <physics3d/CCPhysics3DObject.h>
 
 USING_NS_CC;
 
@@ -137,9 +138,9 @@ void MainGameScene::onEnter() {
             log("Physics world configured successfully");
 
             // ������ײ������
-            auto contactListener = EventListenerPhysicsContact::create();
-            contactListener->onContactBegin = CC_CALLBACK_1(MainGameScene::onContactBegin, this);
-            _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
+            _contactListener = EventListenerPhysicsContact::create();
+            _contactListener->onContactBegin = CC_CALLBACK_1(MainGameScene::onContactBegin, this);
+            _eventDispatcher->addEventListenerWithSceneGraphPriority(_contactListener, this);
             log("Physics contact listener added");
         }
     }
@@ -150,7 +151,50 @@ void MainGameScene::onEnter() {
 
 void MainGameScene::onExit() {
     Layer::onExit();
-    // ��������...
+    
+    // 清理玩家资源
+    if (_player) {
+        _player->removeFromParentAndCleanup(true);
+        _player = nullptr;
+        log("Player resources cleaned up in onExit");
+    }
+    
+    // 清理敌人管理器
+    if (_enemyManager) {
+        _enemyManager->removeAllEnemies();
+        _enemyManager->cleanup();
+        EnemyManager::destroyInstance(); // 销毁单例实例
+        _enemyManager = nullptr;
+        log("EnemyManager destroyed in onExit");
+    }
+    
+    // 移除碰撞监听器
+    if (_contactListener) {
+        _eventDispatcher->removeEventListener(_contactListener);
+        _contactListener = nullptr;
+        log("Collision contact listener removed in onExit");
+    }
+    
+    // 清理场景中的敌人列表（非拥有权）
+    _enemiesList.clear();
+    log("Scene enemy pointers cleared in onExit");
+    
+    // 清理级别管理器引用
+    if (_levelManager) {
+        _levelManager = nullptr;
+    }
+    
+    // 清理其他资源
+    if (_levelLabel) {
+        _levelLabel->removeFromParentAndCleanup(true);
+        _levelLabel = nullptr;
+    }
+    
+    // 清理项目资源
+    for (auto item : _levelItems) {
+        item->removeFromParentAndCleanup(true);
+    }
+    _levelItems.clear();
 }
 
 // MainGameScene.cpp - �޸�initItems����
@@ -302,10 +346,13 @@ bool MainGameScene::onContactBegin(PhysicsContact& contact) {
     if (!nodeA || !nodeB) {
         return false;
     }
+    
+    // 检查玩家是否存在且未死亡
+    bool isPlayerValid = (_player && !_player->isDead());
 
     // 检查是否是玩家和物品的碰撞
-    if ((nodeA == _player && dynamic_cast<Item*>(nodeB)) ||
-        (nodeB == _player && dynamic_cast<Item*>(nodeA))) {
+    if (isPlayerValid && ((nodeA == _player && dynamic_cast<Item*>(nodeB)) ||
+        (nodeB == _player && dynamic_cast<Item*>(nodeA)))) {
         Item* item = nullptr;
         if (nodeA != _player) {
             item = dynamic_cast<Item*>(nodeA);
@@ -323,8 +370,8 @@ bool MainGameScene::onContactBegin(PhysicsContact& contact) {
         }
     }
     // 检查是否是玩家和敌人的碰撞
-    else if ((nodeA == _player && dynamic_cast<Enemy*>(nodeB)) ||
-             (nodeB == _player && dynamic_cast<Enemy*>(nodeA))) {
+    else if (isPlayerValid && ((nodeA == _player && dynamic_cast<Enemy*>(nodeB)) ||
+             (nodeB == _player && dynamic_cast<Enemy*>(nodeA)))) {
         Enemy* enemy = nullptr;
         if (nodeA != _player) {
             enemy = dynamic_cast<Enemy*>(nodeA);
@@ -338,21 +385,26 @@ bool MainGameScene::onContactBegin(PhysicsContact& contact) {
         }
     }
     // 检查是否是玩家和投射物的碰撞
-    else if ((nodeA == _player && bodyB->getCategoryBitmask() == 0x04) ||
-             (nodeB == _player && bodyA->getCategoryBitmask() == 0x04)) {
+    else if (isPlayerValid && ((nodeA == _player && bodyB->getCategoryBitmask() == 0x04) ||
+             (nodeB == _player && bodyA->getCategoryBitmask() == 0x04))) {
         // 简单实现投射物伤害逻辑
         _player->takeDamage(15.0f); // 使用默认伤害值，可以根据需要调整
         
-        // 移除投射物
+        // 移除投射物，确保投射物有效
         Node* projectile = nullptr;
         if (nodeA != _player) {
             projectile = nodeA;
         } else {
             projectile = nodeB;
         }
-        projectile->removeFromParentAndCleanup(true);
         
-        log("Player hit by projectile!");
+        // 增强空指针检查，避免访问已销毁的投射物
+        if (projectile) {
+            projectile->removeFromParentAndCleanup(true);
+            log("Player hit by projectile!");
+        } else {
+            log("WARNING: Attempted to remove null projectile");
+        }
     }
 
     return true;
@@ -620,6 +672,14 @@ void MainGameScene::checkLevelTransition(float delta) {
     if (isPlayerAtRightBoundary()) {
         // ��¼��ǰ�ؿ�״̬
         auto currentLevel = _levelManager->getCurrentLevel();
+
+        // ���ÿ��Ƿ���з˿ŵ��ˣ���Ҫ�ڵ�һ��关卡（LEVEL1）不检查敌人
+        if (currentLevel != LevelManager::LevelState::LEVEL1) {
+            if (_enemyManager && _enemyManager->getAliveEnemiesCount() > 0) {
+                log("Cannot transition: %d enemies still alive", _enemyManager->getAliveEnemiesCount());
+                return;
+            }
+        }
 
         // ����Ƿ�����л�����һ�ؿ�
         if (_levelManager->canSwitchToNextLevel(playerWorldX)) {
@@ -899,15 +959,13 @@ void MainGameScene::switchToNextLevel() {
     _player->stopMoving();
 
     // 清理当前地图的敌人
-    if (!_enemiesList.empty()) {
-        for (auto enemy : _enemiesList) {
-            if (enemy && enemy->getParent()) {
-                enemy->removeFromParentAndCleanup(true);
-            }
-        }
-        _enemiesList.clear();
-        log("Cleared enemies for level transition");
+    if (_enemyManager) {
+        _enemyManager->removeAllEnemies();
+        log("EnemyManager cleared all enemies for level transition");
     }
+    // 清理场景中的敌人列表（非拥有权）
+    _enemiesList.clear();
+    log("Cleared enemy pointers from scene list for level transition");
 
     // ��ȡ��ǰ�ؿ�����һ�ؿ�
     auto oldLevel = _levelManager->getCurrentLevel();
@@ -1077,12 +1135,27 @@ int MainGameScene::getEnemyCount() const {
 void MainGameScene::cleanupDeadEnemies() {
     for (auto it = _enemiesList.begin(); it != _enemiesList.end();) {
         Enemy* enemy = *it;
-        if (!enemy || enemy->isDead() || !enemy->getParent()) {
-            if (enemy && enemy->getParent()) {
-                enemy->removeFromParentAndCleanup(true);
+        if (!enemy || enemy->isDead() || !enemy->getParent() || enemy->getTag() == -1) {
+            // 检查敌人是否仍然存在于 EnemyManager 中
+            bool stillInManager = false;
+            if (_enemyManager) {
+                auto allEnemies = _enemyManager->getAllEnemies();
+                for (auto mgrEnemy : allEnemies) {
+                    if (mgrEnemy == enemy) {
+                        stillInManager = true;
+                        break;
+                    }
+                }
             }
-            it = _enemiesList.erase(it);
-            log("Cleaned up dead enemy");
+
+            // 如果敌人不在 EnemyManager 中或者已经死亡，从场景列表中移除
+            if (!stillInManager || enemy->isDead()) {
+                it = _enemiesList.erase(it);
+                log("Cleaned up enemy from scene list (dead or removed from manager)");
+            }
+            else {
+                ++it;
+            }
         }
         else {
             ++it;
@@ -1095,23 +1168,20 @@ void MainGameScene::cleanupDeadEnemies() {
 void MainGameScene::initEnemies() {
     log("=== initEnemies ===");
 
-    // 清理上一个地图的敌人
-    if (!_enemiesList.empty()) {
-        for (auto enemy : _enemiesList) {
-            if (enemy && enemy->getParent()) {
-                enemy->removeFromParentAndCleanup(true);
-            }
-        }
-        _enemiesList.clear();
-        log("Cleared previous level enemies");
-    }
+    // 清理上一个地图的敌人列表（非拥有权）
+    _enemiesList.clear();
+    log("Cleared previous level enemy pointers");
 
-    // 初始化敌人管理器实例
+    // 获取或初始化敌人管理器实例
     _enemyManager = EnemyManager::getInstance();
     if (!_enemyManager) {
         log("ERROR: EnemyManager not initialized!");
         return;
     }
+    
+    // 清空EnemyManager中的敌人
+    _enemyManager->removeAllEnemies();
+    
     // 设置敌人的目标为玩家
     _enemyManager->setPlayer(_player);
 
@@ -1119,91 +1189,93 @@ void MainGameScene::initEnemies() {
     auto currentLevel = _levelManager->getCurrentLevel();
     log("Initializing enemies for level: %d", (int)currentLevel);
 
-    // Level1作为新手教学关卡，不生成敌人
-    if (currentLevel == LevelManager::LevelState::LEVEL1) {
-        log("Level 1: Tutorial level, no enemies generated");
-        return;
-    }
-
-    // 定义普通/精英敌人类型
-    const std::vector<std::string> regularEnemyTypes = { "close_combat1", "close_combat2", "elite_enemy", "remote_enemy" };
+    // 定义可能的敌人类型
+    const std::vector<std::string> enemyTypes = { "melee", "ranged", "shield" };
 
     // 设置随机种子
     srand(time(nullptr));
 
-    // 生成BOSS（根据指定关卡）
-    std::string bossType;
-    bool hasBoss = false;
-    float playerX = _player->getWorldPositionX();
-    float worldY = _player->getWorldPositionY();
-    
-    if (currentLevel == LevelManager::LevelState::LEVEL2_6) {
-        // BOSS1-CAIXUNKUN生成在level2-6
-        bossType = "boss1";
-        hasBoss = true;
-        log("Generating BOSS1-CAIXUNKUN");
-    } else if (currentLevel == LevelManager::LevelState::LEVEL3_6) {
-        // BOSS2-MAODIE生成在level3-6
-        bossType = "boss2";
-        hasBoss = true;
-        log("Generating BOSS2-MAODIE");
-    } else if (currentLevel == LevelManager::LevelState::LEVEL4_6) {
-        // BOSS3-NAILONG生成在level4-6
-        bossType = "boss3";
-        hasBoss = true;
-        log("Generating BOSS3-NAILONG");
+    // 根据关卡类型生成不同配置的敌人
+    if (currentLevel == LevelManager::LevelState::LEVEL1) {
+        // Level1：教程关卡，不生成任何敌人
+        log("Level 1 is tutorial level, no enemies generated");
     }
-    
-    if (hasBoss) {
-        // 在玩家前方较远位置生成BOSS
-        float worldX = playerX + 1000;
-        createEnemyAt(bossType, worldX, worldY);
+    else if (currentLevel >= LevelManager::LevelState::LEVEL2_1 &&
+        currentLevel <= LevelManager::LevelState::LEVEL4_6) {
+
+        // 检查当前关卡是否有BOSS
+    bool hasBoss = false;
+    // 3个boss分别生成在level2-6, level3-6, level4-6
+    if (currentLevel == LevelManager::LevelState::LEVEL2_6 ||
+        currentLevel == LevelManager::LevelState::LEVEL3_6 ||
+        currentLevel == LevelManager::LevelState::LEVEL4_6) {
+        hasBoss = true;
     }
 
-    // Levels 2-4随机生成3-5个普通/精英敌人
-    if ((currentLevel >= LevelManager::LevelState::LEVEL2_1 && currentLevel <= LevelManager::LevelState::LEVEL2_5) ||
-        (currentLevel >= LevelManager::LevelState::LEVEL3_1 && currentLevel <= LevelManager::LevelState::LEVEL3_5) ||
-        (currentLevel >= LevelManager::LevelState::LEVEL4_1 && currentLevel <= LevelManager::LevelState::LEVEL4_5)) {
+    // 普通敌人数：3-5个
+    // 如果有关卡boss，则不生成普通敌人（确保玩家专注于boss战）
+    int regularEnemyCount = 0;
+    if (!hasBoss) {
+        // 只在2-4关卡随机生成3-5个普通和精英敌人
+        // 检查是否是2-4关卡
+        bool isLevel2_4 = (currentLevel >= LevelManager::LevelState::LEVEL2_1 && currentLevel <= LevelManager::LevelState::LEVEL2_4) ||
+                         (currentLevel >= LevelManager::LevelState::LEVEL3_1 && currentLevel <= LevelManager::LevelState::LEVEL3_4) ||
+                         (currentLevel >= LevelManager::LevelState::LEVEL4_1 && currentLevel <= LevelManager::LevelState::LEVEL4_4);
         
-        // 随机生成3-5个敌人
-        int enemyCount = 3 + rand() % 3; // 3-5个敌人
-        log("Generating %d regular/elite enemies", enemyCount);
-        
-        for (int i = 0; i < enemyCount; i++) {
-            // 随机选择敌人类型
-            int typeIndex = rand() % regularEnemyTypes.size();
-            std::string enemyType = regularEnemyTypes[typeIndex];
-            
-            // 在玩家前方随机位置生成敌人
-            float worldX = playerX + 200 + rand() % 800; // 玩家前方200-1000单位
-            float enemyY = worldY + (rand() % 100) - 50; // 小范围垂直随机
-            
-            createEnemyAt(enemyType, worldX, enemyY);
+        if (isLevel2_4) {
+            regularEnemyCount = 3 + rand() % 3; // 3-5个
         }
     }
-    
-    log("Enemy initialization completed");
 
+        log("Generating enemies for level %d (has boss: %s)",
+            (int)currentLevel, hasBoss ? "YES" : "NO");
+        log("Generating %d regular enemies", regularEnemyCount);
+
+        // 生成普通敌人
+        for (int i = 0; i < regularEnemyCount; i++) {
+            // 随机选择敌人类型
+            int typeIndex = rand() % enemyTypes.size();
+            std::string enemyType = enemyTypes[typeIndex];
+
+            // 获取玩家当前位置
+            float playerX = _player->getWorldPositionX();
+
+            // 在玩家前方随机位置生成敌人
+            // X坐标在玩家前方200-1000单位之间，Y坐标与玩家相近
+            float worldX = playerX + 200 + rand() % 800;
+            float worldY = _player->getWorldPositionY() + (rand() % 100) - 50;
+
+            // 创建敌人
+            createEnemyAt(enemyType, worldX, worldY);
+        }
+
+        // 生成BOSS（如果有）
+        if (hasBoss) {
+            // 获取玩家当前位置
+            float playerX = _player->getWorldPositionX();
+            float worldX = playerX + 800; // BOSS在更远的位置
+            float worldY = _player->getWorldPositionY();
+
+            // 根据关卡确定BOSS类型
+            std::string bossType = "";
+            
             // level2-6生成BOSS1-CAIXUNKUN
-            if (currentLevel >= LevelManager::LevelState::LEVEL2_1 &&
-                currentLevel <= LevelManager::LevelState::LEVEL2_6) {
-                bossType = "melee";
-                bossName = "BOSS1-CAIXUNKUN";
+            if (currentLevel == LevelManager::LevelState::LEVEL2_6) {
+                bossType = "BOSS1-CAIXUNKUN";
             }
-            // level3-5生成BOSS2-MAODIE
-            else if (currentLevel >= LevelManager::LevelState::LEVEL3_1 &&
-                currentLevel <= LevelManager::LevelState::LEVEL3_5) {
-                bossType = "ranged";
-                bossName = "BOSS2-MAODIE";
+            // level3-6生成BOSS2-MAODIE
+            else if (currentLevel == LevelManager::LevelState::LEVEL3_6) {
+                bossType = "BOSS2-MAODIE";
             }
-            // level4-4生成BOSS3-NAILONG
-            else if (currentLevel == LevelManager::LevelState::LEVEL4_4) {
-                bossType = "shield";
-                bossName = "BOSS3-NAILONG";
+            // level4-6生成BOSS3-NAILONG
+            else if (currentLevel == LevelManager::LevelState::LEVEL4_6) {
+                bossType = "BOSS3-NAILONG";
             }
 
-            log("Generating %s", bossName.c_str());
-            createEnemyAt(bossType, worldX, worldY);
+            if (!bossType.empty()) {
+                log("Generating boss: %s at position (%.0f, %.0f)", bossType.c_str(), worldX, worldY);
+                createEnemyAt(bossType, worldX, worldY);
+            }
         }
     }
     else if (currentLevel == LevelManager::LevelState::FINAL_LEVEL) {

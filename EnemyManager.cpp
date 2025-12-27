@@ -34,6 +34,22 @@ EnemyManager::EnemyManager()
     initEnemyDatabase();
 }
 
+EnemyManager::~EnemyManager()
+{
+    // Clean up all enemies
+    removeAllEnemies();
+    
+    // Clear all lists to avoid dangling pointers
+    _enemies.clear();
+    _enemiesToRemove.clear();
+    _enemyDatabase.clear();
+    
+    // Release player reference
+    _player = nullptr;
+    
+    log("EnemyManager destructor called, all resources cleaned up");
+}
+
 void EnemyManager::initialize()
 {
     // Initialize enemy manager
@@ -99,68 +115,100 @@ void EnemyManager::addEnemy(Enemy* enemy)
     }
 }
 
-void EnemyManager::removeEnemy(Enemy* enemy)
-{
-    if (!enemy)
-    {
+void EnemyManager::removeEnemy(Enemy* enemy) {
+    if (!enemy) {
+        log("ERROR: Attempted to remove null enemy");
         return;
     }
-    
+
     // 检查敌人是否已经在移除列表中
-    for (int i = 0; i < (int)_enemiesToRemove.size(); i++)
-    {
-        if (_enemiesToRemove[i] == enemy)
-        {
-            return; // 已经在移除列表中，直接返回
+    for (int i = 0; i < (int)_enemiesToRemove.size(); i++) {
+        if (_enemiesToRemove[i] == enemy) {
+            log("Enemy already in removal queue, skipping");
+            return;
         }
     }
-    
+
+    // 检查敌人是否已经在主列表中
+    bool foundInMainList = false;
+    for (int i = 0; i < (int)_enemies.size(); i++) {
+        if (_enemies[i] == enemy) {
+            foundInMainList = true;
+            break;
+        }
+    }
+
+    if (!foundInMainList) {
+        log("Enemy not found in main list, may have been already removed");
+        safelyRemoveEnemy(enemy); // 直接安全删除
+        return;
+    }
+
+    // 标记为正在移除
+    enemy->setTag(-1); // 使用负值标记为正在移除
+
     // 将敌人添加到延迟移除列表
     _enemiesToRemove.push_back(enemy);
-    log("Enemy added to removal queue");
+    log("Enemy added to removal queue, total in queue: %d", _enemiesToRemove.size());
 }
-
 void EnemyManager::removeAllEnemies()
 {
-    for (int i = 0; i < (int)_enemies.size(); i++)
-    {
-        safelyRemoveEnemy(_enemies[i]);
-    }
-    _enemies.clear();
-}
-
-void EnemyManager::processEnemyRemoval()
-{
-    if (_enemiesToRemove.empty())
-    {
-        return;
+    // 创建临时列表避免在遍历时修改原列表
+    std::vector<Enemy*> allEnemies;
+    
+    // 先处理延迟移除队列中的敌人
+    if (!_enemiesToRemove.empty()) {
+        allEnemies.insert(allEnemies.end(), _enemiesToRemove.begin(), _enemiesToRemove.end());
+        _enemiesToRemove.clear();
     }
     
-    // 处理所有需要移除的敌人
-    for (int i = 0; i < (int)_enemiesToRemove.size(); i++)
-    {
-        Enemy* enemy = _enemiesToRemove[i];
-        if (!enemy)
-        {
+    // 添加当前敌人列表中的敌人
+    allEnemies.insert(allEnemies.end(), _enemies.begin(), _enemies.end());
+    _enemies.clear();
+    
+    // 安全移除所有敌人
+    for (int i = 0; i < (int)allEnemies.size(); i++) {
+        Enemy* enemy = allEnemies[i];
+        if (enemy) {
+            safelyRemoveEnemy(enemy);
+        }
+    }
+}
+
+void EnemyManager::processEnemyRemoval() {
+    if (_enemiesToRemove.empty()) {
+        return;
+    }
+
+    // 创建临时列表处理，避免在遍历时修改
+    std::vector<Enemy*> toRemove = _enemiesToRemove;
+    _enemiesToRemove.clear();
+
+    for (int i = 0; i < (int)toRemove.size(); i++) {
+        Enemy* enemy = toRemove[i];
+        if (!enemy) {
             continue;
         }
-        
-        // 从敌人列表中移除
-        for (int j = 0; j < (int)_enemies.size(); j++)
-        {
-            if (_enemies[j] == enemy)
-            {
+
+        // 从主敌人列表中移除
+        bool removedFromMainList = false;
+        for (int j = 0; j < (int)_enemies.size(); j++) {
+            // 检查_enemies[j]是否为nullptr
+            if (_enemies[j] && _enemies[j] == enemy) {
                 _enemies.erase(_enemies.begin() + j);
+                removedFromMainList = true;
+                log("Removed enemy from main list");
                 break;
             }
         }
-        
+
+        if (!removedFromMainList) {
+            log("WARNING: Enemy not found in main list during removal processing");
+        }
+
         // 安全删除敌人
         safelyRemoveEnemy(enemy);
     }
-    
-    // 清空移除列表
-    _enemiesToRemove.clear();
 }
 
 void EnemyManager::update(float delta)
@@ -296,29 +344,60 @@ void EnemyManager::initEnemyDatabase()
     registerEnemyType("BOSS3-NAILONG", "Nailong Boss", "The third boss, a ranged attacker that fires powerful projectiles.");
 }
 
-void EnemyManager::safelyRemoveEnemy(Enemy* enemy)
-{
-    if (!enemy)
-    {
+void EnemyManager::safelyRemoveEnemy(Enemy* enemy) {
+    if (!enemy) {
+        log("WARNING: Attempted to safely remove null enemy");
         return;
     }
-    
-    // Do not stop all actions here as it might cancel the death animation sequence
-    // enemy->stopAllActions();
-    
-    // Remove physics collision body if it still exists
-    if (enemy->getPhysicsBody())
-    {
-        enemy->setPhysicsBody(nullptr);
+
+    log("Starting safe removal of enemy");
+
+    // 确保敌人处于死亡状态
+    enemy->setCurrentState(EnemyState::DEAD);
+
+    // 停止所有动作
+    enemy->stopAllActions();
+    log("Stopped all enemy actions");
+
+    // 移除物理碰撞体
+    auto physicsBody = enemy->getPhysicsBody();
+    if (physicsBody) {
+        physicsBody->setEnabled(false);
+        // 不直接调用setPhysicsBody(nullptr)以避免cocos2d-x内部断言失败
+        // 物理体将在节点销毁时自动清理
+        log("Disabled enemy physics body");
     }
-    
-    // Remove from parent node
-    if (enemy->getParent())
-    {
+
+    // 移除所有子节点并清理
+    enemy->removeAllChildrenWithCleanup(true);
+    log("Removed all enemy children");
+
+    // 从父节点移除或直接释放
+    if (enemy->getParent()) {
         enemy->removeFromParentAndCleanup(true);
-    } else
-    {
-        // If enemy has no parent, we still need to release it
-        enemy->release();
+        log("Enemy removed from parent");
     }
+    else {
+        // 如果敌人没有父节点，直接释放
+        enemy->release();
+        log("Enemy released (no parent)");
+    }
+    
+    // EnemyManager的引用已经在removeFromParentAndCleanup或直接release中处理了
+
+    // 从移除列表中清除（如果存在）
+    auto it = std::find(_enemiesToRemove.begin(), _enemiesToRemove.end(), enemy);
+    if (it != _enemiesToRemove.end()) {
+        _enemiesToRemove.erase(it);
+        log("Enemy removed from removal queue");
+    }
+
+    // 从主敌人列表中清除（如果存在）
+    it = std::find(_enemies.begin(), _enemies.end(), enemy);
+    if (it != _enemies.end()) {
+        _enemies.erase(it);
+        log("Enemy removed from main enemies list");
+    }
+
+    log("Enemy safe removal completed");
 }

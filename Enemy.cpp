@@ -224,8 +224,21 @@ void Enemy::setCurrentState(EnemyState state) {
                 
                 // Create callback to remove enemy after animation completes
                 auto removeEnemyCallback = CallFunc::create([this, enemyManager]() {
-                    enemyManager->removeEnemy(this);
-                    log("Enemy removed from EnemyManager after death animation completed");
+                    // 检查enemyManager是否为nullptr
+                    if (enemyManager) {
+                        enemyManager->removeEnemy(this);
+                        log("Enemy removed from EnemyManager after death animation completed");
+                    } else {
+                        // 如果EnemyManager已经被销毁，直接安全删除自己
+                        this->stopAllActions();
+                        if (this->getPhysicsBody()) {
+                            this->setPhysicsBody(nullptr);
+                        }
+                        if (this->getParent()) {
+                            this->removeFromParentAndCleanup(true);
+                            log("Enemy removed directly (EnemyManager was destroyed)");
+                        }
+                    }
                 });
                 
                 // Create sequence: play animation -> remove enemy
@@ -235,8 +248,21 @@ void Enemy::setCurrentState(EnemyState state) {
             } else {
                 // No death animation, remove immediately with a small delay
                 auto removeEnemyCallback = CallFunc::create([this, enemyManager]() {
-                    enemyManager->removeEnemy(this);
-                    log("Enemy removed from EnemyManager after small delay (no death animation)");
+                    // 检查enemyManager是否为nullptr
+                    if (enemyManager) {
+                        enemyManager->removeEnemy(this);
+                        log("Enemy removed from EnemyManager after small delay (no death animation)");
+                    } else {
+                        // 如果EnemyManager已经被销毁，直接安全删除自己
+                        this->stopAllActions();
+                        if (this->getPhysicsBody()) {
+                            this->setPhysicsBody(nullptr);
+                        }
+                        if (this->getParent()) {
+                            this->removeFromParentAndCleanup(true);
+                            log("Enemy removed directly (EnemyManager was destroyed)");
+                        }
+                    }
                 });
                 auto sequence = Sequence::create(DelayTime::create(0.1f), removeEnemyCallback, nullptr);
                 this->runAction(sequence);

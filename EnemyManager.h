@@ -71,4 +71,7 @@ private:
     void initEnemyDatabase();
     EnemyConfig getEnemyConfig(const std::string& enemyType) const;
     void safelyRemoveEnemy(Enemy* enemy);
+    
+    // Destructor
+    ~EnemyManager();
 };
