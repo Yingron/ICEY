@@ -48,98 +48,134 @@ bool NarratorManager::init() {
 
 // 从JSON文件加载旁白数据
 void NarratorManager::loadNarrativesFromJson(const std::string& jsonFile) {
-    // 清空现有数据
+    // 清空现有条目和触发器
     _narrativeEntries.clear();
-    _sequences.clear();
     _triggers.clear();
     
-    // 只保留需要的6个旁白音频
-    NarrativeEntry entry;
+    // 为了演示，直接硬编码旁白条目
+    // 确保只保留实际存在的音频文件对应的条目
     
-    // level_1_tutorial.mp3 - 基础操作指引
-    entry.id = "level_1_tutorial";
-    entry.audioFile = "Resources\\audio\\narrator\\level_1_tutorial.mp3";
-    entry.subtitleText = "新手教学之移动——A键左跑，D键右跑，W键向上跳跃；新手教学之攻击——K键普攻，L键重击；还有skill技能！";
-    entry.duration = 8.0f;
-    entry.isSkippable = true;
-    _narrativeEntries[entry.id] = entry;
+    // 第1关教程旁白
+    NarrativeEntry level1Tutorial;
+    level1Tutorial.id = "level_1_tutorial";
+    level1Tutorial.audioFile = "Resources\\audio\\narrator\\level_1_tutorial.mp3";
+    level1Tutorial.subtitleText = "欢迎来到第一关，准备好了吗？";
+    level1Tutorial.duration = 3.0f;
+    level1Tutorial.isSkippable = true;
+    level1Tutorial.delay = 0.0f;
+    _narrativeEntries[level1Tutorial.id] = level1Tutorial;
     
-    // player_health_critical.mp3 - 玩家生命值低提示
-    entry.id = "player_health_critical";
-    entry.audioFile = "Resources\\audio\\narrator\\player_health_critical.mp3";
-    entry.subtitleText = "注意注意，你的生命值不高了，请注意躲避攻击！";
-    entry.duration = 3.0f;
-    entry.isSkippable = true;
-    _narrativeEntries[entry.id] = entry;
+    // 添加触发器 - 第1关开始时触发
+    TriggerCondition level1Condition;
+    level1Condition.type = TriggerCondition::Type::LEVEL_START;
+    level1Condition.targetId = "1";
+    _triggers.emplace_back(level1Condition, level1Tutorial.id);
     
-    // Boss专属旁白条目 - caixukun
-    entry.id = "boss1_ready";
-    entry.audioFile = "Resources\\audio\\narrator\\boss1_ready.mp3";
-    entry.subtitleText = "caixukun准备就绪！";
-    entry.duration = 2.0f;
-    entry.isSkippable = true;
-    _narrativeEntries[entry.id] = entry;
+    // 玩家生命值危险旁白
+    NarrativeEntry playerHealthCritical;
+    playerHealthCritical.id = "player_health_critical";
+    playerHealthCritical.audioFile = "Resources\\audio\\narrator\\player_health_critical.mp3";
+    playerHealthCritical.subtitleText = "注意注意，你的生命值不高了，请注意躲避攻击！";
+    playerHealthCritical.duration = 4.0f;
+    playerHealthCritical.isSkippable = true;
+    playerHealthCritical.delay = 0.0f;
+    _narrativeEntries[playerHealthCritical.id] = playerHealthCritical;
     
-    entry.id = "boss1_hit";
-    entry.audioFile = "Resources\\audio\\narrator\\boss1_hit.mp3";
-    entry.subtitleText = "caixukun被击败！";
-    entry.duration = 2.0f;
-    entry.isSkippable = true;
-    _narrativeEntries[entry.id] = entry;
+    // 添加触发器 - 玩家生命值危险时触发
+    TriggerCondition healthCriticalCondition;
+    healthCriticalCondition.type = TriggerCondition::Type::CUSTOM_EVENT;
+    healthCriticalCondition.customEventName = "PLAYER_HEALTH_CRITICAL";
+    _triggers.emplace_back(healthCriticalCondition, playerHealthCritical.id);
     
-    // Boss专属旁白条目 - nailong
-    entry.id = "boss2_ready";
-    entry.audioFile = "Resources\\audio\\narrator\\boss2_ready.mp3";
-    entry.subtitleText = "nailong准备就绪！";
-    entry.duration = 2.0f;
-    entry.isSkippable = true;
-    _narrativeEntries[entry.id] = entry;
+    // Boss1就绪旁白
+    NarrativeEntry boss1Ready;
+    boss1Ready.id = "boss1_ready";
+    boss1Ready.audioFile = "Resources\\audio\\narrator\\boss1_ready.mp3";
+    boss1Ready.subtitleText = "第一个Boss即将出现！";
+    boss1Ready.duration = 2.0f;
+    boss1Ready.isSkippable = true;
+    _narrativeEntries[boss1Ready.id] = boss1Ready;
     
-    // Boss专属旁白条目 - maodie
-    entry.id = "boss3_ready";
-    entry.audioFile = "Resources\\audio\\narrator\\boss3_ready.mp3";
-    entry.subtitleText = "maodie准备就绪！";
-    entry.duration = 2.0f;
-    entry.isSkippable = true;
-    _narrativeEntries[entry.id] = entry;
+    // 添加触发器 - Boss1出现时触发
+    TriggerCondition boss1Condition;
+    boss1Condition.type = TriggerCondition::Type::CUSTOM_EVENT;
+    boss1Condition.customEventName = "BOSS_READY_boss1";
+    _triggers.emplace_back(boss1Condition, boss1Ready.id);
     
-    // 游戏通关旁白
-    entry.id = "game_complete";
-    entry.audioFile = "Resources\\audio\\narrator\\game_complete.mp3";
-    entry.subtitleText = "恭喜你成功通关！感谢游玩！";
-    entry.duration = 5.0f;
-    entry.isSkippable = true;
-    _narrativeEntries[entry.id] = entry;
+    // Boss1被击中旁白
+    NarrativeEntry boss1Hit;
+    boss1Hit.id = "boss1_hit";
+    boss1Hit.audioFile = "Resources\\audio\\narrator\\boss1_hit.mp3";
+    boss1Hit.subtitleText = "Boss被击中了！继续攻击！";
+    boss1Hit.duration = 1.5f;
+    boss1Hit.isSkippable = true;
+    _narrativeEntries[boss1Hit.id] = boss1Hit;
     
-    // 添加必要的触发器
-    TriggerCondition condition;
+    // 添加触发器 - Boss1被击中时触发
+    TriggerCondition boss1HitCondition;
+    boss1HitCondition.type = TriggerCondition::Type::CUSTOM_EVENT;
+    boss1HitCondition.customEventName = "BOSS_HIT_boss1";
+    _triggers.emplace_back(boss1HitCondition, boss1Hit.id);
     
-    // 新手教程触发器
-    condition.type = TriggerType::LEVEL_START;
-    condition.targetId = "level_1";
-    _triggers.emplace_back(condition, "level_1_tutorial");
+    // Boss2就绪旁白
+    NarrativeEntry boss2Ready;
+    boss2Ready.id = "boss2_ready";
+    boss2Ready.audioFile = "Resources\\audio\\narrator\\boss2_ready.mp3";
+    boss2Ready.subtitleText = "第二个Boss出现了！";
+    boss2Ready.duration = 2.0f;
+    boss2Ready.isSkippable = true;
+    _narrativeEntries[boss2Ready.id] = boss2Ready;
     
-    // 生命值低触发器
-    condition.type = TriggerType::CUSTOM_EVENT;
-    condition.customEventName = "PLAYER_HEALTH_CRITICAL";
-    _triggers.emplace_back(condition, "player_health_critical");
+    // 添加触发器 - Boss2出现时触发
+    TriggerCondition boss2Condition;
+    boss2Condition.type = TriggerCondition::Type::CUSTOM_EVENT;
+    boss2Condition.customEventName = "BOSS_READY_boss2";
+    _triggers.emplace_back(boss2Condition, boss2Ready.id);
     
-    // Boss模式变化触发器
-    condition.customEventName = "BOSS_READY_caixukun";
-    _triggers.emplace_back(condition, "boss1_ready");
+    // Boss3就绪旁白
+    NarrativeEntry boss3Ready;
+    boss3Ready.id = "boss3_ready";
+    boss3Ready.audioFile = "Resources\\audio\\narrator\\boss3_ready.mp3";
+    boss3Ready.subtitleText = "最终Boss登场！";
+    boss3Ready.duration = 2.0f;
+    boss3Ready.isSkippable = true;
+    _narrativeEntries[boss3Ready.id] = boss3Ready;
     
-    condition.customEventName = "BOSS_DEFEATED_caixukun";
-    _triggers.emplace_back(condition, "boss1_hit");
+    // 添加触发器 - Boss3出现时触发
+    TriggerCondition boss3Condition;
+    boss3Condition.type = TriggerCondition::Type::CUSTOM_EVENT;
+    boss3Condition.customEventName = "BOSS_READY_boss3";
+    _triggers.emplace_back(boss3Condition, boss3Ready.id);
     
-    condition.customEventName = "BOSS_READY_nailong";
-    _triggers.emplace_back(condition, "boss2_ready");
+    // 游戏完成旁白
+    NarrativeEntry gameComplete;
+    gameComplete.id = "game_complete";
+    gameComplete.audioFile = "Resources\\audio\\narrator\\game_complete.m4a";
+    gameComplete.subtitleText = "恭喜你成功通关！感谢游玩！";
+    gameComplete.duration = 5.0f;
+    gameComplete.isSkippable = true;
+    _narrativeEntries[gameComplete.id] = gameComplete;
     
-    condition.customEventName = "BOSS_READY_maodie";
-    _triggers.emplace_back(condition, "boss3_ready");
+    // 添加触发器 - 游戏完成时触发
+    TriggerCondition completeCondition;
+    completeCondition.type = TriggerCondition::Type::CUSTOM_EVENT;
+    completeCondition.customEventName = "GAME_COMPLETE";
+    _triggers.emplace_back(completeCondition, gameComplete.id);
     
-    // 游戏通关触发器
-    condition.customEventName = "GAME_COMPLETE";
-    _triggers.emplace_back(condition, "game_complete");
+    // 开场旁白
+    NarrativeEntry prologue;
+    prologue.id = "narrator_prologue";
+    prologue.audioFile = "Resources\\audio\\narrator\\narrator-prologue.mp3";
+    prologue.subtitleText = "这是一段开场旁白。";
+    prologue.duration = 4.0f;
+    prologue.isSkippable = true;
+    _narrativeEntries[prologue.id] = prologue;
+    
+    // 添加触发器 - 游戏开始时触发
+    TriggerCondition prologueCondition;
+    prologueCondition.type = TriggerCondition::Type::CUSTOM_EVENT;
+    prologueCondition.customEventName = "GAME_START";
+    _triggers.emplace_back(prologueCondition, prologue.id);
     
     CCLOG("NarratorManager: 已加载 %zu 个必要旁白", _narrativeEntries.size());
 }
@@ -309,14 +345,14 @@ void NarratorManager::onGameEvent(const std::string& eventName, const ValueMap& 
         }
         
         // 根据事件类型处理
-        if (eventName == "LEVEL_START" && condition.type == TriggerType::LEVEL_START) {
+        if (eventName == "LEVEL_START" && condition.type == TriggerCondition::Type::LEVEL_START) {
             if (params.find("levelId") != params.end() && 
                 params.at("levelId").asString() == condition.targetId) {
                 condition.hasBeenTriggered = true;
                 playNarrative(narrativeId);
             }
         }
-        else if (eventName == condition.customEventName && condition.type == TriggerType::CUSTOM_EVENT) {
+        else if (eventName == condition.customEventName && condition.type == TriggerCondition::Type::CUSTOM_EVENT) {
             condition.hasBeenTriggered = true;
             playNarrative(narrativeId);
         }
@@ -358,19 +394,20 @@ bool NarratorManager::testNarrationTriggers() {
     // 测试所有必要的旁白触发
     std::vector<std::string> testEvents = {
         "LEVEL_START",             // 新手教程
-        "PLAYER_HEALTH_CRITICAL",  // 生命值低提示
-        "BOSS_READY_caixukun",     // caixukun出现
-        "BOSS_DEFEATED_caixukun",  // caixukun被击败
-        "BOSS_READY_nailong",      // nailong出现
-        "BOSS_READY_maodie",       // maodie出现
-        "GAME_COMPLETE"            // 游戏通关
+        "PLAYER_HEALTH_CRITICAL",  // 玩家生命值危险
+        "BOSS_READY_boss1",        // Boss1出现
+        "BOSS_HIT_boss1",          // Boss1被击中
+        "BOSS_READY_boss2",        // Boss2出现
+        "BOSS_READY_boss3",        // Boss3出现
+        "GAME_COMPLETE",           // 游戏通关
+        "GAME_START"               // 游戏开始
     };
     
     for (const auto& eventName : testEvents) {
         CCLOG("测试事件: %s", eventName.c_str());
         ValueMap params;
         if (eventName == "LEVEL_START") {
-            params["levelId"] = "level_1";
+            params["levelId"] = "1";
         }
         onGameEvent(eventName, params);
         CCLOG("事件处理完成: %s", eventName.c_str());
@@ -388,4 +425,5 @@ void NarratorManager::resetAllTriggers() {
     _playedNarratives.clear();
     CCLOG("所有触发器状态已重置");
 }
+
 

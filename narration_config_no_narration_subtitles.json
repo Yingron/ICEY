@@ -1,22 +1,24 @@
 {
-  "narrative_entries": [
+  "narratives": [
     {
       "id": "level_1_tutorial",
       "audio_file": "Resources\\audio\\narrator\\level_1_tutorial.mp3",
-      "subtitle_text": "新手教学之移动——A键左跑，D键右跑，W键向上跳跃；新手教学之攻击——K键普攻，L键重击；还有skill技能！",
-      "duration": 8.0,
+      "subtitle_text": "欢迎来到第一关，准备好了吗？",
+      "duration": 3.0,
       "is_skippable": true,
+      "delay": 0.0,
       "trigger_condition": {
         "type": "LEVEL_START",
-        "target_id": "level_1"
+        "target_id": "1"
       }
     },
     {
       "id": "player_health_critical",
       "audio_file": "Resources\\audio\\narrator\\player_health_critical.mp3",
       "subtitle_text": "注意注意，你的生命值不高了，请注意躲避攻击！",
-      "duration": 3.0,
+      "duration": 4.0,
       "is_skippable": true,
+      "delay": 0.0,
       "trigger_condition": {
         "type": "CUSTOM_EVENT",
         "custom_event_name": "PLAYER_HEALTH_CRITICAL"
@@ -25,56 +27,67 @@
     {
       "id": "boss1_ready",
       "audio_file": "Resources\\audio\\narrator\\boss1_ready.mp3",
-      "subtitle_text": "caixukun准备就绪！",
+      "subtitle_text": "第一个Boss即将出现！",
       "duration": 2.0,
       "is_skippable": true,
       "trigger_condition": {
         "type": "CUSTOM_EVENT",
-        "custom_event_name": "BOSS_READY_caixukun"
+        "custom_event_name": "BOSS_READY_boss1"
       }
     },
     {
       "id": "boss1_hit",
       "audio_file": "Resources\\audio\\narrator\\boss1_hit.mp3",
-      "subtitle_text": "caixukun被击败！",
-      "duration": 2.0,
+      "subtitle_text": "Boss被击中了！继续攻击！",
+      "duration": 1.5,
       "is_skippable": true,
       "trigger_condition": {
         "type": "CUSTOM_EVENT",
-        "custom_event_name": "BOSS_DEFEATED_caixukun"
+        "custom_event_name": "BOSS_HIT_boss1"
       }
     },
     {
       "id": "boss2_ready",
       "audio_file": "Resources\\audio\\narrator\\boss2_ready.mp3",
-      "subtitle_text": "nailong准备就绪！",
+      "subtitle_text": "第二个Boss出现了！",
       "duration": 2.0,
       "is_skippable": true,
       "trigger_condition": {
         "type": "CUSTOM_EVENT",
-        "custom_event_name": "BOSS_READY_nailong"
+        "custom_event_name": "BOSS_READY_boss2"
       }
     },
     {
       "id": "boss3_ready",
       "audio_file": "Resources\\audio\\narrator\\boss3_ready.mp3",
-      "subtitle_text": "maodie准备就绪！",
+      "subtitle_text": "最终Boss登场！",
       "duration": 2.0,
       "is_skippable": true,
       "trigger_condition": {
         "type": "CUSTOM_EVENT",
-        "custom_event_name": "BOSS_READY_maodie"
+        "custom_event_name": "BOSS_READY_boss3"
       }
     },
     {
       "id": "game_complete",
-      "audio_file": "Resources\\audio\\narrator\\game_complete.mp3",
+      "audio_file": "Resources\\audio\\narrator\\game_complete.m4a",
       "subtitle_text": "恭喜你成功通关！感谢游玩！",
       "duration": 5.0,
       "is_skippable": true,
       "trigger_condition": {
         "type": "CUSTOM_EVENT",
         "custom_event_name": "GAME_COMPLETE"
+      }
+    },
+    {
+      "id": "narrator_prologue",
+      "audio_file": "Resources\\audio\\narrator\\narrator-prologue.mp3",
+      "subtitle_text": "这是一段开场旁白。",
+      "duration": 4.0,
+      "is_skippable": true,
+      "trigger_condition": {
+        "type": "CUSTOM_EVENT",
+        "custom_event_name": "GAME_START"
       }
     }
   ]
