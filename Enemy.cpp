@@ -32,18 +32,62 @@ bool Enemy::init(const std::string& enemyType) {
     // Setup animations
     setupAnimations();
 
-    // 设置初始纹理 - 从idle动画中获取第一帧
-    if (_animations.count("idle") > 0) {
-        Animation* idleAnim = _animations["idle"];
-        if (!idleAnim->getFrames().empty()) {
-            SpriteFrame* firstFrame = idleAnim->getFrames().at(0)->getSpriteFrame();
-            if (firstFrame) {
-                this->setSpriteFrame(firstFrame);
-                log("Set initial sprite frame for enemy");
+    // 设置初始纹理 - 尝试多种动画作为回退
+    std::vector<std::string> fallbackAnimations = {"idle", "walk", "run", "attack", "hit", "hurt"};
+    bool spriteSet = false;
+    
+    for (const auto& animName : fallbackAnimations) {
+        if (_animations.count(animName) > 0) {
+            Animation* anim = _animations[animName];
+            if (!anim->getFrames().empty()) {
+                SpriteFrame* firstFrame = anim->getFrames().at(0)->getSpriteFrame();
+                if (firstFrame) {
+                    this->setSpriteFrame(firstFrame);
+                    log("Set initial sprite frame for enemy using %s animation", animName.c_str());
+                    spriteSet = true;
+                    break;
+                }
             }
         }
     }
+    
+    // 作为最后的回退，如果没有任何动画可用，至少设置一个默认的红色方块作为占位符
+    if (!spriteSet) {
+        log("WARNING: No valid animation frames found for enemy. Using fallback color.");
+        this->setColor(Color3B::RED);
+        this->setContentSize(Size(50, 50));
+        this->setTextureRect(Rect(0, 0, 50, 50));
+    }
 
+    // 获取玩家角色大小作为基准
+    float playerWidth = 50.0f;  // 默认玩家宽度
+    float playerHeight = 100.0f; // 默认玩家高度
+    
+    // 尝试获取实际玩家大小
+    Player* player = Player::getInstance();
+    if (player) {
+        auto playerSize = player->getContentSize();
+        playerWidth = playerSize.width;
+        playerHeight = playerSize.height;
+    }
+    
+    // 获取当前敌人大小
+    auto enemySize = this->getContentSize();
+    
+    // 根据敌人类型设置缩放比例
+    float scale = 1.0f; // 默认与玩家等大
+    
+    if (_enemyType == "shield") {
+        // 精英带盾敌人：玩家的1.5倍
+        scale = 1.5f;
+    } else if (_enemyType.find("BOSS") != std::string::npos) {
+        // BOSS敌人：玩家的2倍
+        scale = 2.0f;
+    }
+    
+    // 设置缩放
+    this->setScale(scale);
+    
     // Setup physics properties - 移到设置初始纹理之后
     setupPhysics();
 
@@ -57,7 +101,12 @@ bool Enemy::init(const std::string& enemyType) {
 }
 
 Enemy::~Enemy() {
-    // No need to clean up animation cache as it's shared globally
+    // Clean up animations in _animations map
+    for (auto& animPair : _animations) {
+        if (animPair.second) {
+            animPair.second->release();
+        }
+    }
     _animations.clear();
 }
 
@@ -160,10 +209,9 @@ void Enemy::setCurrentState(EnemyState state) {
             break;
         }
         case EnemyState::DEAD: {
-            // Disable and remove physics body
+            // Disable physics body but don't remove it here - let safelyRemoveEnemy handle it
             if (this->getPhysicsBody()) {
                 this->getPhysicsBody()->setEnabled(false);
-                this->removeComponent(this->getPhysicsBody());
             }
             
             // Play death animation if available and wait for completion before removing
@@ -217,6 +265,45 @@ bool Enemy::canAttack() const {
     return distance <= _attackRange;
 }
 
+void Enemy::showDamageNumber(float damage) {
+    // 创建伤害数字标签
+    auto damageLabel = Label::createWithTTF(StringUtils::format("%.0f", damage), "fonts/arial.ttf", 24);
+    if (!damageLabel) {
+        log("Failed to create damage label");
+        return;
+    }
+    
+    // 设置伤害数字位置（敌人上方）
+    Vec2 position = this->getPosition();
+    position.y += this->getContentSize().height / 2 + 10;
+    damageLabel->setPosition(position);
+    
+    // 设置颜色（根据伤害值显示不同颜色）
+    if (damage < 50) {
+        damageLabel->setColor(Color3B(255, 255, 255));  // 白色
+    } else if (damage < 100) {
+        damageLabel->setColor(Color3B(255, 255, 0));  // 黄色
+    } else {
+        damageLabel->setColor(Color3B(255, 0, 0));  // 红色
+    }
+    
+    // 添加到父节点
+    auto parent = this->getParent();
+    if (parent) {
+        parent->addChild(damageLabel, 100);  // 确保显示在最上层
+        
+        // 创建浮动动画
+        auto moveUp = MoveBy::create(1.0f, Vec2(0, 50));
+        auto fadeOut = FadeOut::create(1.0f);
+        auto delay = DelayTime::create(0.5f);
+        auto removeSelf = RemoveSelf::create(true);
+        
+        // 组合动画：向上移动并淡出，然后移除
+        auto sequence = Sequence::create(moveUp, fadeOut, removeSelf, nullptr);
+        damageLabel->runAction(sequence);
+    }
+}
+
 void Enemy::takeDamage(float damage) {
     if (isDead() || _currentState == EnemyState::HURT) {
         return;
@@ -225,9 +312,119 @@ void Enemy::takeDamage(float damage) {
     // Reduce health
     _currentHealth -= damage;
     
+    // 显示伤害数字
+    showDamageNumber(damage);
+    
+    // 添加伤害粒子效果
+    auto damageParticles = ParticleSystemQuad::create();
+    log("Creating damage particles");
+    damageParticles->setPosition(this->getPosition());
+    damageParticles->setDuration(0.5f);
+    damageParticles->setEmissionRate(100.0f);
+    damageParticles->setLife(0.5f);
+    damageParticles->setLifeVar(0.2f);
+    damageParticles->setSpeed(50.0f);
+    damageParticles->setSpeedVar(20.0f);
+    damageParticles->setGravity(Vec2(0, 20));
+    damageParticles->setAngle(0.0f);
+    damageParticles->setAngleVar(360.0f);
+    damageParticles->setRadialAccel(-50.0f);
+    damageParticles->setTangentialAccel(0.0f);
+    damageParticles->setStartSize(5.0f);
+    damageParticles->setStartSizeVar(2.0f);
+    damageParticles->setStartColor(Color4F(1.0f, 0.3f, 0.0f, 1.0f));
+    damageParticles->setEndColor(Color4F(1.0f, 1.0f, 1.0f, 0.0f));
+    damageParticles->setStartColorVar(Color4F(0.0f, 0.0f, 0.0f, 0.0f));
+    damageParticles->setEndColorVar(Color4F(0.0f, 0.0f, 0.0f, 0.0f));
+    damageParticles->setBlendFunc(BlendFunc::ADDITIVE);
+    
+    // 设置纹理，使用简单的白色纹理作为回退
+    auto director = Director::getInstance();
+    auto textureCache = director->getTextureCache();
+    auto texture = textureCache->addImage("particle_texture.png");
+    log("Attempting to load particle_texture.png, result: %p", texture);
+    if (!texture) {
+        // 如果找不到纹理，创建一个简单的白色纹理
+        unsigned char pixels[4] = { 255, 255, 255, 255 };
+        Texture2D::PixelFormat format = Texture2D::PixelFormat::RGBA8888;
+        texture = new Texture2D();
+        if (texture) {
+            bool initResult = texture->initWithData(pixels, sizeof(pixels), format, 1, 1, Size(1, 1));
+            log("Created fallback texture, init result: %d", initResult);
+            texture->autorelease();
+        } else {
+            log("Failed to create fallback texture!");
+        }
+    }
+    damageParticles->setTexture(texture);
+    log("Set damage particles texture: %p", texture);
+    
+    if (this->getParent()) {
+        this->getParent()->addChild(damageParticles, 100);
+        damageParticles->runAction(Sequence::create(
+            DelayTime::create(0.5f),
+            RemoveSelf::create(),
+            nullptr
+        ));
+    }
+    
     // Check if enemy is dead
     if (_currentHealth <= 0) {
         _currentHealth = 0;
+        
+        // 添加死亡爆炸粒子效果
+        auto explosionParticles = ParticleSystemQuad::create();
+        log("Creating explosion particles");
+        explosionParticles->setPosition(this->getPosition());
+        explosionParticles->setDuration(1.0f);
+        explosionParticles->setEmissionRate(200.0f);
+        explosionParticles->setLife(1.0f);
+        explosionParticles->setLifeVar(0.5f);
+        explosionParticles->setSpeed(100.0f);
+        explosionParticles->setSpeedVar(50.0f);
+        explosionParticles->setGravity(Vec2(0, 0));
+        explosionParticles->setAngle(0.0f);
+        explosionParticles->setAngleVar(360.0f);
+        explosionParticles->setRadialAccel(-100.0f);
+        explosionParticles->setTangentialAccel(50.0f);
+        explosionParticles->setStartSize(8.0f);
+        explosionParticles->setStartSizeVar(4.0f);
+        explosionParticles->setStartColor(Color4F(1.0f, 0.0f, 0.0f, 1.0f));
+        explosionParticles->setEndColor(Color4F(1.0f, 1.0f, 0.0f, 0.0f));
+        explosionParticles->setStartColorVar(Color4F(0.2f, 0.2f, 0.2f, 0.0f));
+        explosionParticles->setEndColorVar(Color4F(0.0f, 0.0f, 0.0f, 0.0f));
+        explosionParticles->setBlendFunc(BlendFunc::ADDITIVE);
+        
+        // 设置纹理，使用简单的白色纹理作为回退
+        auto director = Director::getInstance();
+        auto textureCache = director->getTextureCache();
+        auto texture = textureCache->addImage("particle_texture.png");
+        log("Attempting to load particle_texture.png for explosion, result: %p", texture);
+        if (!texture) {
+            // 如果找不到纹理，创建一个简单的白色纹理
+            unsigned char pixels[4] = { 255, 255, 255, 255 };
+            Texture2D::PixelFormat format = Texture2D::PixelFormat::RGBA8888;
+            texture = new Texture2D();
+            if (texture) {
+                bool initResult = texture->initWithData(pixels, sizeof(pixels), format, 1, 1, Size(1, 1));
+                log("Created fallback texture for explosion, init result: %d", initResult);
+                texture->autorelease();
+            } else {
+                log("Failed to create fallback texture for explosion!");
+            }
+        }
+        explosionParticles->setTexture(texture);
+        log("Set explosion particles texture: %p", texture);
+        
+        if (this->getParent()) {
+            this->getParent()->addChild(explosionParticles, 100);
+            explosionParticles->runAction(Sequence::create(
+                DelayTime::create(1.0f),
+                RemoveSelf::create(),
+                nullptr
+            ));
+        }
+        
         setCurrentState(EnemyState::DEAD);
     } else {
         // Set to hurt state
@@ -321,6 +518,9 @@ void Enemy::loadAnimation(const std::string& animationName, const std::vector<st
     animation->setDelayPerUnit(delay);
     animation->setRestoreOriginalFrame(true);
     
+    // Retain animation to ensure it's not deleted prematurely
+    animation->retain();
+    
     AnimationCache::getInstance()->addAnimation(animation, animationName);
     _animations[animationName] = animation;
 }
@@ -332,11 +532,23 @@ void Enemy::playAnimation(const std::string& animationName, bool loop) {
     
     _currentAnimationKey = animationName;
     
+    // Check if animation exists in _animations map
+    if (_animations.count(animationName) == 0) {
+        CCLOGERROR("Animation '%s' not found in _animations map", animationName.c_str());
+        return;
+    }
+    
+    Animation* animation = _animations[animationName];
+    if (!animation) {
+        CCLOGERROR("Animation '%s' is null in _animations map", animationName.c_str());
+        return;
+    }
+    
     Action* action;
     if (loop) {
-        action = RepeatForever::create(Animate::create(AnimationCache::getInstance()->getAnimation(animationName)));
+        action = RepeatForever::create(Animate::create(animation));
     } else {
-        action = Animate::create(AnimationCache::getInstance()->getAnimation(animationName));
+        action = Animate::create(animation);
     }
     
     this->stopAllActions();
@@ -423,8 +635,9 @@ void Enemy::updateWorldPosition(float delta) {
 }
 
 void Enemy::setupPhysics() {
-    // Create physics collision body
-    auto physicsBody = PhysicsBody::createBox(this->getContentSize(), PhysicsMaterial(0.1f, 0.0f, 0.5f));
+    // Create physics collision body with the scaled size
+    auto scaledSize = this->getContentSize() * this->getScale();
+    auto physicsBody = PhysicsBody::createBox(scaledSize, PhysicsMaterial(0.1f, 0.0f, 0.5f));
     if (physicsBody) {
         physicsBody->setDynamic(true);
         physicsBody->setGravityEnable(false);    // Disable physics engine gravity for enemies

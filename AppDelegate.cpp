@@ -92,22 +92,24 @@ bool AppDelegate::applicationDidFinishLaunching() {
     glview->setDesignResolutionSize(1280, 720, ResolutionPolicy::EXACT_FIT);
 
 
-   // 添加资源搜索路径
-auto fileUtils = FileUtils::getInstance();
+    // 添加资源搜索路径
+    auto fileUtils = FileUtils::getInstance();
+    std::vector<std::string> searchPaths;
+    searchPaths.push_back("Resources");
+    searchPaths.push_back("Resources/images");
+    searchPaths.push_back("Resources/images/environment");
+    searchPaths.push_back("Resources/images/environment/background");
+    searchPaths.push_back("Resources/images/characters/player");
+    searchPaths.push_back("Resources/images/character/player");
+    searchPaths.push_back("Resources/images/character");
+    searchPaths.push_back("images/characters/player");
+    searchPaths.push_back("images/character/player");
+    searchPaths.push_back("images/environment/background");
 
-std::vector<std::string> searchPaths;
-searchPaths.push_back("Resources");
-searchPaths.push_back("Resources/images");
-searchPaths.push_back("Resources/images/environment");
-searchPaths.push_back("Resources/images/environment/background");
-searchPaths.push_back("Resources/images/characters/player");
-searchPaths.push_back("Resources/images/character/player");
-searchPaths.push_back("Resources/images/character");
-searchPaths.push_back("images/characters/player");
-searchPaths.push_back("images/character/player");
-searchPaths.push_back("images/environment/background");  // 添加Level2背景路径
-searchPaths.push_back("C:/aishi/test2/Resources/images/environment/background");  // Level2绝对路径
-searchPaths.push_back(".");
+    // 添加冲刺和受击动画资源路径
+    searchPaths.push_back("C:/test3/Resources/images/characters/player");
+    searchPaths.push_back("C:/test3/Resources/images");
+    searchPaths.push_back("C:/test3/Resources");
 
 fileUtils->setSearchPaths(searchPaths);
 

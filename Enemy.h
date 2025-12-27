@@ -5,6 +5,7 @@
 
 #include "cocos2d.h"
 #include "EnemyState.h"
+#include "AnimationManager.h"
 
 // Forward declaration
 class Player;
@@ -55,6 +56,9 @@ public:
 
     // Physics related
     virtual bool onContactBegin(cocos2d::PhysicsContact& contact);
+    
+    // Damage display
+    void showDamageNumber(float damage);
 
 protected:
     // State related

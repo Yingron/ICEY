@@ -15,6 +15,7 @@ class EnemyManager;
 class Player : public cocos2d::Sprite {
 public:
     static Player* create(const std::string& spriteFile);
+    static Player* getInstance();
     std::vector<std::string> optimizeAttackFrames(const std::vector<std::string>& originalFrames, int targetFrameCount);
     virtual bool init(const std::string& spriteFile);
     virtual ~Player();
@@ -53,6 +54,10 @@ public:
     // 跳跃状态查询
     bool isGrounded() const { return _isGrounded; }
     bool isJumping() const { return _currentState == PlayerState::JUMPING; }
+    
+    // 移动相关查询
+    float getMoveSpeed() const { return _moveSpeed; }
+    bool isFacingRight() const { return _facingRight; }
     // 添加DashBar引用
     DashBar* _dashBar;
 
@@ -64,6 +69,18 @@ public:
     void dashRight();
     void dash();  // 默认向右冲刺
     bool isDashing() const { return _currentState == PlayerState::DASHING; }
+    
+    // 格挡相关方法
+    void startBlocking();
+    void endBlocking();
+    bool canBlock() const;
+    bool isBlocking() const { return _currentState == PlayerState::BLOCKING; }
+    
+    // 闪避相关方法
+    void startDodging(float direction);
+    void endDodging();
+    bool canDodge() const;
+    bool isDodging() const { return _currentState == PlayerState::DODGING; }
     
     // 生命值相关方法和属性
     float getMaxHealth() const { return _maxHealth; }
@@ -78,6 +95,7 @@ public:
     
     // 攻击相关方法
     void detectAndDamageEnemies();
+    bool isAttacking() const { return _currentState == PlayerState::ATTACKING; }
     
     // 技能相关方法
     void skill1();
@@ -94,6 +112,7 @@ public:
     MainGameScene* getMainGameScene() const { return _mainGameScene; }
 
 private:
+    static Player* _instance;
     PlayerState _currentState;
     cocos2d::Vec2 _velocity;
     bool _isMovingLeft;
@@ -114,11 +133,11 @@ private:
     int _maxJumpCount;        // 最大跳跃次数（2表示二连跳）
     float _lastJumpTime;      // 上次跳跃时间，用于检测连跳
 
-    // 连击相关变量（保留这组定义，删除后面的重复定义）
+    // 连击相关变量
     bool _canCombo;
     int _comboCount;
     float _comboTimer;
-    const float COMBO_WINDOW = 0.3f; // 连击时间窗口
+    const float COMBO_WINDOW = 1.0f; // 连击时间窗口（1秒）
     
     // 生命值相关变量
     float _maxHealth;
@@ -146,6 +165,20 @@ private:
     float _dashCooldown;         // 冲刺冷却时间
     float _currentDashDistance;  // 当前已冲刺距离
     bool _isDashLeft;            // 是否向左冲刺
+    
+    // 格挡相关变量
+    bool _isBlocking;            // 是否在格挡状态
+    float _blockDuration;        // 格挡持续时间
+    float _blockCooldown;        // 格挡冷却时间
+    float _blockReduction;       // 格挡减伤百分比
+    float _currentBlockDuration; // 当前格挡持续时间
+    
+    // 闪避相关变量
+    bool _isDodging;             // 是否在闪避状态
+    float _dodgeDuration;        // 闪避持续时间
+    float _dodgeCooldown;        // 闪避冷却时间
+    float _dodgeInvincibility;   // 闪避无敌时间
+    float _currentDodgeDuration; // 当前闪避持续时间
 
     // 冲刺动画键
     std::string _dashLeftAnimKey;

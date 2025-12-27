@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <algorithm>
 
 // Forward declaration
 class Player;
@@ -31,7 +32,10 @@ private:
     
     Player* _player;
     std::vector<Enemy*> _enemies;
+    std::vector<Enemy*> _enemiesToRemove; // 延迟移除列表
     std::map<std::string, EnemyConfig> _enemyDatabase;
+    
+    void processEnemyRemoval(); // 处理延迟移除
 
 public:
     static EnemyManager* getInstance();
@@ -48,7 +52,7 @@ public:
     void removeEnemy(Enemy* enemy);
     void removeAllEnemies();
     
-    const std::vector<Enemy*>& getEnemies() const { return _enemies; }
+    std::vector<Enemy*> getEnemies() const { return _enemies; }
     int getEnemyCount() const { return _enemies.size(); }
     
     void update(float delta);
@@ -57,7 +61,7 @@ public:
     std::vector<Enemy*> getEnemiesByType(const std::string& enemyType);// Getters
     bool hasAliveEnemies() const;
     int getAliveEnemiesCount() const;
-    const std::vector<Enemy*>& getAllEnemies() const { return _enemies; };
+    std::vector<Enemy*> getAllEnemies() const { return _enemies; };
     
     void registerEnemyType(const std::string& enemyType, const std::string& name, const std::string& description);
     std::string getEnemyName(const std::string& enemyType) const;

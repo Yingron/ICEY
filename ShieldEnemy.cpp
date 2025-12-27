@@ -110,30 +110,22 @@ void ShieldEnemy::takeDamage(float damage) {
         return;
     }
 
+    float finalDamage = damage;
+
     // Check if blocking
     if (_isBlocking) {
         // Reduce damage when blocking
-        float reducedDamage = damage * (1.0f - _blockReduction);
+        finalDamage = damage * (1.0f - _blockReduction);
         
         // If damage is completely blocked
-        if (reducedDamage <= 0) {
+        if (finalDamage <= 0) {
             // Can play block success animation or effect here
             return;
         }
-        
-        // Otherwise take reduced damage
-        _currentHealth -= reducedDamage;
-    } else {
-        // Take full damage when not blocking
-        _currentHealth -= damage;
     }
     
-    if (_currentHealth <= 0) {
-        _currentHealth = 0;
-        setCurrentState(EnemyState::DEAD);
-    } else {
-        setCurrentState(EnemyState::HURT);
-    }
+    // Call parent class's takeDamage to handle damage display and state changes
+    Enemy::takeDamage(finalDamage);
 }
 
 void ShieldEnemy::updateAI(float delta) {
@@ -153,9 +145,25 @@ void ShieldEnemy::updateAI(float delta) {
         // Player is in detection range
         
         // Check if should block
-        if (!_isBlocking && _currentBlockCooldown <= 0 && distanceToPlayer <= _attackRange * 1.5f) {
-            // Randomly decide to block based on block chance
-            if (CCRANDOM_0_1() <= _blockChance) {
+        if (!_isBlocking && _currentBlockCooldown <= 0 && distanceToPlayer <= _attackRange * 2.0f) {
+            // More intelligent blocking logic:
+            // 1. Higher chance to block when player is very close
+            // 2. Higher chance to block when player is attacking
+            float dynamicBlockChance = _blockChance;
+            
+            // Increase block chance based on distance
+            if (distanceToPlayer <= _attackRange) {
+                dynamicBlockChance = 0.8f; // 80% chance when very close
+            }
+            
+            // Check if player is attacking
+            // Assuming Player has an isAttacking() method
+            if (_target && _target->isAttacking()) {
+                dynamicBlockChance = 0.9f; // 90% chance when player is attacking
+            }
+            
+            // Randomly decide to block based on dynamic block chance
+            if (CCRANDOM_0_1() <= dynamicBlockChance) {
                 startBlocking();
                 return;
             }
@@ -204,53 +212,72 @@ void ShieldEnemy::initEnemyData() {
 }
 
 void ShieldEnemy::setupAnimations() {
-    // 盾牌敌人资源路径和文件名前缀
-    std::string enemyDir = "images/characters/enemies/Close combat enemy2/";
-    std::string prefix = enemyDir + "jz2-";
-    std::string suffix = "_resized.png";
+    // Load animations from AnimationManager
+    AnimationManager* animMgr = AnimationManager::getInstance();
     
-    // Idle animation (using walk frames as idle for now)
-    std::vector<std::string> walkFrames;
-    for (int i = 1; i <= 20; i++) {
-        walkFrames.push_back(enemyDir + prefix + "walk" + std::to_string(i) + suffix);
+    // For normal shield enemies, use close_combat2 animations
+    // For boss shield enemies, use their specific animations
+    std::string animationType = _enemyType;
+    if (animationType == "shield") {
+        animationType = "close_combat2";
+    } else if (animationType == "BOSS2-MAODIE") {
+        animationType = "boss2";
     }
-    loadAnimation("walk", walkFrames, 0.15f);
     
-    // Attack animation
-    std::vector<std::string> attackFrames;
-    for (int i = 1; i <= 20; i++) {
-        attackFrames.push_back(enemyDir + prefix + "attack" + std::to_string(i) + suffix);
+    // Load all required animations for this enemy type
+    // Add null checks to prevent crashes
+    Animation* anim;
+    
+    anim = animMgr->getAnimation(animationType, "idle");
+    if (anim) {
+        _animations["idle"] = anim;
+    } else {
+        CCLOGERROR("Failed to load idle animation for %s", animationType.c_str());
     }
-    loadAnimation("attack", attackFrames, 0.1f);
     
-    // Block animation (using gj frames - which likely stands for 'guard' or 'block')
-    std::vector<std::string> blockFrames = {
-        enemyDir + prefix + "gj1" + suffix,
-        enemyDir + prefix + "gj2" + suffix
-    };
-    loadAnimation("block", blockFrames, 0.2f);
-    
-    // Hurt animation
-    std::vector<std::string> hurtFrames;
-    for (int i = 1; i <= 20; i++) {
-        hurtFrames.push_back(enemyDir + prefix + "hit" + std::to_string(i) + suffix);
+    anim = animMgr->getAnimation(animationType, "walk");
+    if (anim) {
+        _animations["walk"] = anim;
+    } else {
+        CCLOGERROR("Failed to load walk animation for %s", animationType.c_str());
     }
-    loadAnimation("hurt", hurtFrames, 0.1f);
     
-    // Idle animation
-    std::vector<std::string> idleFrames;
-    for (int i = 1; i <= 5; i++) {
-        idleFrames.push_back(enemyDir + prefix + "walk" + std::to_string(i) + suffix);
+    anim = animMgr->getAnimation(animationType, "run");
+    if (anim) {
+        _animations["run"] = anim;
+    } else {
+        CCLOGERROR("Failed to load run animation for %s", animationType.c_str());
     }
-    loadAnimation("idle", idleFrames, 0.3f);
     
-    // Run animation (use walk animation with faster speed)
-    loadAnimation("run", walkFrames, 0.1f);
-    
-    // Dead animation
-    std::vector<std::string> deadFrames;
-    for (int i = 1; i <= 5; i++) {
-        deadFrames.push_back(enemyDir + prefix + "hit" + std::to_string(i) + suffix);
+    // Try attack animation first, then melee_attack as fallback
+    anim = animMgr->getAnimation(animationType, "attack");
+    if (!anim) {
+        anim = animMgr->getAnimation(animationType, "melee_attack");
     }
-    loadAnimation("dead", deadFrames, 0.15f);
+    if (anim) {
+        _animations["attack"] = anim;
+    } else {
+        CCLOGERROR("Failed to load attack/melee_attack animation for %s", animationType.c_str());
+    }
+    
+    anim = animMgr->getAnimation(animationType, "hurt");
+    if (anim) {
+        _animations["hurt"] = anim;
+    } else {
+        CCLOGERROR("Failed to load hurt animation for %s", animationType.c_str());
+    }
+    
+    anim = animMgr->getAnimation(animationType, "dead");
+    if (anim) {
+        _animations["dead"] = anim;
+    } else {
+        CCLOGERROR("Failed to load dead animation for %s", animationType.c_str());
+    }
+    
+    anim = animMgr->getAnimation(animationType, "block");
+    if (anim) {
+        _animations["block"] = anim;
+    } else {
+        CCLOGERROR("Failed to load block animation for %s", animationType.c_str());
+    }
 }

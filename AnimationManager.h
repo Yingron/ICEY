@@ -1,34 +1,57 @@
 #pragma once
-#ifndef __ANIMATION_MANAGER_H__
-#define __ANIMATION_MANAGER_H__
+#ifndef ANIMATION_MANAGER_H
+#define ANIMATION_MANAGER_H
 
 #include "cocos2d.h"
-#include "PlayerState.h"
 #include <unordered_map>
+#include <string>
 
-class AnimationManager
-{
-private:
-    std::unordered_map<PlayerState, cocos2d::Animation*> m_playerAnimations;
-    std::unordered_map<std::string, cocos2d::Animation*> m_enemyAnimations;
-
+class AnimationManager {
 public:
     static AnimationManager* getInstance();
+    static void destroyInstance();
 
-    void loadPlayerAnimations();
-    void loadEnemyAnimations(const std::string& enemyType);
+    // Ԥ�������е��˶���
+    void preloadEnemyAnimations();
 
-    cocos2d::Animation* getPlayerAnimation(PlayerState state);
-    cocos2d::Animation* getEnemyAnimation(const std::string& enemyType, const std::string& action);
+    // ��ȡ����
+    cocos2d::Animation* getAnimation(const std::string& enemyType, const std::string& state);
 
-    cocos2d::Animate* createPlayerAnimate(PlayerState state);
-    cocos2d::Animate* createEnemyAnimate(const std::string& enemyType, const std::string& action);
+    // ��ȡ����֡�ӳ�
+    float getAnimationDelay(const std::string& enemyType, const std::string& state);
+
+    // ��ȡ������������
+    struct EnemyConfig {
+        float maxHealth;
+        float attackDamage;
+        float moveSpeed;
+        float attackRange;
+        float detectionRange;
+        float attackCooldown;
+        std::string name;
+        bool isBoss;
+        int phaseCount; // BOSS�׶���
+    };
+
+    const EnemyConfig& getEnemyConfig(const std::string& enemyType);
 
 private:
-    AnimationManager() = default;
-    ~AnimationManager() = default;
+    AnimationManager();
+    ~AnimationManager();
+    static AnimationManager* _instance;
 
-    cocos2d::Animation* createAnimationFromFiles(const std::vector<std::string>& frames, float delay);
+    std::unordered_map<std::string, std::unordered_map<std::string, cocos2d::Animation*>> _animations;
+    std::unordered_map<std::string, EnemyConfig> _enemyConfigs;
+
+    void loadBoss1Animations();
+    void loadBoss2Animations();
+    void loadBoss3Animations();
+    void loadCloseCombat1Animations();
+    void loadCloseCombat2Animations();
+    void loadEliteEnemyAnimations();
+    void loadRemoteEnemyAnimations();
+
+    void initEnemyConfigs();
 };
 
-#endif // __ANIMATION_MANAGER_H__
+#endif // ANIMATION_MANAGER_H

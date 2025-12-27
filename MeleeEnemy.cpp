@@ -123,42 +123,65 @@ void MeleeEnemy::initEnemyData() {
 }
 
 void MeleeEnemy::setupAnimations() {
-    // Melee enemy animations - using BOSS1-CAIXUNKUN resources as placeholder
-    std::string enemyDir = "images/characters/enemies/BOSS1-CAIXUNKUN/";
-    std::string prefix = enemyDir + "cxk-";
-    std::string suffix = "_resized.png";
+    // Load animations from AnimationManager
+    AnimationManager* animMgr = AnimationManager::getInstance();
     
-    // Idle animation
-    std::vector<std::string> idleFrames;
-    for (int i = 1; i <= 10; i++) {
-        idleFrames.push_back(prefix + "idle" + std::to_string(i) + suffix);
+    // For normal melee enemies, use close_combat animations
+    // For boss melee enemies, use their specific animations
+    std::string animationType = _enemyType;
+    if (animationType == "melee") {
+        animationType = "close_combat1";
+    } else if (animationType == "BOSS1-CAIXUNKUN") {
+        animationType = "boss1";
     }
-    loadAnimation("idle", idleFrames, 0.3f);
     
-    // Walking animation
-    std::vector<std::string> walkFrames;
-    for (int i = 1; i <= 10; i++) {
-        walkFrames.push_back(prefix + "walk" + std::to_string(i) + suffix);
+    // Load all required animations for this enemy type
+    // Add null checks to prevent crashes
+    Animation* anim;
+    
+    anim = animMgr->getAnimation(animationType, "idle");
+    if (anim) {
+        _animations["idle"] = anim;
+    } else {
+        CCLOGERROR("Failed to load idle animation for %s", animationType.c_str());
     }
-    loadAnimation("walk", walkFrames, 0.15f);
     
-    // Running animation (using walk frames with faster speed)
-    loadAnimation("run", walkFrames, 0.1f);
-    
-    // Attack animation
-    std::vector<std::string> attackFrames;
-    for (int i = 1; i <= 10; i++) {
-        attackFrames.push_back(prefix + "attack" + std::to_string(i) + suffix);
+    anim = animMgr->getAnimation(animationType, "walk");
+    if (anim) {
+        _animations["walk"] = anim;
+    } else {
+        CCLOGERROR("Failed to load walk animation for %s", animationType.c_str());
     }
-    loadAnimation("attack", attackFrames, 0.1f);
     
-    // Hurt animation
-    std::vector<std::string> hurtFrames;
-    for (int i = 1; i <= 10; i++) {
-        hurtFrames.push_back(prefix + "hit" + std::to_string(i) + suffix);
+    anim = animMgr->getAnimation(animationType, "run");
+    if (anim) {
+        _animations["run"] = anim;
+    } else {
+        CCLOGERROR("Failed to load run animation for %s", animationType.c_str());
     }
-    loadAnimation("hurt", hurtFrames, 0.1f);
     
-    // Dead animation (using hit frames as dead for now)
-    loadAnimation("dead", hurtFrames, 0.15f);
+    // Try attack animation first, then melee_attack as fallback
+    anim = animMgr->getAnimation(animationType, "attack");
+    if (!anim) {
+        anim = animMgr->getAnimation(animationType, "melee_attack");
+    }
+    if (anim) {
+        _animations["attack"] = anim;
+    } else {
+        CCLOGERROR("Failed to load attack/melee_attack animation for %s", animationType.c_str());
+    }
+    
+    anim = animMgr->getAnimation(animationType, "hurt");
+    if (anim) {
+        _animations["hurt"] = anim;
+    } else {
+        CCLOGERROR("Failed to load hurt animation for %s", animationType.c_str());
+    }
+    
+    anim = animMgr->getAnimation(animationType, "dead");
+    if (anim) {
+        _animations["dead"] = anim;
+    } else {
+        CCLOGERROR("Failed to load dead animation for %s", animationType.c_str());
+    }
 }

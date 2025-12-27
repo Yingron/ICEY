@@ -9,10 +9,18 @@
 
 USING_NS_CC;
 
+// 初始化静态实例
+Player* Player::_instance = nullptr;
+
+Player* Player::getInstance() {
+    return _instance;
+}
+
 Player* Player::create(const std::string& spriteFile) {
     Player* player = new (std::nothrow) Player();
     if (player && player->init(spriteFile)) {
         player->autorelease();
+        _instance = player;
         return player;
     }
     CC_SAFE_DELETE(player);
@@ -546,6 +554,20 @@ bool Player::init(const std::string& spriteFile) {
     _isInvincible = false;           // 无敌状态
     _invincibleTime = 0.0f;          // 无敌时间
     _hurtFlashCount = 0;             // 受伤闪烁计数
+    
+    // 初始化格挡相关变量
+    _isBlocking = false;
+    _blockDuration = 1.5f;           // 格挡持续时间1.5秒
+    _blockCooldown = 0.5f;           // 格挡冷却时间0.5秒
+    _blockReduction = 0.7f;          // 格挡减伤70%
+    _currentBlockDuration = 0.0f;
+    
+    // 初始化闪避相关变量
+    _isDodging = false;
+    _dodgeDuration = 0.3f;           // 闪避持续时间0.3秒
+    _dodgeCooldown = 1.0f;           // 闪避冷却时间1秒
+    _dodgeInvincibility = 0.3f;      // 闪避无敌时间0.3秒
+    _currentDodgeDuration = 0.0f;
 
     // 初始化技能1相关变量
     _skill1Damage = 50.0f;         // 技能1伤害
@@ -781,7 +803,7 @@ void Player::applySkill1Effect() {
         return;
     }
 
-    const auto& enemies = enemyManager->getAllEnemies();
+    auto enemies = enemyManager->getAllEnemies();
     if (enemies.empty()) {
         log("No enemies to attack with skill1");
         return;
@@ -894,7 +916,7 @@ void Player::applySkill2Effect() {
         return;
     }
 
-    const auto& enemies = enemyManager->getAllEnemies();
+    auto enemies = enemyManager->getAllEnemies();
     if (enemies.empty()) {
         log("No enemies to attack with skill2");
         return;
@@ -956,6 +978,22 @@ void Player::update(float delta) {
         }
     }
 
+    // 更新格挡状态
+    if (_currentState == PlayerState::BLOCKING) {
+        _currentBlockDuration -= delta;
+        if (_currentBlockDuration <= 0) {
+            endBlocking();
+        }
+    }
+
+    // 更新闪避状态
+    if (_currentState == PlayerState::DODGING) {
+        _currentDodgeDuration -= delta;
+        if (_currentDodgeDuration <= 0) {
+            endDodging();
+        }
+    }
+
     // 防止无限下落
     if (_worldPositionY < -1000.0f) {
         _worldPositionY = 0;
@@ -1009,8 +1047,11 @@ void Player::updatePhysics(float delta) {
 
 // Player.cpp - 修改updateWorldPosition函数
 void Player::updateWorldPosition(float delta) {
-    // 如果正在攻击或跳跃，不更新X方向位置（或减小移动速度）
-    if (_currentState == PlayerState::ATTACKING || _currentState == PlayerState::DASHING) {
+    // 如果正在攻击、冲刺、格挡或闪避，不更新X方向位置
+    if (_currentState == PlayerState::ATTACKING || 
+        _currentState == PlayerState::DASHING ||
+        _currentState == PlayerState::BLOCKING ||
+        _currentState == PlayerState::DODGING) {
         return;
     }
 
@@ -1888,6 +1929,14 @@ void Player::takeDamage(float damage) {
         return; // 如果已经死亡或处于无敌状态，不处理伤害
     }
 
+    // 检查是否在格挡状态
+    if (_isBlocking) {
+        // 格挡减少70%伤害
+        float reducedDamage = damage * (1.0f - _blockReduction);
+        log("Player blocked attack, reduced damage from %.2f to %.2f", damage, reducedDamage);
+        damage = reducedDamage;
+    }
+
     // 首先消耗护盾
     if (_currentShield > 0) {
         _currentShield -= 1;
@@ -1938,7 +1987,7 @@ void Player::takeDamage(float damage) {
     }
 }
 
-// Player.cpp - 改进detectAndDamageEnemies函数
+// Player.cpp - 实现精确攻击检测系统
 void Player::detectAndDamageEnemies() {
     auto enemyManager = EnemyManager::getInstance();
     if (!enemyManager) {
@@ -1946,26 +1995,195 @@ void Player::detectAndDamageEnemies() {
         return;
     }
 
-    const auto& enemies = enemyManager->getAllEnemies();
+    auto enemies = enemyManager->getAllEnemies();
     if (enemies.empty()) {
         log("No enemies found for attack detection");
         return;
     }
 
-    float attackRange = 50.0f;
-    float damage = 30.0f;
+    // 根据连击数调整伤害
+    float baseDamage = 30.0f;
+    float comboMultiplier = 1.0f + (_comboCount * 0.2f); // 每连击增加20%伤害
+    float damage = baseDamage * comboMultiplier;
+    
+    // 根据玩家朝向设置攻击范围和方向
+    float attackRangeX = 80.0f;  // 水平攻击范围
+    float attackRangeY = 40.0f;  // 垂直攻击范围
+    float playerX = this->getWorldPositionX();
+    float playerY = this->getWorldPositionY();
 
     for (Enemy* enemy : enemies) {
         if (enemy && !enemy->isDead()) {
-            float distance = std::abs(enemy->getWorldPositionX() - this->getWorldPositionX());
-
-            if (distance <= attackRange) {
+            float enemyX = enemy->getWorldPositionX();
+            float enemyY = enemy->getWorldPositionY();
+            
+            // 1. 检查垂直范围（Y轴）
+            float yDistance = std::abs(enemyY - playerY);
+            if (yDistance > attackRangeY) {
+                continue;  // 不在垂直攻击范围内
+            }
+            
+            // 2. 根据玩家朝向检查水平范围（X轴）
+            if (_facingRight) {
+                // 向右攻击，只检测玩家右侧的敌人
+                if (enemyX < playerX || (enemyX - playerX) > attackRangeX) {
+                    continue;
+                }
+            } else {
+                // 向左攻击，只检测玩家左侧的敌人
+                if (enemyX > playerX || (playerX - enemyX) > attackRangeX) {
+                    continue;
+                }
+            }
+            
+            // 3. 精确的攻击碰撞检测（考虑敌人的实际尺寸）
+            float playerHalfWidth = this->getContentSize().width / 2;
+            float enemyHalfWidth = enemy->getContentSize().width / 2;
+            float actualDistanceX = std::abs(enemyX - playerX) - playerHalfWidth - enemyHalfWidth;
+            
+            if (actualDistanceX <= 0) {
+                // 攻击命中敌人
                 enemy->takeDamage(damage);
-                log("Player attacks enemy! Damage: %.0f, Enemy health: %.0f",
-                    damage, enemy->getCurrentHealth());
+                log("Player attacks enemy! Damage: %.0f (combo: x%.1f), Enemy health: %.0f",
+                    damage, comboMultiplier, enemy->getCurrentHealth());
+                
+                // 增加连击数
+                _comboCount++;
+                _comboTimer = COMBO_WINDOW;  // 重置连击时间窗口
             }
         }
     }
+}
+
+// 格挡相关方法实现
+bool Player::canBlock() const {
+    return _currentState != PlayerState::ATTACKING && 
+           _currentState != PlayerState::DASHING &&
+           _currentState != PlayerState::HURT &&
+           _currentState != PlayerState::DEAD &&
+           _currentState != PlayerState::SKILL1 &&
+           _currentState != PlayerState::SKILL2;
+}
+
+void Player::startBlocking() {
+    if (!canBlock()) {
+        log("Cannot block: current state is %d", (int)_currentState);
+        return;
+    }
+
+    // 设置格挡状态
+    _currentState = PlayerState::BLOCKING;
+    _isBlocking = true;
+    _currentBlockDuration = _blockDuration;
+
+    // 停止当前所有动作
+    this->stopAllActions();
+
+    // 播放格挡动画
+    std::string blockKey = "block"; // 假设已经有格挡动画
+    auto it = _animations.find(blockKey);
+    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+        auto animate = Animate::create(it->second);
+        this->runAction(RepeatForever::create(animate));
+        log("Player starts blocking");
+    }
+    else {
+        log("WARNING: Block animation not found, using default blocking state");
+        // 即使没有动画也要保持格挡状态
+    }
+}
+
+void Player::endBlocking() {
+    if (_currentState != PlayerState::BLOCKING) {
+        return;
+    }
+
+    // 重置格挡状态
+    _isBlocking = false;
+    _currentBlockDuration = 0.0f;
+
+    this->stopAllActions();
+
+    // 根据当前输入状态设置适当的状态
+    if (_isMovingLeft || _isMovingRight) {
+        setCurrentState(PlayerState::RUNNING);
+    }
+    else {
+        setCurrentState(PlayerState::IDLE);
+    }
+    
+    log("Player ends blocking");
+}
+
+// 闪避相关方法实现
+bool Player::canDodge() const {
+    return _currentState != PlayerState::ATTACKING && 
+           _currentState != PlayerState::DASHING &&
+           _currentState != PlayerState::HURT &&
+           _currentState != PlayerState::DEAD &&
+           _currentState != PlayerState::SKILL1 &&
+           _currentState != PlayerState::SKILL2;
+}
+
+void Player::startDodging(float direction) {
+    if (!canDodge()) {
+        log("Cannot dodge: current state is %d", (int)_currentState);
+        return;
+    }
+
+    // 设置闪避状态
+    _currentState = PlayerState::DODGING;
+    _isDodging = true;
+    _currentDodgeDuration = _dodgeDuration;
+    
+    // 设置无敌状态
+    _isInvincible = true;
+    _invincibleTime = _dodgeInvincibility;
+
+    // 停止当前所有动作
+    this->stopAllActions();
+
+    // 播放闪避动画
+    std::string dodgeKey = "dodge";
+    auto it = _animations.find(dodgeKey);
+    if (it != _animations.end() && it->second->getFrames().size() > 0) {
+        auto animate = Animate::create(it->second);
+        this->runAction(Repeat::create(animate, 1));
+        log("Player starts dodging");
+    }
+    else {
+        log("WARNING: Dodge animation not found, using default dodging state");
+        // 即使没有动画也要保持闪避状态
+    }
+    
+    // 根据方向设置朝向
+    if (direction < 0) {
+        _facingRight = false;
+    } else {
+        _facingRight = true;
+    }
+}
+
+void Player::endDodging() {
+    if (_currentState != PlayerState::DODGING) {
+        return;
+    }
+
+    // 重置闪避状态
+    _isDodging = false;
+    _currentDodgeDuration = 0.0f;
+
+    this->stopAllActions();
+
+    // 根据当前输入状态设置适当的状态
+    if (_isMovingLeft || _isMovingRight) {
+        setCurrentState(PlayerState::RUNNING);
+    }
+    else {
+        setCurrentState(PlayerState::IDLE);
+    }
+    
+    log("Player ends dodging");
 }
 
 Player::~Player() {
@@ -1974,4 +2192,9 @@ Player::~Player() {
         CC_SAFE_RELEASE(pair.second);
     }
     _animations.clear();
+    
+    // 清除单例实例
+    if (_instance == this) {
+        _instance = nullptr;
+    }
 }

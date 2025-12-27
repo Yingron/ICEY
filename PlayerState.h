@@ -9,6 +9,8 @@ enum class PlayerState {
     RUNNING,
     JUMPING,
     ATTACKING,
+    BLOCKING,
+    DODGING,
     DASHING,
     SKILL1,
     SKILL2,
