@@ -1,0 +1,25 @@
+修复内容：
+
+1. 问题根源：
+   - 在Player::detectAndDamageEnemies方法中，通过EnemyManager::getAllEnemies()获取敌人列表并遍历
+   - 当敌人被攻击死亡时，EnemyManager::removeEnemy()会从_enemies向量中移除敌人
+   - 这导致正在遍历的向量发生变化，引发迭代器失效，从而导致程序崩溃
+
+2. 修复措施：
+   - 将EnemyManager.h中的getAllEnemies()方法从返回引用修改为返回副本：
+     - 原代码：const std::vector<Enemy*>& getAllEnemies() const { return _enemies; };
+     - 修改后：std::vector<Enemy*> getAllEnemies() const { return _enemies; };
+   
+   - 将EnemyManager.h中的getEnemies()方法从返回引用修改为返回副本：
+     - 原代码：const std::vector<Enemy*>& getEnemies() const { return _enemies; }
+     - 修改后：std::vector<Enemy*> getEnemies() const { return _enemies; }
+
+3. 修复原理：
+   - 现在，Player::detectAndDamageEnemies方法遍历的是敌人向量的副本，而不是原始向量
+   - 即使敌人从原始向量中移除，遍历过程也不会受到影响，避免了迭代器失效的问题
+
+4. 其他检查：
+   - 确认Enemy::takeDamage方法在添加伤害数字和粒子效果时正确检查了父节点是否存在
+   - 确认EnemyManager::removeEnemy和safelyRemoveEnemy方法正确处理了敌人的移除和资源释放
+
+修复后，玩家和敌人战斗时程序应该不会再崩溃。

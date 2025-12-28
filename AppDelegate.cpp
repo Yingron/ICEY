@@ -1,4 +1,5 @@
 ﻿#include "AppDelegate.h"
+#include"AchievementSystem.h"
 
 #define USE_AUDIO_ENGINE 1
 
@@ -59,6 +60,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // initialize director
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
+
+    AchievementSystem::getInstance()->init();//12/28/15.19
    
     if (!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
