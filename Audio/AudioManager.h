@@ -1,4 +1,4 @@
-﻿#ifndef __AUDIO_MANAGER_H__
+#ifndef __AUDIO_MANAGER_H__
 #define __AUDIO_MANAGER_H__
 
 #include "cocos2d.h"
@@ -10,24 +10,24 @@
 USING_NS_CC;
 using namespace cocos2d::experimental;
 
-// 闊抽绫诲瀷鏋氫妇
+// 音频类型枚举
 enum class AudioType
 {
-    BGM,    // 鑳屾櫙闊充箰
-    EFFECT, // 娓告垙闊虫晥
-    UI,     // UI闊虫晥
-    VOICE   // 鏃佺櫧/璇煶
+    BGM,    // 背景音乐
+    EFFECT, // 游戏音效
+    UI,     // UI 音效
+    VOICE   // 旁白/语音
 };
 
-// 闊抽閰嶇疆缁撴瀯浣?
+// 音频配置结构体
 struct AudioConfig
 {
-    std::string id;         // 闊抽ID
-    std::string filePath;   // 鏂囦欢璺緞
-    AudioType type;         // 闊抽绫诲瀷
-    float volume;           // 鐩稿闊抽噺 (0.0-1.0)
-    bool loop;              // 鏄惁寰幆
-    bool preload;           // 鏄惁棰勫姞杞?
+    std::string id;         // 音频 ID
+    std::string filePath;   // 文件路径
+    AudioType type;         // 音频类型
+    float volume;           // 相对音量 (0.0-1.0)
+    bool loop;              // 是否循环
+    bool preload;           // 是否预加载
 
     AudioConfig()
         : volume(1.0f)
@@ -54,23 +54,23 @@ public:
     AudioManager();
     virtual ~AudioManager();
 
-    // 鑾峰彇鍗曚緥瀹炰緥
+    // 获取单例实例
     static AudioManager* getInstance();
 
-    // 閿€姣佸崟渚?
+    // 销毁单例
     static void destroyInstance();
 
-    // 鍒濆鍖栭煶棰戠鐞嗗櫒
+    // 初始化音频管理器
     bool init();
 
-    // 闊抽閰嶇疆绠＄悊
+    // 音频配置管理
     void addAudioConfig(const AudioConfig& config);
     void addAudioConfig(const std::string& audioId, AudioType type, const std::string& filePath, bool loop, float volume);
     void removeAudioConfig(const std::string& audioId);
     void loadAudioConfigs(const std::vector<AudioConfig>& configs);
 
-    // 鑳屾櫙闊充箰鎺у埗
-    int playBGM(const std::string& audioId);  // 淇敼锛氳繑鍥瀒nt绫诲瀷
+    // 背景音乐控制
+    int playBGM(const std::string& audioId);  // 返回音频 ID
     void stopBGM();
     void pauseBGM();
     void resumeBGM();
@@ -78,80 +78,80 @@ public:
     void fadeOutBGM(float duration = 2.0f);
     bool isBGMPlaying() const;
 
-    // 闊虫晥绠＄悊
+    // 音效管理
     int playEffect(const std::string& audioId);
     void stopAllEffects();
     void unloadAllEffects();
-    void stopEffect(int audioID);  // 淇敼锛氬弬鏁板悕缁熶竴
+    void stopEffect(int audioID);  // 参数命名保持统一
     void pauseAllEffects();
     void resumeAllEffects();
-    void pauseEffect(int audioID);  // 娣诲姞锛氭殏鍋滃崟涓煶鏁?
-    void resumeEffect(int audioID); // 娣诲姞锛氭仮澶嶅崟涓煶鏁?
+    void pauseEffect(int audioID);  // 暂停单个音效
+    void resumeEffect(int audioID); // 恢复单个音效
     void preloadEffect(const std::string& audioId);
     void unloadEffect(const std::string& audioId);
 
-    // UI闊虫晥绠＄悊
+    // UI 音效管理
     void playUISound(const std::string& audioId);
 
-    // 璇煶绠＄悊
+    // 语音管理
     int playVoice(const std::string& audioId);
-    void stopAllVoices();   // 娣诲姞锛氬仠姝㈡墍鏈夎闊?
-    void pauseAllVoices();  // 娣诲姞锛氭殏鍋滄墍鏈夎闊?
-    void resumeAllVoices(); // 娣诲姞锛氭仮澶嶆墍鏈夎闊?
+    void stopAllVoices();   // 停止所有语音
+    void pauseAllVoices();  // 暂停所有语音
+    void resumeAllVoices(); // 恢复所有语音
 
-    // 闊抽噺鎺у埗
+    // 音量控制
     void setBGMVolume(float volume);
     void setEffectVolume(float volume);
     void setUIVolume(float volume);
-    void setVoiceVolume(float volume);  // 娣诲姞锛氳闊抽煶閲忔帶鍒?
+    void setVoiceVolume(float volume);  // 语音音量
     void setMuted(bool muted);
 
-    // 鑾峰彇闊抽噺
+    // 获取音量
     float getBGMVolume() const;
     float getEffectVolume() const;
     float getUIVolume() const;
-    float getVoiceVolume() const;  // 娣诲姞锛氳幏鍙栬闊抽煶閲?
+    float getVoiceVolume() const;  // 获取语音音量
     bool isMuted() const;
-    const std::string& getCurrentBGM() const;  // 娣诲姞锛氳幏鍙栧綋鍓岯GM
+    const std::string& getCurrentBGM() const;  // 获取当前 BGM
 
-    // 搴旂敤鐘舵€佸鐞?
+    // 应用前后台状态
     void onEnterBackground();
     void onEnterForeground();
 
 private:
-    // 绂佹鎷疯礉鍜岃祴鍊?
+    // 禁止拷贝与赋值
     AudioManager(const AudioManager&) = delete;
     AudioManager& operator=(const AudioManager&) = delete;
 
-    // 鍒濆鍖栭粯璁ら厤缃?
+    // 初始化默认配置
     void initDefaultConfigs();
 
-    // 娓呯悊娣″叆娣″嚭鍔ㄤ綔
+    // 清理淡入淡出调度
     void cleanupFadeActions();
 
 private:
     static AudioManager* s_instance;
 
-    // 闊抽閰嶇疆
+    // 音频配置表
     std::map<std::string, AudioConfig> m_audioConfigs;
 
-    // 褰撳墠鎾斁鐨凚GM
+    // 当前播放的 BGM
     int m_currentBGMAudioID;
     std::string m_currentBGM;
 
-    // 姝ｅ湪鎾斁鐨勯煶鏁?
+    // 正在播放的音效
     std::map<int, std::string> m_playingEffects;
 
-    // 姝ｅ湪鎾斁鐨勮闊?
-    std::map<int, std::string> m_playingVoices;  // 娣诲姞锛氳闊冲垪琛?
+    // 正在播放的语音
+    std::map<int, std::string> m_playingVoices;
 
-    // 闊抽噺璁剧疆
+    // 音量设置
     float m_bgmVolume;
     float m_effectVolume;
     float m_uiVolume;
-    float m_voiceVolume;  // 娣诲姞锛氳闊抽煶閲?
+    float m_voiceVolume;
 
-    // 闈欓煶鍓嶉煶閲忓瓨鍌?
+    // 静音前的音量备份
     float m_lastBGMVolume;
     float m_lastEffectVolume;
     float m_lastUIVolume;
