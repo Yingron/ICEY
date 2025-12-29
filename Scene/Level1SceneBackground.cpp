@@ -7,7 +7,7 @@ USING_NS_CC;
 bool SceneBackground::init() {
     if (!Node::init()) return false;
 
-    // 锟斤拷锟矫碉拷前锟截匡拷锟侥憋拷锟斤拷
+    // 初始化当前关卡的背景
     setupLevel1Background();
 
     scheduleUpdate();
@@ -18,10 +18,10 @@ bool SceneBackground::init() {
 void SceneBackground::setupLevel1Background() {
     log("=== Setting up Scene Background ===");
 
-    // 锟斤拷取锟斤拷前锟截匡拷锟侥憋拷锟斤拷图片锟叫憋拷
+    // 获取当前关卡对应的背景图片列表
     std::vector<std::string> bgImages = getCurrentLevelBackgroundImages();
 
-    // 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
+    // 创建连续背景
     _continuousBackground = ContinuousBackground::createWithImageSequence(bgImages);
     if (_continuousBackground) {
         this->addChild(_continuousBackground);
@@ -32,15 +32,15 @@ void SceneBackground::setupLevel1Background() {
     }
 }
 
-// Level1SceneBackground.cpp - 锟睫革拷 getCurrentLevelBackgroundImages 锟斤拷锟斤拷
+// Level1SceneBackground.cpp - 修正 getCurrentLevelBackgroundImages 逻辑
 std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
     std::vector<std::string> images;
 
-    // 锟斤拷取锟斤拷前锟截匡拷
+    // 获取当前关卡
     auto levelManager = LevelManager::getInstance();
     auto currentLevel = levelManager->getCurrentLevel();
 
-    // 锟斤拷锟捷关匡拷枚锟劫凤拷锟截讹拷应锟侥憋拷锟斤拷图片
+    // 根据关卡枚举获取对应的背景图片
     if (currentLevel == LevelManager::LevelState::LEVEL1) {
         images = {
             "background-level1-1.png",
@@ -69,7 +69,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         images = { "background-level2-6.png" };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_1) {
-        // 锟斤拷展为锟斤拷锟斤拷锟结：5锟斤拷图片
+        // 扩展为多图：5 张图片
         images = {
             "background-level3-1-1.png",
             "background-level3-1-2.png",
@@ -79,7 +79,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL3_2) {
-        // 锟斤拷展为锟斤拷锟斤拷锟结：3锟斤拷图片
+        // 扩展为多图：3 张图片
         images = {
             "background-level3-2-1.png",
             "background-level3-2-2.png",
@@ -105,7 +105,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         images = { "background-level4-2.png" };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL4_3) {
-        // 锟斤拷展为锟斤拷锟斤拷锟结：3锟斤拷图片
+        // 扩展为多图：3 张图片
         images = {
             "background-level4-3-1.png",
             "background-level4-3-2.png",
@@ -116,7 +116,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         images = { "background-level4-4.png" };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL4_5) {
-        // 锟斤拷展为锟斤拷锟斤拷锟结：3锟斤拷图片
+        // 扩展为多图：3 张图片
         images = {
             "background-level4-5-1.png",
             "background-level4-5-2.png",
@@ -124,7 +124,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         };
     }
     else if (currentLevel == LevelManager::LevelState::LEVEL4_6) {
-        // 锟斤拷展为锟斤拷锟斤拷锟结：3锟斤拷图片
+        // 扩展为多图：3 张图片
         images = {
             "background-level4-6-1.png",
             "background-level4-6-2.png",
@@ -132,7 +132,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
         };
     }
     else if (currentLevel == LevelManager::LevelState::FINAL_LEVEL) {
-        // 锟斤拷锟较柏课ｏ拷锟斤拷4锟斤拷图片
+        // 终极关卡：复用同一张 4 次
         images = {
             "final-level-4.png",
             "final-level-4.png",
@@ -144,7 +144,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
     auto fileUtils = FileUtils::getInstance();
     std::vector<std::string> verifiedImages;
 
-    // 锟斤拷锟斤拷募锟斤拷欠锟斤拷锟节ｏ拷锟斤拷锟斤拷锟斤拷锟斤拷路锟斤拷
+    // 验证文件是否存在，按多种可能路径搜索
     for (const auto& filename : images) {
         std::vector<std::string> basePaths = {
             "",
@@ -153,7 +153,7 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
             "images/",
             "../Resources/images/environment/background/",
             "../../Resources/images/environment/background/",
-            "C:/aishi/test2/Resources/images/environment/background/"  // 锟斤拷锟斤拷路锟斤拷
+            "C:/aishi/test2/Resources/images/environment/background/"  // 备用路径
         };
 
         bool found = false;
@@ -177,18 +177,18 @@ std::vector<std::string> SceneBackground::getCurrentLevelBackgroundImages() {
 }
 
 void SceneBackground::reloadCurrentLevelBackground() {
-    // 锟接革拷锟节碉拷锟狡筹拷锟缴的憋拷锟斤拷
+    // 重载当前关卡背景
     if (_continuousBackground) {
         _continuousBackground->removeFromParent();
         _continuousBackground = nullptr;
     }
 
-    // 锟斤拷锟铰硷拷锟截憋拷锟斤拷
+    // 重新加载当前关卡背景
     setupLevel1Background();
 }
 
 void SceneBackground::updateWithPlayerSpeed(float delta, float playerSpeed) {
-    // 锟斤拷锟斤拷锟揭拷锟斤拷锟斤拷锟斤拷锟劫度革拷锟铰憋拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷实锟斤拷
+    // 可根据玩家速度调整背景滚动（目前留空示例）
     if (_continuousBackground) {
         // _continuousBackground->setScrollSpeed(playerSpeed * 0.5f);
     }
@@ -204,7 +204,7 @@ float SceneBackground::getScrollSpeed() const {
 void SceneBackground::update(float delta) {
     Node::update(delta);
 
-    // 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟接碉拷锟斤拷锟斤拷息
+    // 定期输出背景滚动信息
     static float debugTimer = 0.0f;
     debugTimer += delta;
     if (debugTimer > 2.0f) {
