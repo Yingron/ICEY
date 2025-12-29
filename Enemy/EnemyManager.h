@@ -33,14 +33,14 @@ private:
     
     Player* _player;
     std::vector<Enemy*> _enemies;
-    std::vector<Enemy*> _enemiesToRemove; // 锟接筹拷锟狡筹拷锟叫憋拷
+    std::vector<Enemy*> _enemiesToRemove; // 等待移除的敌人
     std::map<std::string, EnemyConfig> _enemyDatabase;
     
-    // 锟斤拷锟节关匡拷锟侥碉拷锟斤拷锟斤拷锟斤拷映锟斤拷锟?
+    // 关卡到敌人生成序列的映射
     std::map<LevelManager::LevelState, std::vector<std::string>> _levelEnemySequence;
     
-    void processEnemyRemoval(); // 锟斤拷锟斤拷锟接筹拷锟狡筹拷
-    void initLevelEnemySequences(); // 锟斤拷始锟斤拷锟截匡拷锟斤拷锟斤拷锟斤拷锟斤拷
+    void processEnemyRemoval();       // 处理延迟移除
+    void initLevelEnemySequences();   // 初始化关卡敌人生成序列
   
 public:
     static EnemyManager* getInstance();
@@ -66,10 +66,9 @@ public:
     std::vector<Enemy*> getEnemiesByType(const std::string& enemyType);// Getters
     bool hasAliveEnemies() const;
     int getAliveEnemiesCount() const;
-    std::vector<Enemy*> getAllEnemies() const; // 鍙繑鍥炵湡姝ｆ椿鐫€鐨勬晫浜?
+    std::vector<Enemy*> getAllEnemies() const; // 只返回真正存活的敌人
     
-    // 锟斤拷取锟截讹拷锟截匡拷锟侥碉拷锟斤拷锟斤拷锟斤拷
-    // 锟斤拷取锟截讹拷锟截匡拷锟侥碉拷锟斤拷锟斤拷锟斤拷
+    // 获取关卡对应的敌人生成序列
     std::vector<std::string> getLevelEnemySequence(LevelManager::LevelState level) const
     {
         std::vector<std::string> result;
