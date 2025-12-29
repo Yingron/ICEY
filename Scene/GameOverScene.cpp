@@ -1,9 +1,9 @@
-﻿#include "GameOverScene.h"
+﻿﻿#include "GameOverScene.h"
 #include "MainGameScene.h"
 #include "StartScene.h"
 #include "cocos2d.h"
 #include <iostream>
-#include"AudioManager.h"
+#include "AudioManager.h"
 #include "LevelMusicManager.h"
 
 USING_NS_CC;
@@ -34,10 +34,9 @@ bool GameOverScene::init()
     return true;
 }
 
-
 std::string GameOverScene::getDeathDescription(int count)
 {
-    s_currentSessionDeathCount++;  // 增加当前会话的死亡数
+    s_currentSessionDeathCount++;  // 增加当前会话的死亡次数
     if (s_currentSessionDeathCount == 1)
     {
         return "你死了";
@@ -98,28 +97,26 @@ std::string GameOverScene::getDeathDescription(int count)
 
 void GameOverScene::createUI()
 {
-
     LevelMusicManager::getInstance()->playBGMForLevel(LevelManager::LevelState::GAMEOVER_SCENE);
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-    // ������͸����ɫ����
+    // 创建半透明黑色背景
     m_background = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
     m_background->setPosition(origin);
     this->addChild(m_background, 0);
 
-
-    // ��ȡ��������������
+    // 读取并递增死亡次数
     auto userDefault = UserDefault::getInstance();
     int deathCount = userDefault->getIntegerForKey("death_count", 0);
-    deathCount++;  // ���ӱ�������
+    deathCount++;  // 本次死亡+1
     userDefault->setIntegerForKey("death_count", deathCount);
     userDefault->flush();
 
-    // ��ȡ��������
+    // 获取死亡描述
     std::string deathDescription = getDeathDescription(deathCount);
 
-    // ����Game Over����
+    // 创建 Game Over 文本
     m_gameOverLabel = Label::createWithTTF(deathDescription, "fonts/forui3.ttf", 72);
     if (!m_gameOverLabel)
     {
@@ -128,22 +125,22 @@ void GameOverScene::createUI()
 
     m_gameOverLabel->setPosition(origin.x + visibleSize.width / 2,
         origin.y + visibleSize.height * 0.7f);
-    m_gameOverLabel->setTextColor(Color4B(220, 20, 60, 255)); // ��ɫ
+    m_gameOverLabel->setTextColor(Color4B(220, 20, 60, 255)); // 深红色
     m_gameOverLabel->enableShadow(Color4B::BLACK, Size(3, -3), 3);
     this->addChild(m_gameOverLabel, 1);
 
-    // ��ťͼƬ·��
+    // 按钮图片路径
     std::string btnNormal = "images/ui/start&exit_btn_normal.png";
     std::string btnPressed = "images/ui/start&exit_btn_pressed.png";
 
-    // ���¿�ʼ��ť
+    // 重新开始按钮
     m_restartButton = Button::create(btnNormal, btnPressed);
     if (m_restartButton)
     {
         m_restartButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.5f));
         m_restartButton->addClickEventListener(CC_CALLBACK_1(GameOverScene::onRestartClicked, this));
 
-        auto restartLabel = Label::createWithTTF(u8"���¿�ʼ", "fonts/forui2.ttf", 32);
+        auto restartLabel = Label::createWithTTF(u8"重新开始", "fonts/forui2.ttf", 32);
         if (!restartLabel)
         {
             restartLabel = Label::createWithSystemFont("RESTART", "Arial", 32);
@@ -154,14 +151,14 @@ void GameOverScene::createUI()
         this->addChild(m_restartButton, 1);
     }
 
-    // ���˵���ť
+    // 返回菜单按钮
     m_menuButton = Button::create(btnNormal, btnPressed);
     if (m_menuButton)
     {
         m_menuButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.4f));
         m_menuButton->addClickEventListener(CC_CALLBACK_1(GameOverScene::onMenuClicked, this));
 
-        auto menuLabel = Label::createWithTTF(u8"�������˵�", "fonts/forui2.ttf", 32);
+        auto menuLabel = Label::createWithTTF(u8"返回菜单", "fonts/forui2.ttf", 32);
         if (!menuLabel)
         {
             menuLabel = Label::createWithSystemFont("MAIN MENU", "Arial", 32);
@@ -175,31 +172,31 @@ void GameOverScene::createUI()
 
 void GameOverScene::onRestartClicked(Ref* sender)
 {
-    log("���¿�ʼ��Ϸ");
+    log("重新开始游戏");
     AudioManager::getInstance()->playUISound("ui_button_click");
-    // �����µ���Ϸ�������л�
+    // 切换到新的游戏场景
     auto gameScene = MainGameScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, gameScene));
 }
 
 void GameOverScene::onMenuClicked(Ref* sender)
 {
-    log("�������˵�");
+    log("返回主菜单");
     AudioManager::getInstance()->playUISound("ui_button_click");
-    // ������ʼ�������л�
+    // 切换到开始场景
     auto startScene = StartScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, startScene));
 }
 
 void GameOverScene::initKeyboardListener()
 {
-    // �������̼�����
+    // 注册键盘监听
     m_keyboardListener = EventListenerKeyboard::create();
 
-    // ���ð����ص�
+    // 绑定按键回调
     m_keyboardListener->onKeyPressed = CC_CALLBACK_2(GameOverScene::onKeyPressed, this);
 
-    // ���Ӽ�����
+    // 添加监听
     _eventDispatcher->addEventListenerWithSceneGraphPriority(m_keyboardListener, this);
 }
 
@@ -209,13 +206,13 @@ void GameOverScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
     {
         case cocos2d::EventKeyboard::KeyCode::KEY_ENTER:
         case cocos2d::EventKeyboard::KeyCode::KEY_KP_ENTER:
-            // Enter�������¿�ʼ��Ϸ
+            // Enter 重新开始游戏
             onRestartClicked(nullptr);
             event->stopPropagation();
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE:
-            // ESC�����������˵�
+            // ESC 返回主菜单
             onMenuClicked(nullptr);
             event->stopPropagation();
             break;
@@ -227,7 +224,7 @@ void GameOverScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
 
 GameOverScene::~GameOverScene()
 {
-    // �������̼�����
+    // 移除键盘监听
     if (m_keyboardListener)
     {
         _eventDispatcher->removeEventListener(m_keyboardListener);
