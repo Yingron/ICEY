@@ -406,35 +406,35 @@ void MainGameScene::initCamera() {
 void MainGameScene::initBackground() {
     log("=== initBackground ===");
 
-    // ��ȡ��Ļ�ߴ�
+    // 获取屏幕尺寸
     auto visibleSize = Director::getInstance()->getVisibleSize();
     _screenWidth = visibleSize.width;
     float screenHeight = visibleSize.height;
 
     log("Screen width: %.0f, height: %.0f", _screenWidth, screenHeight);
 
-    // ������ǰ�ؿ��ı���
+    // 创建当前关卡的背景
     _currentBackground = SceneBackground::create();
     if (_currentBackground) {
         this->addChild(_currentBackground, -10);
 
-        // ��ȡ�������
+        // 获取背景的宽度
         _worldWidth = _currentBackground->getWorldWidth();
 
         log("Background created successfully");
         log("World width: %.0f, Screen width: %.0f", _worldWidth, _screenWidth);
 
-        // ��ʼ�����ƫ����Ϊ0
+        // 初始化相机偏移为0
         _cameraOffsetX = 0.0f;
 
-        // �ؼ��޸����������±���λ��
+        // 关键：根据相机偏移更新背景位置
         _currentBackground->updateWithCameraOffset(_cameraOffsetX);
 
-        // ��鱳���Ƿ���ȫ������Ļ
+        // 检查背景是否完全覆盖屏幕
         if (_worldWidth < _screenWidth) {
             log("WARNING: Background width (%.0f) < screen width (%.0f)", _worldWidth, _screenWidth);
 
-            // ǿ�Ʊ�������������Ļ
+            // 强制背景拉伸以覆盖屏幕
             _currentBackground->setScaleX(_screenWidth / _worldWidth);
             _worldWidth = _screenWidth;
             log("Forced background to cover screen by scaling");
@@ -444,10 +444,10 @@ void MainGameScene::initBackground() {
     else {
         log("ERROR: Failed to create background");
 
-        // ���������󱸱���
+        // 创建应急背景
         auto emergencyBackground = Sprite::create();
         emergencyBackground->setTextureRect(Rect(0, 0, _screenWidth, visibleSize.height));
-        emergencyBackground->setColor(Color3B(30, 30, 60)); // ����ɫ����
+        emergencyBackground->setColor(Color3B(30, 30, 60)); // 深色备用背景
         emergencyBackground->setPosition(Vec2(_screenWidth * 0.5f, visibleSize.height * 0.5f));
         this->addChild(emergencyBackground, -10);
 
@@ -456,7 +456,7 @@ void MainGameScene::initBackground() {
     }
 }
 
-// MainGameScene.cpp - �޸� initPlayer ����
+// MainGameScene.cpp - 修改 initPlayer 函数
 void MainGameScene::initPlayer() {
     log("=== initPlayer ===");
 
@@ -467,15 +467,15 @@ void MainGameScene::initPlayer() {
         float initialWorldX = _screenWidth * 0.1f;
         float initialWorldY = 0.0f;
 
-        // ������ҵ���������
+        // 配置物理属性
         auto physicsBody = _player->getPhysicsBody();
         if (physicsBody) {
             physicsBody->setDynamic(true);
-            physicsBody->setGravityEnable(false); // �������������������ʹ���Զ�������
+            physicsBody->setGravityEnable(false); // 关闭默认重力，改用自定义重力
             physicsBody->setRotationEnable(false);
 
-            // ������ײ����
-            physicsBody->setCategoryBitmask(0x01); // ������
+            // 设置碰撞掩码
+            physicsBody->setCategoryBitmask(0x01); // 玩家
             physicsBody->setCollisionBitmask(0x00); // 不与任何物体发生物理碰撞
             physicsBody->setContactTestBitmask(0x02 | 0x04); // 检测与物品和敌人的碰撞
         }
@@ -510,26 +510,26 @@ void MainGameScene::initPlayer() {
 void MainGameScene::initInput() {
     log("=== initInput ===");
 
-    // �������̼�����
+    // 创建键盘监听器
     _keyboardListener = EventListenerKeyboard::create();
 
-    // ���������¼�
+    // 注册按下事件
     _keyboardListener->onKeyPressed = CC_CALLBACK_2(MainGameScene::onKeyPressed, this);
 
-    // �����ͷ��¼�
+    // 注册抬起事件
     _keyboardListener->onKeyReleased = CC_CALLBACK_2(MainGameScene::onKeyReleased, this);
 
-    // ���Ӽ�����
+    // 添加监听器
     _eventDispatcher->addEventListenerWithSceneGraphPriority(_keyboardListener, this);
 
     log("Input initialized");
 }
 
-// MainGameScene.cpp - �޸� initDebugUI �����е��ظ�����
+// MainGameScene.cpp - 修改 initDebugUI 函数中的乱码注释
 void MainGameScene::initDebugUI() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // �������Ա�ǩ
+    // 创建调试标签
     _debugLabel = Label::createWithSystemFont(
         "Level 1 - Camera Follow Mode",
         "Arial", 18
@@ -538,7 +538,7 @@ void MainGameScene::initDebugUI() {
     _debugLabel->setColor(Color3B::YELLOW);
     this->addChild(_debugLabel, 100);
 
-    // �����ؿ���ǩ
+    // 创建关卡标签
     _levelLabel = Label::createWithSystemFont(
         "Level 1",
         "Arial", 24
@@ -547,7 +547,7 @@ void MainGameScene::initDebugUI() {
     _levelLabel->setColor(Color3B::GREEN);
     this->addChild(_levelLabel, 100);
 
-    // ����������ʾ��ǩ - �ϲ������ʾ
+    // 创建操作提示标签 - 置于底部
     auto instructionLabel = Label::createWithSystemFont(
         "A: Move Left | D: Move Right | W: Jump | K: Attack | SPACE: Dash | Reach right end to next level",
         "Arial", 16
@@ -556,17 +556,17 @@ void MainGameScene::initDebugUI() {
     instructionLabel->setColor(Color3B::WHITE);
     this->addChild(instructionLabel, 100);
 
-    // �����߽��ǣ������ã�
+    // 创建右侧边界标记（示意）
     auto boundaryMarker = DrawNode::create();
 
-    // ����Ļ�Ҳ໭һ�����߱�ʾ�߽�
+    // 在屏幕右侧画一条线表示边界
     boundaryMarker->drawLine(
         Vec2(visibleSize.width - 50, 0),
         Vec2(visibleSize.width - 50, visibleSize.height),
         Color4F::RED
     );
 
-    // ��������˵��
+    // 边界文字说明
     auto boundaryLabel = Label::createWithSystemFont(
         "Boundary",
         "Arial", 12
@@ -579,7 +579,7 @@ void MainGameScene::initDebugUI() {
     this->addChild(boundaryLabel, 99);
 }
 
-// MainGameScene.cpp - �޸� updateCamera ����
+// MainGameScene.cpp - 修改 updateCamera 函数
 void MainGameScene::updateCamera(float delta) {
     if (!_player || !_currentBackground) return;
 
@@ -627,18 +627,17 @@ void MainGameScene::updateCamera(float delta) {
 
     float actualPlayerScreenX = playerWorldX + _cameraOffsetX;
 
-    // �޸���������ĻYλ��Ӧ�ù̶�����������Yλ��Ӱ�죨��������������
-    // ��Ϊ��Ծ�ȶ����Ѿ�����ҵ����������д���������ֻ��Ҫ��ȷӳ�䵽��Ļ
+    // 修正：角色的屏幕 Y 应保持在地面高度（除非跳跃时映射）
+    // 由于跳跃高度已经用世界坐标计算，这里只需映射到屏幕
     float groundScreenY = visibleSize.height * GameConfig::PLAYER_GROUND_Y_PERCENT;
 
-    // �������ڵ����ϣ�ʹ�ù̶��ĵ���Yλ��
+    // 当玩家在地面上时，使用固定的地面 Y 坐标
     if (_player->isGrounded()) {
         _player->setPosition(Vec2(actualPlayerScreenX, groundScreenY));
     }
     else {
-        // ����������Ծ�У�������Y����ӳ�䵽��Ļ���ʵ����ţ�
-        // ��Ҫ�����������ӣ�ʹ��Ծ��������Ȼ
-        float jumpScaleFactor = 0.5f; // �������ֵʹ��Ծ����������Ȼ
+        // 跳跃中：将世界 Y 映射到屏幕，略做缩放以更自然
+        float jumpScaleFactor = 0.5f; // 调小可让跳跃更自然
         float actualPlayerScreenY = groundScreenY + (playerWorldY * jumpScaleFactor);
         _player->setPosition(Vec2(actualPlayerScreenX, actualPlayerScreenY));
     }
@@ -672,9 +671,9 @@ void MainGameScene::checkLevelTransition(float delta) {
             }
         }
 
-        // ����Ƿ�����л�����һ�ؿ�
+        // 判断是否可以切换到下一关
         if (_levelManager->canSwitchToNextLevel(playerWorldX)) {
-            // ��ʼ�ؿ��л�
+            // 开始关卡切换
             _isTransitioning = true;
             _transitionTimer = 0.0f;
 
@@ -714,53 +713,53 @@ void MainGameScene::update(float delta) {
         }
     }
 
-    // ���ؿ��л�
+    // 处理关卡切换
     checkLevelTransition(delta);
 
     checkPlayerHealth();//******************hy
 
-    // �����ؿ��л�����Ч��
+    // 关卡切换过渡效果
     if (_isTransitioning) {
         _transitionTimer += delta;
 
-        // �򵥵ĵ���Ч��
+        // 简单的淡入淡出效果
         float fadeProgress = _transitionTimer / TRANSITION_DURATION;
         if (fadeProgress >= 1.0f) {
-            // �л��ؿ�
+            // 切换关卡
             switchToNextLevel();
         }
     }
     else {
-        // ֻ���ڷ��л�״̬�²Ÿ��������
+        // 仅在非切换状态下更新相机
         updateCamera(delta);
     }
 
-    // �����Ʒ��ײ
+    // 检查道具碰撞
     checkItemCollisions(delta);
 
-    // ���˷���
+    // 更新敌人
     updateEnemies(delta);
 
-    // ���˲�ײ
+    // 检查敌人碰撞
     checkEnemyCollisions(delta);
 
-    // ���˳�����
+    // 清理死亡敌人
     cleanupDeadEnemies();
 
-    // ���µ�����Ϣ
+    // 更新调试信息
     if (_player && _debugLabel) {
         float playerWorldX = _player->getWorldPositionX();
         float playerWorldY = _player->getWorldPositionY();
         float currentLevel = (int)_levelManager->getCurrentLevel();
 
-        // ��ʾ����ϸ�ĵ�����Ϣ
+        // 显示更详细的调试信息
         _debugLabel->setString(StringUtils::format(
             "Level: %d | Player: (%.0f, %.0f)/%.0f | Cam: %.0f | Vel: (%.0f, %.0f)",
             currentLevel, playerWorldX, playerWorldY, _worldWidth, _cameraOffsetX,
             _player->getCurrentVelocity().x, _player->getCurrentVelocity().y
         ));
 
-        // ��������л��ؿ�����ʾ�л���ʾ
+        // 如果正在切换关卡则显示切换提示
         if (_isTransitioning) {
             _debugLabel->setString(StringUtils::format(
                 "Switching to next level... %.0f%%",
@@ -774,9 +773,7 @@ void MainGameScene::update(float delta) {
     }
 }
 
-// ������Ѫ��//****************hy
 void MainGameScene::checkPlayerHealth() {
-    // ��ȡ��ǰѪ��
     float currentHealth = HudManager::getCurrentHealth();
 
     // If health is 0 and game is not over, show game over
@@ -790,17 +787,14 @@ void MainGameScene::checkPlayerHealth() {
 void MainGameScene::showGameOver() {
     log("Showing game over interface");
     onPlayerDeath();//12/28/15.19
-
-    // ������Ϸ������־
+־
     _isGameOver = true;
 
-    // ֹͣ����ƶ�
     if (_player) {
         _player->stopMoving();
         _player->setCurrentState(PlayerState::IDLE);
     }
 
-    // ��ʾ��Ϸ��������
     auto gameOverScene = GameOverScene::createScene();
     Director::getInstance()->pushScene(gameOverScene);
 
@@ -847,7 +841,6 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
     }
 
     int currentMax = 0;
-    //����HudManager��ɾ��  hy
     switch (keyCode) {
         case cocos2d::EventKeyboard::KeyCode::KEY_1:
             HudManager::updateHealth(30.0f);
@@ -862,15 +855,12 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             HudManager::updateHealth(0.0f);
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_5:
-            // ����������
             HudManager::addCombo();
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_6:
-            // ����������
             HudManager::resetCombo();
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_7:
-            // �����ض�������
             HudManager::setCombo(10);
             break;
         case cocos2d::EventKeyboard::KeyCode::KEY_8:
@@ -923,12 +913,11 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_B:
-            // T�������ٳ���ʱ�䣨������ܣ�
             if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
                 if (auto dashBar = hudLayer->getDashBar()) {
                     float currentTime = dashBar->getRechargeTime();
                     float newTime = currentTime - 0.5f;
-                    if (newTime < 0.5f) newTime = 0.5f; // ��С0.5��
+                    if (newTime < 0.5f) newTime = 0.5f; 
                     dashBar->setRechargeTime(newTime);
                     log("����ʱ��: %.1f�� -> %.1f��", currentTime, newTime);
                 }
@@ -936,7 +925,6 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             break;
 
         case cocos2d::EventKeyboard::KeyCode::KEY_N:
-            // Y�������ӳ���ʱ�䣨�������ܣ�
             if (auto hudLayer = HudManager::getInstance()->getHudLayer()) {
                 if (auto dashBar = hudLayer->getDashBar()) {
                     float currentTime = dashBar->getRechargeTime();
@@ -947,7 +935,7 @@ void MainGameScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2
             }
             break;
 
-        case cocos2d::EventKeyboard::KeyCode::KEY_0://����hud����
+        case cocos2d::EventKeyboard::KeyCode::KEY_0:
             static bool hudVisible = true;
             hudVisible = !hudVisible;
             HudManager::showHud(hudVisible);
@@ -1086,14 +1074,14 @@ void MainGameScene::switchToNextLevel() {
     _levelLabel->setString(levelName);
     log("New level name: %s", levelName.c_str());
 
-    // ���¼��ر���
+    // 重新加载背景
     if (_currentBackground) {
         _currentBackground->removeFromParent();
         _currentBackground = nullptr;
         log("Removed old background");
     }
 
-    // �����±���
+    // 创建新背景
     _currentBackground = SceneBackground::create();
     if (_currentBackground) {
         this->addChild(_currentBackground, -10);
@@ -1101,31 +1089,31 @@ void MainGameScene::switchToNextLevel() {
         log("Created new background for %s, world width: %.0f", levelName.c_str(), _worldWidth);
     }
 
-    // �������λ�õ��¹ؿ������
+    // 重置玩家位置到新关卡起点
     if (_player) {
-        _player->setWorldPositionX(100.0f); // ��100����λ�ÿ�ʼ
+        _player->setWorldPositionX(100.0f); // 从100的世界坐标开始
         log("Reset player position to x=100");
     }
 
-    // ���������
+    // 重置相机
     _cameraOffsetX = 0.0f;
 
-    // �������������λ��
+    // 更新玩家屏幕位置
     updateCamera(0);
 
-    // ��������Ʒ
+    // 清理当前关卡道具
     for (auto item : _levelItems) {
         item->removeFromParent();
     }
     _levelItems.clear();
 
-    // ��ʼ���¹ؿ�����Ʒ
+    // 初始化新关卡道具
     initItems();
 
-    // ��ʼ���¹ؿ����˷���
+    // 初始化新关卡敌人
     initEnemies();
 
-    // �����л�״̬
+    // 结束切换状态
     _isTransitioning = false;
 
     log("Level transition completed");
@@ -1178,7 +1166,6 @@ void MainGameScene::cleanupDeadEnemies() {
     }
 }
 
-// ��ʼ���˷���
 // 初始化敌人系统
 void MainGameScene::initEnemies() {
     log("=== initEnemies ===");
@@ -1389,9 +1376,9 @@ bool MainGameScene::isPlayerAtRightBoundary() {
     if (!_player) return false;
 
     float playerWorldX = _player->getWorldPositionX();
-    float boundaryThreshold = 150.0f; // ��50���ӵ�150�����������
+    float boundaryThreshold = 150.0f; // 将50扩大到150，增加缓冲区域
 
-    // ���ӵ�����Ϣ
+    // 打印调试信息
     static float debugTimer = 0.0f;
     debugTimer += 1.0f / 60.0f;
     if (debugTimer > 1.0f) {
@@ -1401,12 +1388,12 @@ bool MainGameScene::isPlayerAtRightBoundary() {
             (playerWorldX >= _worldWidth - boundaryThreshold) ? "YES" : "NO");
     }
 
-    // ���������ȫ������Ļ��ʹ��ȫ�����
+    // 如果世界宽度大于屏幕宽度，使用完整世界宽度判断
     if (_worldWidth >= _screenWidth) {
         return (playerWorldX >= _worldWidth - boundaryThreshold);
     }
 
-    // ����ʹ�ñ�����ʵ�ʿ���
+    // 如果世界小于屏幕，使用背景的实际宽度
     return (playerWorldX >= _worldWidth - boundaryThreshold);
 }
 
