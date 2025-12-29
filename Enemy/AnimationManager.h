@@ -11,16 +11,16 @@ public:
     static AnimationManager* getInstance();
     static void destroyInstance();
 
-    // 预锟斤拷锟斤拷锟斤拷锟叫碉拷锟剿讹拷锟斤拷
+    // 预加载所有敌人动画
     void preloadEnemyAnimations();
 
-    // 锟斤拷取锟斤拷锟斤拷
+    // 获取动画
     cocos2d::Animation* getAnimation(const std::string& enemyType, const std::string& state);
 
-    // 锟斤拷取锟斤拷锟斤拷帧锟接筹拷
+    // 获取动画帧间隔
     float getAnimationDelay(const std::string& enemyType, const std::string& state);
 
-    // 锟斤拷取锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
+    // 获取敌人配置
     struct EnemyConfig {
         float maxHealth;
         float attackDamage;
@@ -30,7 +30,7 @@ public:
         float attackCooldown;
         std::string name;
         bool isBoss;
-        int phaseCount; // BOSS锟阶讹拷锟斤拷
+        int phaseCount; // BOSS 阶段数
     };
 
     const EnemyConfig& getEnemyConfig(const std::string& enemyType);
