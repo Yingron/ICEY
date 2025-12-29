@@ -32,7 +32,7 @@ ContinuousBackground* ContinuousBackground::createWithImageSequence(const std::v
     return nullptr;
 }
 
-// 锟睫革拷 setupContinuousBackground 锟斤拷锟斤拷锟斤拷使锟矫革拷锟缴匡拷锟侥憋拷锟斤拷锟斤拷锟角诧拷锟斤拷
+// 修正 setupContinuousBackground，确保加载时能正常工作
 void ContinuousBackground::setupContinuousBackground(const std::vector<std::string>& imageFiles) {
     auto visibleSize = Director::getInstance()->getVisibleSize();
     auto fileUtils = FileUtils::getInstance();
@@ -43,10 +43,10 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
 
     float currentX = 0.0f;
 
-    // 锟斤拷锟斤拷锟斤拷芯锟斤拷锟?
+    // 清空已有精灵列表
     _backgroundSprites.clear();
 
-    // 锟斤拷锟矫伙拷斜锟斤拷锟酵计拷锟斤拷锟斤拷锟揭伙拷锟斤拷锟缴拷锟斤拷锟?
+    // 如果没有背景图，则使用纯色占位
     if (imageFiles.empty()) {
         log("WARNING: No background images provided");
         auto blackBackground = Sprite::create();
@@ -63,18 +63,18 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
         return;
     }
 
-    // 锟斤拷锟截憋拷锟斤拷图片
+    // 遍历背景图片
     for (size_t i = 0; i < imageFiles.size(); i++) {
         const auto& filename = imageFiles[i];
 
-        // 锟斤拷锟斤拷募锟斤拷欠锟斤拷锟斤拷
+        // 检查文件是否存在
         if (filename.empty() || !fileUtils->isFileExist(filename)) {
             log("ERROR: Background file not found or empty: %s", filename.c_str());
 
-            // 锟斤拷锟斤拷占位锟斤拷锟斤拷锟斤拷
+            // 使用占位背景
             auto placeholder = Sprite::create();
             placeholder->setTextureRect(Rect(0, 0, visibleSize.width, visibleSize.height));
-            placeholder->setColor(Color3B(50, 50, 50)); // 锟斤拷锟缴嘉伙拷锟?
+            placeholder->setColor(Color3B(50, 50, 50)); // 灰色占位
 
             placeholder->setAnchorPoint(Vec2::ZERO);
             placeholder->setPosition(Vec2(currentX, 0));
@@ -87,12 +87,12 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
             continue;
         }
 
-        // 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
+        // 加载纹理
         auto texture = Director::getInstance()->getTextureCache()->addImage(filename);
         if (!texture) {
             log("ERROR: Failed to load texture: %s", filename.c_str());
 
-            // 锟斤拷锟斤拷占位锟斤拷
+            // 使用占位背景
             auto placeholder = Sprite::create();
             placeholder->setTextureRect(Rect(0, 0, visibleSize.width, visibleSize.height));
             placeholder->setColor(Color3B(100, 100, 100));
@@ -118,42 +118,40 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
             continue;
         }
 
-        // 锟斤拷取图片原始锟竭达拷
+        // 获取图片原始尺寸
         float spriteWidth = sprite->getContentSize().width;
         float spriteHeight = sprite->getContentSize().height;
 
-        // 锟截硷拷锟睫革拷锟斤拷使锟矫革拷锟斤拷确锟侥革拷锟斤拷锟姐法
-        // 锟斤拷锟斤拷锟斤拷要锟斤拷全锟斤拷锟斤拷锟斤拷幕锟斤拷锟斤拷小锟斤拷锟脚憋拷锟斤拷
+        // 计算缩放，确保至少覆盖屏幕
         float scaleX = visibleSize.width / spriteWidth;
         float scaleY = visibleSize.height / spriteHeight;
 
-        // 选锟斤拷锟斤拷锟斤拷全锟斤拷锟斤拷锟斤拷幕锟侥较达拷锟斤拷锟脚憋拷锟斤拷
+        // 选用能完全覆盖屏幕的缩放
         float finalScale = scaleX;
         if (spriteHeight * scaleX < visibleSize.height) {
-            // 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷藕锟竭度诧拷锟斤拷锟斤拷使锟矫高讹拷锟斤拷锟斤拷
+            // 如果高度不足，则按高度缩放
             finalScale = scaleY;
         }
 
-        // 确锟斤拷锟斤拷锟斤拷锟斤拷锟脚憋拷锟斤拷锟斤拷锟斤拷锟杰革拷锟斤拷锟斤拷幕
+        // 再次校验，必要时放大
         if (spriteWidth * finalScale < visibleSize.width ||
             spriteHeight * finalScale < visibleSize.height) {
-            // 锟斤拷锟斤拷锟饺伙拷锟斤拷芨锟斤拷牵锟绞癸拷酶锟斤拷锟斤拷锟斤拷锟脚憋拷锟斤拷
             float neededScaleX = visibleSize.width / spriteWidth;
             float neededScaleY = visibleSize.height / spriteHeight;
-            finalScale = MAX(neededScaleX, neededScaleY) * 1.1f; // 锟斤拷锟斤拷10%确锟斤拷锟斤拷锟斤拷
+            finalScale = MAX(neededScaleX, neededScaleY) * 1.1f; // 预留 10% 余量
         }
 
         sprite->setScale(finalScale);
 
-        // 锟斤拷锟斤拷锚锟斤拷锟轿伙拷锟?
+        // 设置锚点与位置
         sprite->setAnchorPoint(Vec2::ZERO);
         sprite->setPosition(Vec2(currentX, 0));
 
-        // 锟斤拷锟接碉拷锟节碉拷
+        // 添加到场景
         this->addChild(sprite);
         _backgroundSprites.push_back(sprite);
 
-        // 锟斤拷锟铰碉拷前位锟斤拷
+        // 更新当前 x 位置
         float finalWidth = spriteWidth * finalScale;
         currentX += finalWidth;
 
@@ -164,7 +162,7 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
             currentX - finalWidth);
     }
 
-    // 锟斤拷录锟斤拷锟斤拷锟斤拷龋锟绞碉拷时锟斤拷锟斤拷锟斤拷龋锟?
+    // 记录世界宽度
     _worldWidth = currentX;
     _totalWidth = _worldWidth;
 
@@ -172,22 +170,21 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
     log("World background width: %.0f, sprite count: %d", _worldWidth, (int)_backgroundSprites.size());
     log("Screen size: %.0fx%.0f", visibleSize.width, visibleSize.height);
 
-    // 锟截硷拷锟睫革拷锟斤拷强锟斤拷确锟斤拷锟斤拷锟斤拷锟斤拷全锟斤拷锟斤拷锟斤拷幕
+    // 若总宽度仍小于屏幕宽度，复制最后一张补足
     if (_worldWidth < visibleSize.width) {
         log("Background total width (%.0f) < screen width (%.0f), extending background...",
             _worldWidth, visibleSize.width);
 
         if (!_backgroundSprites.empty()) {
-            // 锟斤拷取锟斤拷锟揭伙拷疟锟斤拷锟酵?
+            // 取最后一张
             Sprite* lastSprite = _backgroundSprites.back();
             float lastSpriteWidth = lastSprite->getContentSize().width * lastSprite->getScale();
             float lastSpriteHeight = lastSprite->getContentSize().height * lastSprite->getScale();
 
-            // 锟斤拷锟斤拷锟斤拷要锟截革拷锟侥达拷锟斤拷
+            // 需要重复的次数
             int repeats = ceil((visibleSize.width - _worldWidth) / lastSpriteWidth) + 1;
 
             for (int i = 0; i < repeats; i++) {
-                // 锟斤拷锟斤拷锟斤拷锟揭伙拷疟锟斤拷锟酵?
                 auto repeatSprite = Sprite::createWithTexture(lastSprite->getTexture());
                 repeatSprite->setScale(lastSprite->getScale());
                 repeatSprite->setAnchorPoint(Vec2::ZERO);
@@ -204,17 +201,16 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
         }
     }
 
-    // 锟斤拷锟秸硷拷椋猴拷锟斤拷锟斤拷锟斤拷锟斤拷然锟斤拷锟斤拷锟斤拷全锟斤拷锟斤拷锟斤拷幕锟斤拷锟斤拷锟斤拷锟斤拷锟?
+    // 如果仍未覆盖屏幕，继续填充
     if (_worldWidth < visibleSize.width) {
         log("WARNING: Background still doesn't cover screen fully. Adding filler.");
 
-        // 锟斤拷锟斤拷锟斤拷锟斤拷锟揭伙拷疟锟斤拷锟酵硷拷锟缴拷锟斤拷锟斤拷锟斤拷锟?
+        // 使用与最后一张同色的填充块
         auto filler = Sprite::create();
         float fillerWidth = visibleSize.width - _worldWidth;
         filler->setTextureRect(Rect(0, 0, fillerWidth, visibleSize.height));
 
         if (!_backgroundSprites.empty()) {
-            // 锟斤拷锟皆达拷锟斤拷锟揭伙拷疟锟斤拷锟酵硷拷谢锟饺★拷锟缴?
             auto lastSprite = _backgroundSprites.back();
             filler->setColor(lastSprite->getColor());
         }
@@ -226,7 +222,7 @@ void ContinuousBackground::setupContinuousBackground(const std::vector<std::stri
         filler->setPosition(Vec2(_worldWidth, 0));
         this->addChild(filler);
 
-        _worldWidth += fillerWidth; // 澧炲姞濉厖鐨勫搴﹀埌涓栫晫瀹藉害
+        _worldWidth += fillerWidth; // 增加填充部分宽度到世界宽度
         log("Added filler to complete screen coverage, new world width: %.0f", _worldWidth);
     }
 
@@ -242,16 +238,16 @@ float ContinuousBackground::calculateTotalWidth() {
 }
 
 void ContinuousBackground::updateWithCameraOffset(float cameraOffsetX) {
-    // 锟斤拷锟斤拷锟斤拷锟斤拷锟狡拷锟?
+    // 更新摄像机偏移
     _cameraOffsetX = cameraOffsetX;
 
-    // 锟狡讹拷锟斤拷锟斤拷锟斤拷锟斤拷锟节碉拷
+    // 设置背景位置
     this->setPositionX(cameraOffsetX);
 
-    // 锟斤拷锟斤拷锟斤拷息 - 锟斤拷锟斤拷锟斤拷志频锟斤拷
+    // 定期输出调试信息
     static int frameCount = 0;
     frameCount++;
-    if (frameCount % 120 == 0) { // 每2锟斤拷锟铰家伙拷危锟斤拷锟斤拷锟?0fps锟斤拷
+    if (frameCount % 120 == 0) { // 每 2 秒（约 60fps）输出一次
         auto visibleSize = Director::getInstance()->getVisibleSize();
         log("Background: PosX=%.0f, CamOffset=%.0f, WorldWidth=%.0f, ScreenWidth=%.0f",
             this->getPositionX(), cameraOffsetX, _worldWidth, visibleSize.width);
