@@ -1,4 +1,4 @@
-ï»¿#pragma once
+#pragma once
 #ifndef ITEM_BAG_LAYER_H
 #define ITEM_BAG_LAYER_H
 
@@ -7,9 +7,9 @@
 #include "Item.h"
 #include "AchievementSystem.h"
 #include <vector>
-static const float ROW_HEIGHT = 60.0f;      // æ¯è¡Œé«˜åº¦
-static const float ROW_MARGIN = 10.0f;      // è¡Œé—´è·
-static const float PADDING_X = 20.0f;       // å·¦å³è¾¹è·
+static const float ROW_HEIGHT = 60.0f;      // Ã¿ĞĞ¸ß¶È
+static const float ROW_MARGIN = 10.0f;      // ĞĞ¼ä¾à
+static const float PADDING_X = 20.0f;       // ×óÓÒ±ß¾à
 
 class ItemBagLayer : public cocos2d::Layer
 {
@@ -17,59 +17,59 @@ public:
     CREATE_FUNC(ItemBagLayer);
     virtual bool init() override;
 
-    // æ˜¾ç¤º/éšè—èƒŒåŒ…
+    // ÏÔÊ¾/Òş²Ø±³°ü
     void showBag();
     void hideBag();
     void toggleBag();
     bool isBagVisible() const { return _isVisible; }
 
-    // åˆ·æ–°èƒŒåŒ…æ˜¾ç¤º
+    // Ë¢ĞÂ±³°üÏÔÊ¾
     void refreshBag();
 
-    // æ›´æ–°è¿›åº¦æ ‡ç­¾
+    // ¸üĞÂ½ø¶È±êÇ©
     void updateProgressLabel();
 
-    // é”®ç›˜äº‹ä»¶å¤„ç†
+    // ¼üÅÌÊÂ¼ş´¦Àí
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
 
-    // è®¾ç½®æ˜¾ç¤ºæ¨¡å¼ï¼šç‰©å“æˆ–æˆå°±
+    // ÉèÖÃÏÔÊ¾Ä£Ê½£ºÎïÆ·»ò³É¾Í
     void setDisplayMode(bool showItems) { _showItems = showItems; }
 
-    // æ–°å¢ï¼šåˆ‡æ¢æ˜¾ç¤ºæ¨¡å¼
+    // ĞÂÔö£ºÇĞ»»ÏÔÊ¾Ä£Ê½
     void switchToItems();
     void switchToAchievements();
     void toggleDisplayMode();
 
 private:
-    // ç‰©å“è¯¦æƒ…ç›¸å…³
+    // ÎïÆ·ÏêÇéÏà¹Ø
     void showItemDetail(const std::string& itemId);
     void createItemDetailUI(const std::string& itemId);
     void hideItemDetail();
 
-    // UIåˆ›å»º
+    // UI´´½¨
     void createUI();
     void createItemGrid();
     void createAchievementGrid();
     void updateItemDisplay();
 
-    // æ–°å¢ï¼šæ›´æ–°åˆ‡æ¢æŒ‰é’®æ–‡æœ¬
+    // ĞÂÔö£º¸üĞÂÇĞ»»°´Å¥ÎÄ±¾
     void updateSwitchButtonText();
 
-    // æˆå‘˜å˜é‡
+    // ³ÉÔ±±äÁ¿
     cocos2d::ui::ScrollView* _scrollView;
     cocos2d::LayerColor* _background;
 
     std::vector<cocos2d::Sprite*> _itemIcons;
     std::vector<cocos2d::Label*> _itemLabels;
 
-    cocos2d::Label* _titleLabel; // å½“å‰æ˜¾ç¤ºçš„æ ‡é¢˜
-    cocos2d::ui::Button* _switchButton; // æ–°å¢ï¼šåˆ‡æ¢æŒ‰é’®
+    cocos2d::Label* _titleLabel; // µ±Ç°ÏÔÊ¾µÄ±êÌâ
+    cocos2d::ui::Button* _switchButton; // ĞÂÔö£ºÇĞ»»°´Å¥
 
     bool _isVisible;
-    bool _showItems; // true: æ˜¾ç¤ºç‰©å“, false: æ˜¾ç¤ºæˆå°±
+    bool _showItems; // true: ÏÔÊ¾ÎïÆ·, false: ÏÔÊ¾³É¾Í
     float _bagScale;
 
-    // å¸ƒå±€å‚æ•°
+    // ²¼¾Ö²ÎÊı
     const int GRID_COLS = 4;
     const float ITEM_SIZE = 80.0f;
     const float ITEM_MARGIN = 20.0f;
