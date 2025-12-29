@@ -290,10 +290,10 @@ bool LevelManager::canSwitchToNextLevel(float playerWorldX) {
             nextLevel = LevelState::LEVEL4_6;
             break;
         case LevelState::LEVEL4_6:
-            // 鍦↙evel4-6鐨勬渶鍚庝竴寮犺儗鏅浘澶勶紝鎴戜滑闇€瑕佺壒娈婂鐞嗭紝涓嶇洿鎺ュ垏鎹㈠埌鏈€缁堝叧鍗?
-            // 鑰屾槸绛夊緟鐜╁杈撳叆纭
+            // 在 level4-6 的最后一张背景图处，需要特殊处理，不直接切换到最终关卡
+            // 而是等待玩家输入确认
             if (isAtLevel4FinalBackground() && !_triggeredLevel4Completion) {
-                return false; // 鏆傛椂闃绘鑷姩鍒囨崲
+                return false; // 暂时阻止自动切换
             }
             nextLevel = LevelState::FINAL_LEVEL;
             break;
@@ -469,41 +469,41 @@ bool LevelManager::isPlayerAtLevelBoundary(float playerWorldX) const {
     return playerWorldX >= maxWorldX - 200.0f;
 }
 
-// 锟斤拷锟矫筹拷锟斤拷诘锟斤拷锟绞?
+// 设置当前的游戏模式
 void LevelManager::setCurrentGameMode(GameMode mode) {
     _currentGameMode = mode;
     log("Game mode set to %s", (mode == GameMode::DEFAULT ? "DEFAULT" : "EASY"));
 }
 
-// 锟斤拷转锟斤拷锟节碉拷锟斤拷式
+// 切换当前的游戏模式
 void LevelManager::toggleGameMode() {
     _currentGameMode = (_currentGameMode == GameMode::DEFAULT) ? GameMode::EASY : GameMode::DEFAULT;
     log("Game mode toggled to %s", (_currentGameMode == GameMode::DEFAULT ? "DEFAULT" : "EASY"));
 }
 
-// 璁剧疆褰撳墠鏄剧ず鐨勮儗鏅浘鐗囩储寮?
+// 设置当前显示的背景图片索引
 void LevelManager::setCurrentBackgroundIndex(int index) {
     _currentBackgroundIndex = index;
     log("Current background index set to %d", index);
 }
 
-// 鑾峰彇褰撳墠鏄剧ず鐨勮儗鏅浘鐗囩储寮?
+// 获取当前显示的背景图片索引
 int LevelManager::getCurrentBackgroundIndex() const {
     return _currentBackgroundIndex;
 }
 
-// 妫€鏌ユ槸鍚﹀埌杈綥evel4-6鐨勬渶鍚庝竴寮犺儗鏅浘(background-level4-6-3.png)
+// 检查是否到达 Level4-6 的最后一张背景图 (background-level4-6-3.png)
 bool LevelManager::isAtLevel4FinalBackground() const {
-    // 妫€鏌ユ槸鍚﹀湪Level4-6
+    // 检查是否在 Level4-6
     if (_currentLevel != LevelState::LEVEL4_6) {
         return false;
     }
     
-    // 妫€鏌ユ槸鍚︽槸鏈€鍚庝竴寮犺儗鏅浘 (绱㈠紩涓?)
+    // 检查是否是最后一张背景图（索引为 2）
     return _currentBackgroundIndex == 2;
 }
 
-// 鏍囪鏄惁宸茶Е鍙慙evel4缁撴潫澶勭悊
+// 标记是否已经触发 Level4 结束处理
 bool LevelManager::hasTriggeredLevel4Completion() const {
     return _triggeredLevel4Completion;
 }
@@ -513,7 +513,7 @@ void LevelManager::setTriggeredLevel4Completion(bool triggered) {
     log("Level4 completion trigger set to %s", triggered ? "true" : "false");
 }
 
-// 鑾峰彇褰撳墠鍏冲崱鐨勫畬鏁撮厤缃?
+// 获取当前关卡的完整配置
 LevelManager::LevelConfig LevelManager::getCurrentLevelConfig() const {
     LevelConfig result;
     
@@ -524,12 +524,12 @@ LevelManager::LevelConfig LevelManager::getCurrentLevelConfig() const {
         }
     }
     
-    // 濡傛灉娌℃湁鎵惧埌閰嶇疆锛屼娇鐢ㄧ涓€涓厤缃垨鍒涘缓榛樿閰嶇疆
+    // 如果没有找到配置，使用第一个配置或创建默认配置
     if (result.backgroundImages.empty() && !_levelConfigs.empty()) {
         result = _levelConfigs[0];
     }
     
-    // 璁剧疆姝ｇ‘鐨勪笘鐣屽搴?
+    // 设置正确的世界宽度
     switch (_currentLevel) {
     case LevelState::LEVEL1:
         result.worldWidth = 5 * 1280.0f;
@@ -539,18 +539,18 @@ LevelManager::LevelConfig LevelManager::getCurrentLevelConfig() const {
         break;
     case LevelState::LEVEL3_1:
     case LevelState::HIDDEN_LEVEL1:
-        // 3-1鏈?寮犺儗鏅浘锛宧idden-level1涔熸湁5寮犺儗鏅浘
+        // 3-1 有 5 张背景图，hidden-level1 也有 5 张背景图
         result.worldWidth = 5 * 1280.0f;
         break;
     case LevelState::LEVEL3_2:
     case LevelState::LEVEL4_3:
     case LevelState::LEVEL4_5:
     case LevelState::LEVEL4_6:
-        // 杩欎簺鍏冲崱鏈?寮犺儗鏅浘
+        // 这些关卡有 3 张背景图
         result.worldWidth = 3 * 1280.0f;
         break;
     default:
-        // 榛樿鍗曞紶鑳屾櫙鍥?
+        // 默认单张背景图
         result.worldWidth = 1280.0f;
         break;
     }
