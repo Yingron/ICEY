@@ -15,37 +15,37 @@ LevelManager* LevelManager::getInstance() {
     return _instance;
 }
 
-// 淇鍚庣殑鏋勯€犲嚱鏁?- 鍙繚鐣欎竴涓?
+// 修正后的构造函数 - 只保留一个
 LevelManager::LevelManager() {
     log("Initializing LevelManager...");
     
-    // 锟斤拷始锟斤拷锟截匡拷锟斤拷状态锟斤拷LEVEL1
+    // 初始化当前关卡为 LEVEL1
     _currentLevel = LevelState::LEVEL1;
-    _previousLevel = LevelState::LEVEL1; // 鍒濆鍖栦箣鍓嶇殑鍏冲崱涓哄綋鍓嶅叧鍗?
+    _previousLevel = LevelState::LEVEL1; // 初始化之前的关卡为当前关卡
     
-    // 锟斤拷始锟斤拷锟节碉拷锟斤拷式锟斤拷默锟斤拷模式
+    // 初始化当前游戏模式为默认模式
     _currentGameMode = GameMode::DEFAULT;
     
-    // 锟斤拷始锟斤拷锟截匡拷锟斤拷贸锟斤拷莶锟斤拷锟?
+    // 初始化关卡配置
     initLevelConfigs();
     
-    // 锟斤拷始锟斤拷锟截匡拷锟捷诧拷锟斤拷
+    // 初始化关卡总数
     log("LevelManager initialized with %zu level configs.", _levelConfigs.size());
     
-    // 锟斤拷锟脚讹拷锟斤拷模式锟斤拷锟截猴拷锟斤拷
+    // 先行播放背景音乐
     AudioManager::getInstance()->playBGM("background_music");
     log("Background music started");
     
-    // 鍒濆鍖栨柊澧炴垚鍛樺彉閲?
+    // 初始化新增成员变量
     _currentBackgroundIndex = 0;
     _triggeredLevel4Completion = false;
 }
 
 void LevelManager::initLevelConfigs() {
-    // 娓呯悊鐜版湁閰嶇疆
+    // 清理现有配置
     _levelConfigs.clear();
 
-    // Level1: 5寮犺儗鏅浘
+    // Level1:5 张背景图
     LevelConfig level1;
     level1.level = LevelState::LEVEL1;
     level1.name = "Level 1";
@@ -58,7 +58,7 @@ void LevelManager::initLevelConfigs() {
     };
     _levelConfigs.push_back(level1);
 
-    // Level2-1 鍒?Level2-6
+    // Level2-1 到 Level2-6
     LevelConfig level2_1;
     level2_1.level = LevelState::LEVEL2_1;
     level2_1.name = "Level 2-1";
@@ -231,7 +231,7 @@ void LevelManager::initLevelConfigs() {
 bool LevelManager::canSwitchToNextLevel(float playerWorldX) {
     float maxWorldX = getCurrentLevelMaxWorldX();
 
-    // 鐜╁鍒拌揪褰撳墠鍏冲崱杈圭晫鏃讹紝鍙互鍒囨崲鍒颁笅涓€鍏冲崱
+    // 玩家到达当前关卡边界时，可以切换到下一个关卡
     if (playerWorldX >= maxWorldX - 10.0f) {
         LevelState nextLevel = _currentLevel;
         switch (_currentLevel) {
@@ -378,7 +378,7 @@ LevelManager::LevelState LevelManager::switchToNextLevel() {
         break;
     }
 
-    // 鍒囨崲闊充箰
+    // 切换 BGM
     auto musicManager = LevelMusicManager::getInstance();
     if (musicManager && _currentLevel != LevelState::COMPLETED) {
         musicManager->playBGMForLevel(_currentLevel);
@@ -393,10 +393,10 @@ void LevelManager::switchToHiddenLevel1() {
     auto oldLevel = _currentLevel;
     _currentLevel = LevelState::HIDDEN_LEVEL1;
     
-    // 淇濆瓨涔嬪墠鐨勫叧鍗★紝浠ヤ究杩斿洖
+    // 保存之前的关卡，用于返回
     _previousLevel = oldLevel;
     
-    // 鍒囨崲闊充箰
+    // 切换 BGM
     auto musicManager = LevelMusicManager::getInstance();
     if (musicManager) {
         musicManager->playBGMForLevel(_currentLevel);
@@ -408,14 +408,14 @@ void LevelManager::switchToHiddenLevel1() {
 void LevelManager::returnFromHiddenLevel() {
     auto oldLevel = _currentLevel;
     
-    // 杩斿洖鍒颁箣鍓嶇殑鍏冲崱锛屽鏋滄病鏈夊垯榛樿杩斿洖LEVEL3_2
+    // 返回之前的关卡，如果没有则默认返回 LEVEL3_2
     if (_previousLevel != LevelState::COMPLETED) {
         _currentLevel = _previousLevel;
     } else {
         _currentLevel = LevelState::LEVEL3_2;
     }
     
-    // 鍒囨崲闊充箰
+    // 切换 BGM
     auto musicManager = LevelMusicManager::getInstance();
     if (musicManager) {
         musicManager->playBGMForLevel(_currentLevel);
@@ -427,13 +427,13 @@ void LevelManager::returnFromHiddenLevel() {
 void LevelManager::resetLevels() {
     _currentLevel = LevelState::LEVEL1;
 
-    // 閲嶇疆闊充箰
+    // 重置 BGM
     auto musicManager = LevelMusicManager::getInstance();
     if (musicManager) {
         musicManager->playBGMForLevel(_currentLevel);
     }
     
-    // 閲嶇疆鑳屾櫙绱㈠紩鍜岃Е鍙戠姸鎬?
+    // 重置背景索引和触发状态
     _currentBackgroundIndex = 0;
     _triggeredLevel4Completion = false;
 }
@@ -445,7 +445,7 @@ std::vector<std::string> LevelManager::getCurrentLevelBackgrounds() const {
         }
     }
 
-    // 榛樿杩斿洖绗竴涓?
+    // 默认返回第一个
     return _levelConfigs.empty() ? std::vector<std::string>() : _levelConfigs[0].backgroundImages;
 }
 
@@ -556,4 +556,5 @@ LevelManager::LevelConfig LevelManager::getCurrentLevelConfig() const {
     }
     
     return result;
+
 }
