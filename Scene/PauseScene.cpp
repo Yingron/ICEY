@@ -2,8 +2,8 @@
 #include "MainGameScene.h"
 #include "StartScene.h"
 #include "cocos2d.h"
-#include<iostream>
-#include"AudioManager.h"
+#include <iostream>
+#include "AudioManager.h"
 #include "LevelMusicManager.h"
 
 USING_NS_CC;
@@ -23,7 +23,7 @@ Scene* PauseScene::createScene()
     }
     catch (const std::exception& e)
     {
-        std::cerr << "PauseScene::createScene 锟斤拷锟斤拷: " << e.what() << std::endl;
+        std::cerr << "PauseScene::createScene 创建异常: " << e.what() << std::endl;
         return Scene::create();
     }
 }
@@ -46,17 +46,17 @@ void PauseScene::createUI()
     {
         auto visibleSize = Director::getInstance()->getVisibleSize();
         Vec2 origin = Director::getInstance()->getVisibleOrigin();
-        // 锟斤拷锟斤拷锟斤拷透锟斤拷锟斤拷锟斤拷 
+        // 添加半透明遮罩背景
         m_background = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
         m_background->setPosition(origin);
         this->addChild(m_background, 0);
         
 
-        // 锟斤拷锟斤拷锟斤拷锟斤拷 - 使锟斤拷TTF锟斤拷锟斤拷锟斤拷示锟斤拷锟斤拷
-        auto titleLabel = Label::createWithTTF(u8"锟斤拷戏锟斤拷停", "fonts/forui3.ttf", 64);
-        // 锟斤拷锟絋TF锟斤拷锟斤拷失锟杰ｏ拷使锟矫憋拷选锟斤拷锟斤拷
+        // 标题文字 - 优先使用 TTF 以正确显示中文
+        auto titleLabel = Label::createWithTTF(u8"游戏暂停", "fonts/forui3.ttf", 64);
+        // 如果 TTF 加载失败，则使用系统字体兜底
         if (!titleLabel || titleLabel->getContentSize().width <= 0) {
-            titleLabel = Label::createWithSystemFont("GAME PAUSED", "", 64); // 英锟侥憋拷选
+            titleLabel = Label::createWithSystemFont("GAME PAUSED", "", 64); // 英文兜底
         }
 
         titleLabel->setPosition(origin.x + visibleSize.width / 2, origin.y + visibleSize.height * 0.7f);
@@ -67,15 +67,15 @@ void PauseScene::createUI()
         std::string btnNormal = "images/ui/start&exit_btn_normal.png";
         std::string btnPressed = "images/ui/start&exit_btn_pressed.png";
 
-        // 锟斤拷锟斤拷锟斤拷钮
+        // 继续游戏按钮
         m_resumeButton = Button::create(btnNormal, btnPressed);
         if (m_resumeButton)
         {
             m_resumeButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.55f));
             m_resumeButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onResumeClicked, this));
 
-            // 锟斤拷钮锟斤拷锟斤拷使锟斤拷TTF锟斤拷锟斤拷
-            auto resumeLabel = Label::createWithTTF(u8"锟斤拷锟斤拷锟斤拷戏", "fonts/forui2.ttf", 32);
+            // 按钮标题，优先使用 TTF
+            auto resumeLabel = Label::createWithTTF(u8"继续游戏", "fonts/forui2.ttf", 32);
             if (!resumeLabel || resumeLabel->getContentSize().width <= 0) {
                 resumeLabel = Label::createWithSystemFont("RESUME", "", 32);
             }
@@ -88,14 +88,14 @@ void PauseScene::createUI()
             throw std::runtime_error("Continue button creation failed: " + btnNormal);
         }
 
-        // 锟斤拷锟铰匡拷始锟斤拷钮
+        // 重新开始按钮
         m_restartButton = Button::create(btnNormal, btnPressed);
         if (m_restartButton)
         {
             m_restartButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.45f));
             m_restartButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onRestartClicked, this));
 
-            auto restartLabel = Label::createWithTTF(u8"锟斤拷锟铰匡拷始", "fonts/forui2.ttf", 32);
+            auto restartLabel = Label::createWithTTF(u8"重新开始", "fonts/forui2.ttf", 32);
             if (!restartLabel || restartLabel->getContentSize().width <= 0)
             {
                 restartLabel = Label::createWithSystemFont("RESTART", "", 32);
@@ -109,14 +109,14 @@ void PauseScene::createUI()
             throw std::runtime_error("Restart button creation failed: " + btnNormal);
         }
 
-        // 锟剿筹拷锟斤拷钮
+        // 返回主菜单按钮
         m_exitButton = Button::create(btnNormal, btnPressed);
         if (m_exitButton)
         {
             m_exitButton->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.35f));
             m_exitButton->addClickEventListener(CC_CALLBACK_1(PauseScene::onExitClicked, this));
 
-            auto exitLabel = Label::createWithTTF(u8"锟斤拷锟截菜碉拷", "fonts/forui2.ttf", 32);
+            auto exitLabel = Label::createWithTTF(u8"返回主菜单", "fonts/forui2.ttf", 32);
             if (!exitLabel || exitLabel->getContentSize().width <= 0) {
                 exitLabel = Label::createWithSystemFont("MAIN MENU", "", 32);
             }
@@ -144,14 +144,14 @@ void PauseScene::onResumeClicked(Ref* sender)//***
 
     try {
         AudioManager::getInstance()->playUISound("ui_button_click");
-        // 锟饺恢革拷Director
+        // 确保恢复 Director
         auto director = Director::getInstance();
         if (director->isPaused())
         {
             director->resume();
         }
 
-        // 锟斤拷锟斤拷锟斤拷前锟斤拷锟斤拷
+        // 弹出当前场景
         director->popScene();
 
         log("Game resumed successfully");
@@ -159,7 +159,7 @@ void PauseScene::onResumeClicked(Ref* sender)//***
     catch (const std::exception& e) 
     {
         std::cerr << "Error in onResumeClicked: " << e.what() << std::endl;
-        // 锟斤拷锟斤拷锟街革拷锟斤拷强锟狡恢革拷Director
+        // 出现异常仍强制恢复 Director
         Director::getInstance()->resume();
     }
 }
@@ -170,19 +170,19 @@ void PauseScene::onRestartClicked(Ref* sender)
 
     try {
         AudioManager::getInstance()->playUISound("ui_button_click");
-        // 锟斤拷要锟斤拷锟饺恢革拷Director
+        // 需要先恢复 Director
         auto director = Director::getInstance();
         if (director->isPaused())
         {
             director->resume();
         }
 
-         //锟饺达拷一帧确锟斤拷状态锟街革拷
+         // 延迟到下一帧确保状态更新
         director->getScheduler()->performFunctionInCocosThread([director]() {
-            // 锟斤拷锟斤拷锟铰碉拷锟斤拷戏锟斤拷锟斤拷
+            // 创建新的游戏场景
             auto gameScene = MainGameScene::createScene();
 
-            // 锟芥换锟斤拷锟斤拷
+            // 切换场景
             director->replaceScene(TransitionFade::create(0.5f, gameScene));
             });
 
@@ -191,7 +191,7 @@ void PauseScene::onRestartClicked(Ref* sender)
     catch (const std::exception& e) 
     {
         std::cerr << "Error in onRestartClicked: " << e.what() << std::endl;
-        // 锟斤拷锟斤拷锟街革拷锟斤拷强锟狡恢革拷锟斤拷锟叫伙拷锟斤拷锟斤拷戏锟斤拷锟斤拷
+        // 异常时强制恢复并直接切换到新游戏场景
         Director::getInstance()->resume();
         auto gameScene = MainGameScene::createScene();
         Director::getInstance()->replaceScene(gameScene);
@@ -204,19 +204,19 @@ void PauseScene::onExitClicked(Ref* sender)
 
     try {
         AudioManager::getInstance()->playUISound("ui_button_click");
-        // 锟斤拷要锟斤拷锟饺恢革拷Director
+        // 需要先恢复 Director
         auto director = Director::getInstance();
         if (director->isPaused()) 
         {
             director->resume();
         }
 
-        // 锟饺达拷一帧确锟斤拷状态锟街革拷
+        // 延迟到下一帧确保状态更新
         director->getScheduler()->performFunctionInCocosThread([director]() {
-            // 锟斤拷锟斤拷锟斤拷始锟斤拷锟斤拷
+            // 创建开始菜单场景
             auto startScene = StartScene::createScene();
 
-            // 锟芥换锟斤拷锟斤拷锟斤拷使锟矫癸拷锟斤拷效锟斤拷锟斤拷
+            // 切换场景并使用淡入淡出效果
             director->replaceScene(TransitionFade::create(0.5f, startScene));
             });
 
@@ -224,7 +224,7 @@ void PauseScene::onExitClicked(Ref* sender)
     }
     catch (const std::exception& e) {
         std::cerr << "Error in onExitClicked: " << e.what() << std::endl;
-        // 锟斤拷锟斤拷锟街革拷锟斤拷强锟狡恢革拷锟斤拷锟叫伙拷锟斤拷锟斤拷始锟斤拷锟斤拷
+        // 异常时强制恢复并直接切换到开始场景
         Director::getInstance()->resume();
         auto startScene = StartScene::createScene();
         Director::getInstance()->replaceScene(startScene);
@@ -233,7 +233,7 @@ void PauseScene::onExitClicked(Ref* sender)
 
 PauseScene::~PauseScene()
 {
-    // 锟斤拷锟斤拷锟斤拷锟教硷拷锟斤拷锟斤拷
+    // 释放键盘监听器
     if (m_keyboardListener) 
     {
         _eventDispatcher->removeEventListener(m_keyboardListener);
@@ -243,47 +243,47 @@ PauseScene::~PauseScene()
 
 void PauseScene::initKeyboardListener()
 {
-    log("=== 锟斤拷始锟斤拷锟斤拷停锟斤拷锟斤拷锟斤拷锟教硷拷锟斤拷 ===");
+    log("=== 初始化暂停场景的键盘监听 ===");
 
-    // 锟斤拷锟斤拷锟斤拷屑锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷瞥锟?
+    // 如果之前已有监听，先移除
     if (m_keyboardListener) {
         _eventDispatcher->removeEventListener(m_keyboardListener);
         m_keyboardListener = nullptr;
     }
 
-    // 锟斤拷锟斤拷锟铰的硷拷锟教硷拷锟斤拷锟斤拷
+    // 创建新的键盘事件监听器
     m_keyboardListener = EventListenerKeyboard::create();
 
-    // 锟斤拷锟矫帮拷锟斤拷锟斤拷锟铰回碉拷
+    // 绑定按键回调
     m_keyboardListener->onKeyPressed = CC_CALLBACK_2(PauseScene::onKeyPressed, this);
 
-    // 锟斤拷锟接硷拷锟斤拷锟斤拷锟斤拷锟铰硷拷锟街凤拷锟斤拷
+    // 注册监听到事件分发器
     _eventDispatcher->addEventListenerWithSceneGraphPriority(m_keyboardListener, this);
 
-    log("锟斤拷锟教硷拷锟斤拷锟斤拷锟斤拷注锟结，锟斤拷锟节匡拷锟皆帮拷ESC锟斤拷锟斤拷");
+    log("键盘监听器已注册，可使用 ESC 关闭暂停界面");
 }
 
 void PauseScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
-    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//锟斤拷esc锟斤拷锟斤拷锟斤拷停
+    if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE)//按 ESC 继续游戏
     {
-        onResumeClicked(nullptr);  // 直锟接碉拷锟矫恢革拷锟斤拷锟斤拷
+        onResumeClicked(nullptr);  // 直接恢复游戏
         event->stopPropagation();
         return;
     }
 }
 
-// 锟斤拷停锟斤拷锟斤拷锟斤拷示时
+// 暂停场景显示时
 void PauseScene::onEnter() {
     Layer::onEnter();
 
-    // 锟斤拷停锟斤拷前BGM锟斤拷锟斤拷锟斤拷锟斤拷停锟斤拷锟斤拷BGM
+    // 暂停当前关卡 BGM 并播放暂停界面 BGM
     LevelMusicManager::getInstance()->pauseCurrentBGM();
     AudioManager::getInstance()->playBGM("bgm_pause");
 }
 
-// 锟斤拷停锟斤拷锟斤拷锟剿筹拷时
+// 暂停场景关闭时
 void PauseScene::onExit() {
-    // 止停锟斤拷停锟斤拷锟斤拷BGM锟斤拷锟街革拷锟斤拷戏BGM
+    // 停止暂停界面 BGM 并恢复游戏 BGM
     AudioManager::getInstance()->stopBGM();
     LevelMusicManager::getInstance()->resumeCurrentBGM();
 
