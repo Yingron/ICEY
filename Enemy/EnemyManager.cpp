@@ -1,5 +1,5 @@
 // EnemyManager.cpp
-// 鍦ㄦ枃浠堕《閮ㄧ‘淇濆寘鍚簡蹇呰鐨勫ご鏂囦欢
+// 在文件头部已包含关键的头文件
 #include "EnemyManager.h"
 #include "Player.h"
 #include "MeleeEnemy.h"
@@ -129,7 +129,7 @@ void EnemyManager::removeEnemy(Enemy* enemy) {
         return;
     }
 
-    // 妫€鏌ユ晫浜烘槸鍚﹀凡缁忓湪绉婚櫎鍒楄〃涓?
+    // 检查敌人是否已经在移除队列
     for (int i = 0; i < (int)_enemiesToRemove.size(); i++) {
         if (_enemiesToRemove[i] == enemy) {
             log("Enemy already in removal queue, skipping");
@@ -137,7 +137,7 @@ void EnemyManager::removeEnemy(Enemy* enemy) {
         }
     }
 
-    // 妫€鏌ユ晫浜烘槸鍚﹀凡缁忓湪涓诲垪琛ㄤ腑
+    // 检查敌人是否在主列表
     bool foundInMainList = false;
     for (int i = 0; i < (int)_enemies.size(); i++) {
         if (_enemies[i] == enemy) {
@@ -148,33 +148,33 @@ void EnemyManager::removeEnemy(Enemy* enemy) {
 
     if (!foundInMainList) {
         log("Enemy not found in main list, may have been already removed");
-        safelyRemoveEnemy(enemy); // 鐩存帴瀹夊叏鍒犻櫎
+        safelyRemoveEnemy(enemy); // 直接安全删除
         return;
     }
 
-    // 鏍囪涓烘鍦ㄧЩ闄?
-    enemy->setTag(-1); // 浣跨敤璐熷€兼爣璁颁负姝ｅ湪绉婚櫎
+    // 标记为正在移除
+    enemy->setTag(-1); // 使用特殊标签标记正在移除
 
-    // 灏嗘晫浜烘坊鍔犲埌寤惰繜绉婚櫎鍒楄〃
+    // 加入延迟移除队列
     _enemiesToRemove.push_back(enemy);
     log("Enemy added to removal queue, total in queue: %d", _enemiesToRemove.size());
 }
 void EnemyManager::removeAllEnemies()
 {
-    // 鍒涘缓涓存椂鍒楄〃閬垮厤鍦ㄩ亶鍘嗘椂淇敼鍘熷垪琛?
+    // 创建临时列表，避免遍历时修改原列表
     std::vector<Enemy*> allEnemies;
     
-    // 鍏堝鐞嗗欢杩熺Щ闄ら槦鍒椾腑鐨勬晫浜?
+    // 先处理已在移除队列中的敌人
     if (!_enemiesToRemove.empty()) {
         allEnemies.insert(allEnemies.end(), _enemiesToRemove.begin(), _enemiesToRemove.end());
         _enemiesToRemove.clear();
     }
     
-    // 娣诲姞褰撳墠鏁屼汉鍒楄〃涓殑鏁屼汉
+    // 再添加当前敌人列表中的敌人
     allEnemies.insert(allEnemies.end(), _enemies.begin(), _enemies.end());
     _enemies.clear();
     
-    // 瀹夊叏绉婚櫎鎵€鏈夋晫浜?
+    // 安全移除所有敌人
     for (int i = 0; i < (int)allEnemies.size(); i++) {
         Enemy* enemy = allEnemies[i];
         if (enemy) {
@@ -188,7 +188,7 @@ void EnemyManager::processEnemyRemoval() {
         return;
     }
 
-    // 鍒涘缓涓存椂鍒楄〃澶勭悊锛岄伩鍏嶅湪閬嶅巻鏃朵慨鏀?
+    // 创建临时列表处理，避免遍历时修改
     std::vector<Enemy*> toRemove = _enemiesToRemove;
     _enemiesToRemove.clear();
 
@@ -198,10 +198,10 @@ void EnemyManager::processEnemyRemoval() {
             continue;
         }
 
-        // 浠庝富鏁屼汉鍒楄〃涓Щ闄?
+        // 从主列表移除
         bool removedFromMainList = false;
         for (int j = 0; j < (int)_enemies.size(); j++) {
-            // 妫€鏌enemies[j]鏄惁涓簄ullptr
+            // 检查 _enemies[j] 是否为 nullptr
             if (_enemies[j] && _enemies[j] == enemy) {
                 _enemies.erase(_enemies.begin() + j);
                 removedFromMainList = true;
@@ -214,7 +214,7 @@ void EnemyManager::processEnemyRemoval() {
             log("WARNING: Enemy not found in main list during removal processing");
         }
 
-        // 瀹夊叏鍒犻櫎鏁屼汉
+        // 安全删除敌人
         safelyRemoveEnemy(enemy);
     }
 }
@@ -239,7 +239,7 @@ void EnemyManager::update(float delta)
         }
     }
     
-    // 澶勭悊寤惰繜绉婚櫎
+    // 处理延迟移除
     processEnemyRemoval();
 }
 
@@ -267,7 +267,7 @@ std::vector<Enemy*> EnemyManager::getEnemiesByType(const std::string& enemyType)
         Enemy* enemy = _enemies[i];
         if (enemy && enemy->getEnemyType() == enemyType && !enemy->isDead())
         {
-            // 妫€鏌ユ晫浜烘槸鍚﹀湪绉婚櫎鍒楄〃涓?
+            // 检查敌人是否在移除队列
             bool isInRemovalList = false;
             for (int j = 0; j < (int)_enemiesToRemove.size(); j++)
             {
@@ -297,7 +297,7 @@ std::vector<Enemy*> EnemyManager::getAllEnemies() const
         Enemy* enemy = _enemies[i];
         if (enemy && !enemy->isDead())
         {
-            // 妫€鏌ユ晫浜烘槸鍚﹀湪绉婚櫎鍒楄〃涓?
+            // 检查敌人是否在移除队列
             bool isInRemovalList = false;
             for (int j = 0; j < (int)_enemiesToRemove.size(); j++)
             {
@@ -325,7 +325,7 @@ bool EnemyManager::hasAliveEnemies() const
         Enemy* enemy = _enemies[i];
         if (enemy && !enemy->isDead())
         {
-            // 妫€鏌ユ晫浜烘槸鍚﹀凡缁忓湪绉婚櫎鍒楄〃涓?
+            // 检查是否已在移除队列
             bool isInRemovalList = false;
             for (int j = 0; j < (int)_enemiesToRemove.size(); j++)
             {
@@ -336,7 +336,7 @@ bool EnemyManager::hasAliveEnemies() const
                 }
             }
             
-            // 鍙湁涓嶅湪绉婚櫎鍒楄〃涓殑鏁屼汉鎵嶈鍏ユ椿鐫€鐨勬晫浜?
+            // 只有未在移除队列的敌人才算存活
             if (!isInRemovalList)
             {
                 return true;
@@ -354,7 +354,7 @@ int EnemyManager::getAliveEnemiesCount() const
         Enemy* enemy = _enemies[i];
         if (enemy && !enemy->isDead())
         {
-            // 妫€鏌ユ晫浜烘槸鍚﹀凡缁忓湪绉婚櫎鍒楄〃涓?
+            // 检查是否已在移除队列
             bool isInRemovalList = false;
             for (int j = 0; j < (int)_enemiesToRemove.size(); j++)
             {
@@ -365,7 +365,7 @@ int EnemyManager::getAliveEnemiesCount() const
                 }
             }
             
-            // 鍙湁涓嶅湪绉婚櫎鍒楄〃涓殑鏁屼汉鎵嶈鍏ユ椿鐫€鐨勬晫浜?
+            // 只有未在移除队列的敌人才计为存活
             if (!isInRemovalList)
             {
                 ++count;
@@ -428,10 +428,10 @@ void EnemyManager::initEnemyDatabase()
 
 void EnemyManager::initLevelEnemySequences()
 {
-    // Level 1浣滀负鏁欏鍏充笉鐢熶骇鏁屼汉
+    // Level 1 作为新手关，不生成敌人
     _levelEnemySequence[LevelManager::LevelState::LEVEL1] = {};
     
-    // Level 2-i鐢熸垚i涓晫浜猴紝鏁屼汉绉嶇被闅忔満鍐冲畾锛孡evel 2-6鐢熸垚BOSS1
+    // Level 2-i 生成 i 个敌人，类型随机；Level 2-6 生成 BOSS1
     _levelEnemySequence[LevelManager::LevelState::LEVEL2_1] = {"melee"};
     _levelEnemySequence[LevelManager::LevelState::LEVEL2_2] = {"melee", "ranged"};
     _levelEnemySequence[LevelManager::LevelState::LEVEL2_3] = {"melee", "ranged", "shield"};
@@ -439,8 +439,8 @@ void EnemyManager::initLevelEnemySequences()
     _levelEnemySequence[LevelManager::LevelState::LEVEL2_5] = {"melee", "ranged", "ranged", "shield", "shield"};
     _levelEnemySequence[LevelManager::LevelState::LEVEL2_6] = {"BOSS1-CAIXUNKUN"};
     
-    // Level 3 follows Level 2's rules, first 5 levels generate enemies corresponding to level numbers, last level generates BOSS2
-    // According to requirements, LEVEL3_1 has no enemies, LEVEL3_2 also has no enemies
+    // Level 3 按 Level 2 规则：前 5 关按关卡编号生成敌人，最后一关生成 BOSS2
+    // 按需求，LEVEL3_1 无敌人，LEVEL3_2 也无敌人
     _levelEnemySequence[LevelManager::LevelState::LEVEL3_1] = {};
     _levelEnemySequence[LevelManager::LevelState::LEVEL3_2] = {}; // No enemies for this level
     _levelEnemySequence[LevelManager::LevelState::LEVEL3_3] = {"melee", "ranged", "shield"};
@@ -448,8 +448,8 @@ void EnemyManager::initLevelEnemySequences()
     _levelEnemySequence[LevelManager::LevelState::LEVEL3_5] = {"melee", "ranged", "shield", "shield", "melee"};
     _levelEnemySequence[LevelManager::LevelState::LEVEL3_6] = {"BOSS2-MAODIE"};
     
-    // Level 4鍚孡evel 2鐨勯€昏緫锛屽墠5鍏崇敓鎴愬拰鍏冲崱鏁板搴旂殑鏁屼汉
-    // 鏍规嵁鐢ㄦ埛瑕佹眰锛孡EVEL4_3鍜孡EVEL4_5涓嶇敓鎴愭晫浜猴紝LEVEL4_4鍙敓鎴怋OSS3锛孡EVEL4_6涓嶇敓鎴愭晫浜?
+    // Level 4 按 Level 2 规则：前 5 关生成与关卡编号对应数量的敌人
+    // 根据需求：LEVEL4_3 和 LEVEL4_5 不生成敌人，LEVEL4_4 只生成 BOSS3，LEVEL4_6 不生成敌人
     _levelEnemySequence[LevelManager::LevelState::LEVEL4_1] = {"ranged"};
     _levelEnemySequence[LevelManager::LevelState::LEVEL4_2] = {"ranged", "shield"};
     _levelEnemySequence[LevelManager::LevelState::LEVEL4_3] = {};
@@ -466,33 +466,33 @@ void EnemyManager::safelyRemoveEnemy(Enemy* enemy) {
 
     log("Starting safe removal of enemy");
 
-    // 纭繚鏁屼汉澶勪簬姝讳骸鐘舵€?
+    // 确保敌人处于死亡状态
     enemy->setCurrentState(EnemyState::DEAD);
 
-    // 鍋滄鎵€鏈夊姩浣?
+    // 停止所有动作
     enemy->stopAllActions();
     log("Stopped all enemy actions");
 
-    // 绉婚櫎鐗╃悊纰版挒浣?
+    // 禁用物理碰撞体
     auto physicsBody = enemy->getPhysicsBody();
     if (physicsBody) {
         physicsBody->setEnabled(false);
-        // 涓嶇洿鎺ヨ皟鐢╯etPhysicsBody(nullptr)浠ラ伩鍏峜ocos2d-x鍐呴儴鏂█澶辫触
-        // 鐗╃悊浣撳皢鍦ㄨ妭鐐归攢姣佹椂鑷姩娓呯悊
+        // 不直接调用 setPhysicsBody(nullptr) 以避免 cocos2d-x 内部断言
+        // 物理体将在节点销毁时自动清理
         log("Disabled enemy physics body");
     }
 
-    // 绉婚櫎鎵€鏈夊瓙鑺傜偣骞舵竻鐞?
+    // 移除所有子节点并清理
     enemy->removeAllChildrenWithCleanup(true);
     log("Removed all enemy children");
 
-    // 浠庣埗鑺傜偣绉婚櫎鎴栫洿鎺ラ噴鏀?
+    // 从父节点移除或直接释放
     if (enemy->getParent()) {
         enemy->removeFromParentAndCleanup(true);
         log("Enemy removed from parent");
     }
     else {
-        // 濡傛灉鏁屼汉娌℃湁鐖惰妭鐐癸紝鐩存帴閲婃斁
+        // 如果敌人没有父节点，直接释放
         enemy->release();
         log("Enemy released (no parent)");
     }
