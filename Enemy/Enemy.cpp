@@ -28,17 +28,17 @@ bool Enemy::init(const std::string& enemyType) {
     _velocity = Vec2::ZERO;
     _currentAttackCooldown = 0.0f;
     
-    // Initialize patrol points system
+    // 初始化巡逻点系统
     _currentPatrolPointIndex = 0;
     _patrolClockwise = true;
 
-    // Initialize enemy data
+    // 初始化敌人数据
     initEnemyData();
     
-    // Setup animations
+    // 设置动画
     setupAnimations();
 
-    // 璁剧疆鍒濆绾圭悊 - 灏濊瘯澶氱鍔ㄧ敾浣滀负鍥為€€
+    // 设置初始回退 - 尝试多种动画作为回退
     std::vector<std::string> fallbackAnimations = {"idle", "walk", "run", "attack", "hit", "hurt"};
     bool spriteSet = false;
     
@@ -57,7 +57,7 @@ bool Enemy::init(const std::string& enemyType) {
         }
     }
     
-    // 浣滀负鏈€鍚庣殑鍥為€€锛屽鏋滄病鏈変换浣曞姩鐢诲彲鐢紝鑷冲皯璁剧疆涓€涓粯璁ょ殑绾㈣壊鏂瑰潡浣滀负鍗犱綅绗?
+    // 作为最终的回退：若无可用动画，至少设置一个默认红色方块以便定位
     if (!spriteSet) {
         log("WARNING: No valid animation frames found for enemy. Using fallback color.");
         this->setColor(Color3B::RED);
@@ -65,11 +65,11 @@ bool Enemy::init(const std::string& enemyType) {
         this->setTextureRect(Rect(0, 0, 50, 50));
     }
 
-    // 鑾峰彇鐜╁瑙掕壊澶у皬浣滀负鍩哄噯
-    float playerWidth = 50.0f;  // 榛樿鐜╁瀹藉害
-    float playerHeight = 100.0f; // 榛樿鐜╁楂樺害
+    // 获取玩家角色大小作为基准
+    float playerWidth = 50.0f;   // 默认玩家宽度
+    float playerHeight = 100.0f; // 默认玩家高度
     
-    // 灏濊瘯鑾峰彇瀹為檯鐜╁澶у皬
+    // 尝试获取实际玩家大小
     Player* player = Player::getInstance();
     if (player) {
         auto playerSize = player->getContentSize();
@@ -77,24 +77,24 @@ bool Enemy::init(const std::string& enemyType) {
         playerHeight = playerSize.height;
     }
     
-    // 鑾峰彇褰撳墠鏁屼汉澶у皬
+    // 获取当前敌人大小
     auto enemySize = this->getContentSize();
     
-    // 鏍规嵁鏁屼汉绫诲瀷璁剧疆缂╂斁姣斾緥
-    float scale = 3.0f; // 榛樿涓庣帺瀹剁瓑澶?
-    
+    // 根据敌人类型设置缩放比例
+    float scale = 3.0f; // 默认与玩家等大（当前资源尺寸约需 3 倍）
+
     if (_enemyType == "shield") {
-        // 绮捐嫳甯︾浘鏁屼汉锛氱帺瀹剁殑1.5鍊?
+        // 盾牌类敌人：约为玩家的 1.5 倍
         scale = 3.0f;
     } else if (_enemyType.find("BOSS") != std::string::npos) {
-        // BOSS鏁屼汉锛氱帺瀹剁殑2鍊?
+        // BOSS 敌人：约为玩家的 2 倍
         scale = 2.0f;
     }
     
-    // 璁剧疆缂╂斁
+    // 设置缩放
     this->setScale(scale);
     
-    // Setup physics properties - 绉诲埌璁剧疆鍒濆绾圭悊涔嬪悗
+    // Setup physics properties - 放在设置初始回退之后
     setupPhysics();
 
     // Start default animation
@@ -230,12 +230,12 @@ void Enemy::setCurrentState(EnemyState state) {
                 
                 // Create callback to remove enemy after animation completes
                 auto removeEnemyCallback = CallFunc::create([this, enemyManager]() {
-                    // 妫€鏌nemyManager鏄惁涓簄ullptr
+                    // 检查 EnemyManager 是否为 nullptr
                     if (enemyManager) {
                         enemyManager->removeEnemy(this);
                         log("Enemy removed from EnemyManager after death animation completed");
                     } else {
-                        // 濡傛灉EnemyManager宸茬粡琚攢姣侊紝鐩存帴瀹夊叏鍒犻櫎鑷繁
+                        // 如果 EnemyManager 已经被销毁，直接安全删除自身
                         this->stopAllActions();
                         if (this->getPhysicsBody()) {
                             this->getPhysicsBody()->setEnabled(false);
@@ -254,12 +254,12 @@ void Enemy::setCurrentState(EnemyState state) {
             } else {
                 // No death animation, remove immediately with a small delay
                 auto removeEnemyCallback = CallFunc::create([this, enemyManager]() {
-                    // 妫€鏌nemyManager鏄惁涓簄ullptr
+                    // 检查 EnemyManager 是否为 nullptr
                     if (enemyManager) {
                         enemyManager->removeEnemy(this);
                         log("Enemy removed from EnemyManager after small delay (no death animation)");
                     } else {
-                        // 濡傛灉EnemyManager宸茬粡琚攢姣侊紝鐩存帴瀹夊叏鍒犻櫎鑷繁
+                        // 如果 EnemyManager 已被销毁，直接安全删除自身
                         this->stopAllActions();
                         if (this->getPhysicsBody()) {
                             this->getPhysicsBody()->setEnabled(false);
@@ -298,39 +298,39 @@ bool Enemy::canAttack() const {
 }
 
 void Enemy::showDamageNumber(float damage) {
-    // 鍒涘缓浼ゅ鏁板瓧鏍囩
+    // 创建伤害数字标签
     auto damageLabel = Label::createWithTTF(StringUtils::format("%.0f", damage), "fonts/arial.ttf", 24);
     if (!damageLabel) {
         log("Failed to create damage label");
         return;
     }
     
-    // 璁剧疆浼ゅ鏁板瓧浣嶇疆锛堟晫浜轰笂鏂癸級
+    // 设置伤害数字位置（角色上方）
     Vec2 position = this->getPosition();
     position.y += this->getContentSize().height / 2 + 10;
     damageLabel->setPosition(position);
     
-    // 璁剧疆棰滆壊锛堟牴鎹激瀹冲€兼樉绀轰笉鍚岄鑹诧級
+    // 设置颜色（根据伤害大小展示不同颜色）
     if (damage < 50) {
-        damageLabel->setColor(Color3B(255, 255, 255));  // 鐧借壊
+        damageLabel->setColor(Color3B(255, 255, 255));  // 白色
     } else if (damage < 100) {
-        damageLabel->setColor(Color3B(255, 255, 0));  // 榛勮壊
+        damageLabel->setColor(Color3B(255, 255, 0));    // 黄色
     } else {
-        damageLabel->setColor(Color3B(255, 0, 0));  // 绾㈣壊
+        damageLabel->setColor(Color3B(255, 0, 0));      // 红色
     }
     
-    // 娣诲姞鍒扮埗鑺傜偣
+    // 添加到父节点
     auto parent = this->getParent();
     if (parent) {
-        parent->addChild(damageLabel, 100);  // 纭繚鏄剧ず鍦ㄦ渶涓婂眰
+        parent->addChild(damageLabel, 100);  // 确保显示在最上层
         
-        // 鍒涘缓娴姩鍔ㄧ敾
+        // 创建漂浮动画
         auto moveUp = MoveBy::create(1.0f, Vec2(0, 50));
         auto fadeOut = FadeOut::create(1.0f);
         auto delay = DelayTime::create(0.5f);
         auto removeSelf = RemoveSelf::create(true);
         
-        // 缁勫悎鍔ㄧ敾锛氬悜涓婄Щ鍔ㄥ苟娣″嚭锛岀劧鍚庣Щ闄?
+        // 组合动画：向上移动并淡出，然后移除
         auto sequence = Sequence::create(moveUp, fadeOut, removeSelf, nullptr);
         damageLabel->runAction(sequence);
     }
@@ -344,10 +344,10 @@ void Enemy::takeDamage(float damage) {
     // Reduce health
     _currentHealth -= damage;
     
-    // 鏄剧ず浼ゅ鏁板瓧
+    // 显示伤害数字
     showDamageNumber(damage);
     
-    // 娣诲姞浼ゅ绮掑瓙鏁堟灉
+    // 添加伤害粒子效果
     auto damageParticles = ParticleSystemQuad::create();
     log("Creating damage particles");
     damageParticles->setPosition(this->getPosition());
@@ -370,13 +370,13 @@ void Enemy::takeDamage(float damage) {
     damageParticles->setEndColorVar(Color4F(0.0f, 0.0f, 0.0f, 0.0f));
     damageParticles->setBlendFunc(BlendFunc::ADDITIVE);
     
-    // 璁剧疆绾圭悊锛屼娇鐢ㄧ畝鍗曠殑鐧借壊绾圭悊浣滀负鍥為€€
+    // 设置纹理，使用已有 UI 图片作为粒子纹理；若失败则创建简单白色纹理作为回退
     auto director = Director::getInstance();
     auto textureCache = director->getTextureCache();
-    auto texture = textureCache->addImage("images/UI/health_bar.png"); // 浣跨敤鐜版湁UI鍥剧墖浣滀负绮掑瓙绾圭悊
+    auto texture = textureCache->addImage("images/UI/health_bar.png"); // 使用现有 UI 图片作为粒子纹理
     log("Attempting to load particle texture, result: %p", texture);
     if (!texture) {
-        // 濡傛灉鎵句笉鍒扮汗鐞嗭紝鍒涘缓涓€涓畝鍗曠殑鐧借壊绾圭悊
+        // 如果找不到纹理，创建一个简单的白色纹理
         unsigned char pixels[4] = { 255, 255, 255, 255 };
         Texture2D::PixelFormat format = Texture2D::PixelFormat::RGBA8888;
         texture = new Texture2D();
@@ -404,7 +404,7 @@ void Enemy::takeDamage(float damage) {
     if (_currentHealth <= 0) {
         _currentHealth = 0;
         
-        // 娣诲姞姝讳骸鐖嗙偢绮掑瓙鏁堟灉
+        // 添加死亡爆炸粒子效果
         auto explosionParticles = ParticleSystemQuad::create();
         log("Creating explosion particles");
         explosionParticles->setPosition(this->getPosition());
@@ -427,13 +427,13 @@ void Enemy::takeDamage(float damage) {
         explosionParticles->setEndColorVar(Color4F(0.0f, 0.0f, 0.0f, 0.0f));
         explosionParticles->setBlendFunc(BlendFunc::ADDITIVE);
         
-        // 璁剧疆绾圭悊锛屼娇鐢ㄧ畝鍗曠殑鐧借壊绾圭悊浣滀负鍥為€€
+        // 设置纹理，使用已有 UI 图片；若失败则创建简单白色纹理作为回退
         auto director = Director::getInstance();
         auto textureCache = director->getTextureCache();
-        auto texture = textureCache->addImage("images/UI/health_bar.png"); // 浣跨敤鐜版湁UI鍥剧墖浣滀负鐖嗙偢绮掑瓙绾圭悊
+        auto texture = textureCache->addImage("images/UI/health_bar.png"); // 使用已有 UI 图片作为爆炸粒子纹理
         log("Attempting to load explosion particle texture, result: %p", texture);
         if (!texture) {
-            // 濡傛灉鎵句笉鍒扮汗鐞嗭紝鍒涘缓涓€涓畝鍗曠殑鐧借壊绾圭悊
+            // 如果找不到纹理，创建一个简单的白色纹理
             unsigned char pixels[4] = { 255, 255, 255, 255 };
             Texture2D::PixelFormat format = Texture2D::PixelFormat::RGBA8888;
             texture = new Texture2D();
@@ -736,19 +736,19 @@ void Enemy::updatePhysics(float delta) {
     // Update position
     _worldPositionX += _velocity.x * delta;
     
-    // 娣诲姞杈圭晫妫€鏌ワ紝纭繚鏁屼汉涓嶄細璧板嚭娓告垙鐣岄潰
+    // 添加边界检测，确保敌人不会跑出游戏场景
     float maxWorldX = LevelManager::getInstance()->getCurrentLevelMaxWorldX();
     float minWorldX = 0.0f;
     
-    // 纭繚鏁屼汉涓嶄細瓒呭嚭宸﹁竟鐣?
+    // 确保敌人不会越过左边界
     if (_worldPositionX < minWorldX) {
         _worldPositionX = minWorldX;
-        _velocity.x = -_velocity.x; // 鍙嶈浆鏂瑰悜
+        _velocity.x = -_velocity.x; // 反转方向
     }
-    // 纭繚鏁屼汉涓嶄細瓒呭嚭鍙宠竟鐣?
+    // 确保敌人不会越过右边界
     else if (_worldPositionX > maxWorldX) {
         _worldPositionX = maxWorldX;
-        _velocity.x = -_velocity.x; // 鍙嶈浆鏂瑰悜
+        _velocity.x = -_velocity.x; // 反转方向
     }
     
     // Remove gravity application to prevent enemies from falling
