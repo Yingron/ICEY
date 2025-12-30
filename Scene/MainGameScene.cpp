@@ -786,8 +786,7 @@ void MainGameScene::checkPlayerHealth() {
 // Show game over interface//********hy
 void MainGameScene::showGameOver() {
     log("Showing game over interface");
-    onPlayerDeath();//12/28/15.19
-־
+    onPlayerDeath();//12/28/15.19־
     _isGameOver = true;
 
     if (_player) {
@@ -1451,4 +1450,5 @@ void MainGameScene::onGameCompleted() {//12/28/15.19
     AchievementSystem::getInstance()->triggerGameCompleted();
     log("游戏通关成就已触发");
 }
+
 
