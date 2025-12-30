@@ -24,7 +24,7 @@ Scene* MainGameScene::createScene() {
     auto physicsWorld = scene->getPhysicsWorld();
     if (physicsWorld) {
         physicsWorld->setGravity(Vec2(0, -500.0f));
-        physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+        physicsWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
         log("Physics world created with gravity: (0, -500)");
     }
 
@@ -1451,3 +1451,4 @@ void MainGameScene::onGameCompleted() {//12/28/15.19
     AchievementSystem::getInstance()->triggerGameCompleted();
     log("游戏通关成就已触发");
 }
+
